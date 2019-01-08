@@ -1,5 +1,6 @@
 def main():
     #import Monte Carlo algorithm
+    from skmonaco import mcquad
     #integrate all probabilities over the hypercube
     #integrate all above_average (or below average) over the hypercube
     #Divide to get the chance that 1 is not ES against 2
