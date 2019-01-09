@@ -1,11 +1,11 @@
 '''This module manages the interaction with the user and
 sends the user's commands to a file read by the artificial
 primary investigator.'''
-def main():
-  normal = '''The computer is currently running Theodore's AP Research project
+import time, api
+normal = '''The computer is currently running Theodore's AP Research project
               between midnight and 2:30 pm. Type 'quit' to safely quit the program.
               Type 'options' to get more options.'''
-  options = '''Type 'quit' to safely quit the program.
+options = '''Type 'quit' to safely quit the program.
               Type 'options' to get this options message.
               Type 'adjourn' to get the program to cease operations until midnight.
               Type 'reload' to tell the Artificial Primary Investigator (API) that conditions may have changed.
@@ -17,8 +17,16 @@ def main():
                   tested to see if it is ES against all other algorithms.
               Type 'reset all all' to get the API to reset ALL the trials. This is reversible, but you have to 
                   know how API thinks. Be careful.'''
-  error = '''Sorry, I did not recognize that command. Are you sure you typed it correctly?'''
-  quitting = '''I told the Artificial Primary Investigator (API) to quit. I'll tell you when it has quit.'''
-  done_quitting = '''The API has quit. I have quit too.'''
-  
+error = '''Sorry, I did not recognize that command. Are you sure you typed it correctly?'''
+starting = '''Starting the Artificial Primary Investigator (API)'''
+quitting = '''I told the Artificial Primary Investigator (API) to quit. I'll tell you when it has quit.'''
+done_quitting = '''The API has quit. I have quit too.'''
+def main():
+    print time.asctime() + starting
+    response = ""
+    while response != "quit":
+        pass
+    print time.asctime() + quitting
+    #Contact API and tell it to quit
+    print time.asctime() + done_quitting
   
