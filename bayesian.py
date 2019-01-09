@@ -1,5 +1,5 @@
 def main():
-    #import Monte Carlo algorithm
+    #import Monte Carlo integration algorithm from scikit-monaco library
     from skmonaco import mcquad
     #integrate all probabilities over the hypercube
     #integrate all above_average (or below average) over the hypercube
