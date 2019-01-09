@@ -1,12 +1,31 @@
-def main():
+def main(game_results, trials = 1e6):
     #import Monte Carlo integration algorithm from scikit-monaco library
     from skmonaco import mcquad
+    n = len( game_results ) - 1
     #integrate all probabilities over the hypercube
-    #integrate all above_average (or below average) over the hypercube
+    all_results = mcquad( all_cases , args = [game_results]
+                            npoints=trials, xl = zeros(n), xu = ones(n) )
+    #integrate all below average over the hypercube
+    below_average_results = mcquad( below_average_cases , args = [game_results]
+                            npoints=trials, xl = zeros(n), xu = ones(n) )
     #Divide to get the chance that 1 is not ES against 2
+    return below_average_results[0] / all_results[0]
+def zeros(n):
+    result = []
+    for i in range(n):
+        result.append(0.0)
+    return result
+def ones(n):
+    result = []
+    for i in range(n):
+        result.append(1.0)
+    return result
 def all_cases( point_tuple, game_results):
     '''Default: assume game_results is sorted as wins, 2-ties, ..., n-ties,
     lose. Wins refer to the invading player's wins'''
+    if len( point_tuple ) != len(game_results) - 1:
+        raise Exception("len(point_tuple) = " + str(len(point_tuple)) 
+            + ", len(game_results) = " + str(len(game_results)) )
     point = list( point_tuple )
     point.sort()
     point = (0,) + point + (1,)
@@ -16,9 +35,10 @@ def all_cases( point_tuple, game_results):
         interval = point[n+1] - point[n]
         density *= interval ** how_many_games
     return density
-def below_average( point_tuple, game_results):
+def below_average_cases( point_tuple, game_results):
     '''Since the average score decreases compared to the total as n increases,
     most of the volume of the cube
     consists of events where the invading strategy is above average
     (I hope). Thus to save time we should only calculate in places
     where the invader's score is below average. '''
+    
