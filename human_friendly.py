@@ -20,12 +20,18 @@ options = '''Type 'quit' to safely quit the program.
               Type 'confidence value' to tell the API to reload and conduct trials aiming for confidence value.
                   You can set value to be anywhere in (0,1), but you probably want to choose 0.99 or 0.95, which 
                   means that the API tries to become 99% sure that a strategy is (or isn't) ES against another.
-              Type 'maximum value' to tell the API the maximum number of trials it can run where one 
+              Type 'max_trials value' to tell the API the maximum number of trials it can run where one 
                   algorithm is testing for being ES against another. max_trials overrides 
                   any consideration of confidence.
-              Type 'minumum value' to tell the API the minimum number of trials it must run where one
+              Type 'min_trials value' to tell the API the minimum number of trials it must run where one
                   algorithm is testing for being ES against another. min_trials overrides 
-                  any consideration of confidence.'''
+                  any consideration of confidence.
+              Type 'max_time value' to tell the API the maximum amount of time (seconds) it can run where one 
+                  algorithm is testing for being ES against another. max_time overrides 
+                  any consideration of confidence or trials.
+              Type 'min_time value' to tell the API the minimum amount of time (seconds) it must run where one
+                  algorithm is testing for being ES against another. min_time overrides 
+                  any consideration of confidence or trials.'''
 error = '''Sorry, I did not recognize that command. Are you sure you typed it correctly?'''
 starting = '''Starting the Artificial Primary Investigator (API)'''
 quitting = '''I told the Artificial Primary Investigator (API) to quit. I'll tell you when it has quit.'''
