@@ -58,8 +58,14 @@ def main():
         elif response = 'quit':
             break
         else:
-            #Contact API with the message  ***
-    #Contact API and tell it to quit ***
+            #Contact API with the message
+            f = open("Results/human_friendly_to_api.txt","a")
+            f.write( str( time.time() ) + ":" + response + '\n' )
+            f.close()      
+    #Contact API and tell it to quit
+    f = open("Results/human_friendly_to_api.txt","a")
+    f.write( str( time.time() ) + ":" response + '\n' )
+    f.close()
     print time.asctime() + quitting
     #Wait until the API quits
     t1.join()
