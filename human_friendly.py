@@ -37,24 +37,24 @@ starting = '''Starting the Artificial Primary Investigator (API)'''
 quitting = '''I told the Artificial Primary Investigator (API) to quit. I'll tell you when it has quit.'''
 done_quitting = '''The API has quit. I have quit too.'''
 def main():
-    print time.asctime() + starting
+    print time.asctime() + ": " + starting
     t1 = multiprocesssing.Process( target = api.main )
     t1.run()
     #Starts the API here, using multi-processing
     #so human_friendly will be free to continue
     response = ""
     while True:
-        print time.asctime() + normal
+        print time.asctime() + ": " + normal
         response_OK = False
         while not response_OK:
             response = raw_input().lower().rstrip().lstrip()
             if formatted( response ):
                 response_OK = True
             else:
-                print time.asctime() + error
+                print time.asctime() + ": " + error
         #Do something based on the response
         if response = 'options':
-            print time.asctime() + options
+            print time.asctime() + ": " + options
         elif response = 'quit':
             break
         else:
@@ -66,10 +66,10 @@ def main():
     f = open("Results/human_friendly_to_api.txt","a")
     f.write( str( time.time() ) + ":" response + '\n' )
     f.close()
-    print time.asctime() + quitting
+    print time.asctime() + ": " + quitting
     #Wait until the API quits
     t1.join()
-    print time.asctime() + done_quitting
+    print time.asctime() + ": " + done_quitting
 def formatted( command ):
     '''Detects whether command is acceptable.'''
     new = command.split()
