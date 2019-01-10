@@ -1,7 +1,7 @@
 '''This module manages the interaction with the user and
 sends the user's commands to a file read by the artificial
 primary investigator.'''
-import time, api
+import time, api, multiprocessing
 normal = '''The computer is currently running Theodore's AP Research project
               between midnight and 2:30 pm. Type 'quit' to safely quit the program.
               Type 'options' to get more options.'''
@@ -38,7 +38,9 @@ quitting = '''I told the Artificial Primary Investigator (API) to quit. I'll tel
 done_quitting = '''The API has quit. I have quit too.'''
 def main():
     print time.asctime() + starting
-    #Starts the API here, probably by starting an Automator, which will then be halted by API,
+    t1 = multiprocesssing.Process( target = api.main )
+    t1.run()
+    #Starts the API here, using multi-processing
     #so human_friendly will be free to continue
     response = ""
     while True:
@@ -56,10 +58,11 @@ def main():
         elif response = 'quit':
             break
         else:
-            #Contact API with the message
-    #Contact API and tell it to quit
+            #Contact API with the message  ***
+    #Contact API and tell it to quit ***
     print time.asctime() + quitting
-    #Keep checking the file until the API quits
+    #Wait until the API quits
+    t1.join()
     print time.asctime() + done_quitting
 def formatted( command ):
     '''Detects whether command is acceptable.'''
