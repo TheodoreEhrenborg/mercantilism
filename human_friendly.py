@@ -38,10 +38,32 @@ quitting = '''I told the Artificial Primary Investigator (API) to quit. I'll tel
 done_quitting = '''The API has quit. I have quit too.'''
 def main():
     print time.asctime() + starting
+    #Start the API here
     response = ""
-    while response != "quit":
-        pass
+    while True:
+        print normal
+        response_OK = False
+        while not response_OK:
+            response = raw_input().lower()
+            if formatted( response ):
+                response_OK = True
+            else:
+                print error
+        #Do something based on the response
+    
     print time.asctime() + quitting
     #Contact API and tell it to quit
     print time.asctime() + done_quitting
-  
+def formatted( command ):
+    '''Detects whether command is acceptable.'''
+    new = command.split()
+    if len(new) == 1:
+        return new[0] in ['quit','options','adjourn','reload']
+    elif len(new) == 3:
+        return new[0] in ['reset']
+    elif len(new) == 2:
+        return new[0] in ['confidence', 'min_trials', 'max_trials', 'min_time', 'max_time']
+    else:
+        return False
+        
+    
