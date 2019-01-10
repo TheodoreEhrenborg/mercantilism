@@ -2,7 +2,11 @@
 (API). It only run programs at night to keep CPU speed constant.
 It keeps the main log and decides which algorithms to test 
 against each other.'''
+import time
 previous_command_time = 0
+should_quit = False
+should_adjourn = False
+should_reload = False
 list_of_algorithms = []
 def get_time(line):
     '''Returns the number before the first ':' '''
@@ -27,13 +31,41 @@ def get_new_commands():
     return result
 def execute_commands():
     '''Looks for commands and executes them.
-    If a command is quit or adjourn,
-    API executes the other commands first, and
-    then does the highest priority command, where 
-    quit > ***
+    If a command is quit, adjourn, or reload,
+    this method executes the other commands first, and
+    then ends. The caller has to deal with quit, adjourn,
+    or reload.'''
     commands = get_new_commands()
     f = open("api.log","a")
     highest_priority = None
     for i in commands:
         f.write( time.asctime() + ": " + "Got command \'" + i + "\'" )
-        if i = ***
+        if i = 'quit':
+            should_quit = True
+        elif i = 'adjourn':
+            should_adjourn = True
+        elif i = 'reload':
+            should_reload = True
+        elif i = 
+        else:
+            f.write( time.asctime() + ": " + "Could not understand command!" )
+            
+def main():
+    #I need a way to run this during daytime.***
+    while not should_quit:
+        execute_commands()
+        if ( not should_quit ) and ( not should_adjourn ):
+            #Read the log and update the algorithm list and priorities
+        execute_commands()
+        if ( not should_quit ) and ( not should_adjourn ) and ( not should_reload ) :
+            #Choose a comparison and do it. Repeat. Check for commands every 5 min
+        if ( not should_quit ) and ( should_adjourn ):
+            f = open("api.log","a")
+            f.write( time.asctime() + ": " + "Adjourning" )
+            f.close()
+            adjourn()
+def adjourn():
+    while should_adjourn:
+        time.sleep( 300 )
+        execute_commands()
+    
