@@ -72,6 +72,8 @@ def main():
     print time.asctime() + ": " + done_quitting
 def formatted( command ):
     '''Detects whether command is acceptable.'''
+    if 'official' in command:
+      return False
     new = command.split()
     if len(new) == 1:
         return new[0] in ['quit','options','adjourn','reload']
