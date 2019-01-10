@@ -3,6 +3,7 @@
 It keeps the main log and decides which algorithms to test 
 against each other.'''
 previous_command_time = 0
+list_of_algorithms = []
 def get_time(line):
     '''Returns the number before the first ':' '''
     i = line.index(':')
@@ -25,8 +26,14 @@ def get_new_commands():
             previous_command_time = t
     return result
 def execute_commands():
+    '''Looks for commands and executes them.
+    If a command is quit or adjourn,
+    API executes the other commands first, and
+    then does the highest priority command, where 
+    quit > ***
     commands = get_new_commands()
     f = open("api.log","a")
+    highest_priority = None
     for i in commands:
         f.write( time.asctime() + ": " + "Got command \'" + i + "\'" )
-    
+        if i = ***
