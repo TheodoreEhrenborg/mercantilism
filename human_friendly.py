@@ -16,7 +16,16 @@ options = '''Type 'quit' to safely quit the program.
               Type 'reset all algorithm_name' to get the API to reset all the trials where algorithm_name was
                   tested to see if it is ES against all other algorithms.
               Type 'reset all all' to get the API to reset ALL the trials. This is reversible, but you have to 
-                  know how API thinks. Be careful.'''
+                  know how API thinks. Be careful.
+              Type 'confidence value' to tell the API to reload and conduct trials aiming for confidence value.
+                  You can set value to be anywhere in (0,1), but you probably want to choose 0.99 or 0.95, which 
+                  means that the API tries to become 99% sure that a strategy is (or isn't) ES against another.
+              Type 'maximum value' to tell the API the maximum number of trials it can run where one 
+                  algorithm is testing for being ES against another. max_trials overrides 
+                  any consideration of confidence.
+              Type 'minumum value' to tell the API the minimum number of trials it must run where one
+                  algorithm is testing for being ES against another. min_trials overrides 
+                  any consideration of confidence.'''
 error = '''Sorry, I did not recognize that command. Are you sure you typed it correctly?'''
 starting = '''Starting the Artificial Primary Investigator (API)'''
 quitting = '''I told the Artificial Primary Investigator (API) to quit. I'll tell you when it has quit.'''
