@@ -31,7 +31,7 @@ class API:
                 previous_command_time = t
        return result
     def execute_commands(self):
-        '''Looks for commands and executes them.
+        '''Looks for commands and executes them -- puts them on the log.
         If a command is quit, adjourn, or reload,
         this method executes the other commands first, and
         then ends. The caller has to deal with quit, adjourn,
@@ -41,18 +41,35 @@ class API:
         f = open("api.log","a")
         highest_priority = None
         for i in commands:
-            f.write( time.asctime() + ": " + "Got command \'" + i + "\'" )
+            f.write( time.asctime() + ": " + "Got command \'" + i + "\'" + "\n" )
             if i = 'quit':
-                should_quit = True
+                self.should_quit = True
             elif i = 'adjourn':
-                should_adjourn = True
+                self.should_adjourn = True
             elif time.localtime()[3] >= 14 and time.localtime()[4] >= 30:
-                should_reload = True
+                self.should_reload = True
             elif i = 'reload':
-                should_reload = True
-            elif i = 
+                self.should_reload = True
+            elif 'reset' in i:
+                f.write( time.asctime() + ": Official R" + i[1:] + "\n" ) 
+                self.should_reload = True
+            elif 'confidence' in i and 'current' not in i:
+                f.write( time.asctime() + ": Official C" + i[1:] + "\n" )
+                self.should_reload = True
+            elif 'max_trials' in i:
+                f.write( time.asctime() + ": Official M" + i[1:] + "\n" )
+                self.should_reload = True
+            elif 'min_trials' in i:
+                f.write( time.asctime() + ": Official M" + i[1:] + "\n" )
+                self.should_reload = True
+            elif 'max_time' in i:
+                f.write( time.asctime() + ": Official M" + i[1:] + "\n" )
+                self.should_reload = True
+            elif 'min_time' in i:
+                f.write( time.asctime() + ": Official M" + i[1:] + "\n" )
+                self.should_reload = True
             else:
-                f.write( time.asctime() + ": " + "Could not understand command!" )            
+                f.write( time.asctime() + ": " + "Could not understand command!" + "\n" )            
     def run(self):
         #I need a way to run this during daytime.***
         self.previous_command_time = 0
@@ -72,16 +89,16 @@ class API:
                 raise Exception("It seems that the previous session of API did not quit!")
         catch IOError:
             pass
-        while not should_quit:
+        while not self.should_quit:
             self.execute_commands()
-            if ( not should_quit ) and ( not should_adjourn ):
+            if ( not self.should_quit ) and ( not self.should_adjourn ):
                 #Read the log and update the algorithm list and priorities
                 self.use_log()
-            should_reload = False
+            self.should_reload = False
             self.execute_commands()
-            if ( not should_quit ) and ( not should_adjourn ) and ( not should_reload ) :
+            if ( not self.should_quit ) and ( not self.should_adjourn ) and ( not self.should_reload ) :
                 #Choose a comparison and do it. Repeat. Check for commands every 5 min
-            if ( not should_quit ) and ( should_adjourn ):
+            if ( not self.should_quit ) and ( self.should_adjourn ):
                 self.adjourn()
         f = open("api.log","a")
         f.write( time.asctime() + ": " + "Official: Quitting" )
@@ -90,12 +107,11 @@ class API:
         f = open("api.log","a")
         f.write( time.asctime() + ": " + "Adjourning" )
         f.close()
-        while should_adjourn:
+        while self.should_adjourn:
             time.sleep( 300 )
             self.execute_commands()
-    def search(self):
-        '''I don't know if this method is complete. ***
-        Checks whether a CPU-intensive process is running.'''
+    def check_for_proceses(self):
+        '''Checks whether a CPU-intensive process is running.'''
         import os
         os.system("top -stats command -l 1 > top-output.txt")#Write the activity monitor to a file    
         f=open("top-output.txt","r")
@@ -105,10 +121,11 @@ class API:
                 process_active = True
                 break	       	 
         f.close()
+        return process_active
     def use_log(self):
         list_algorithms = inspect.getmembers( algorithms, inspect.ismethod)
         #***Make sure we can only get algorithms without aux_ in __name__
-        f = open("api.log","a")
+        f = open("api.log","r")
         lines = f.readlines()
         f.close()
         lines = lines.reverse()
@@ -132,11 +149,13 @@ class API:
             if "Official: Max_trials: " in line:
                 self.confidence = int( line.partition("Official: Max_trials: ")[2] )
                 break
+        self.comparsions = {}
         for a in list_algorithms:
             for b in list_algorithms:
                 DEFAULT = 0.5
                 current_confidence = DEFAULT
                 key = "Official: Current Confidence: " + str(a) + " " + str(b) + " "
+                found = False
                 for line in lines:
                     if "Official: Reset " + str(a) + " " + str(b) in line:
                         break
@@ -148,6 +167,10 @@ class API:
                         break
                     if key in line:
                         current_confidence = float( line.partition(key)[2] )
+                        found = True
                         break
                 self.comparisons[ (a,b) ] = current_confidence 
-                    
+                if not found:
+                    f = open("api.log","a")
+                    f.write( time.asctime() + ": " + key + str(current_confidence) + "\n" )
+                    f.close()
