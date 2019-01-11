@@ -68,4 +68,15 @@ def adjourn():
     while should_adjourn:
         time.sleep( 300 )
         execute_commands()
-    
+def search():
+    '''I don't know if this method is complete. ***
+    Checks whether a CPU-intensive process is running.'''
+    import os
+    os.system("top -stats command -l 1 > top-output.txt")#Write the activity monitor to a file    
+    f=open("top-output.txt","r")
+    process_active = False
+    for line in f:
+        if ('firefox' in line) or ('Google Chrome' in line) or ('Safari' in line and 'SafariCloudHisto' not in line and 'com.apple.Safari' not in line and 'SafariBook' not in line) or ('mprime' in line) or ('Mathematica' in line):
+            process_active = True
+            break	       	 
+    f.close()
