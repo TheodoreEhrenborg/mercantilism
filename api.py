@@ -76,6 +76,7 @@ class API:
             self.execute_commands()
             if ( not should_quit ) and ( not should_adjourn ):
                 #Read the log and update the algorithm list and priorities
+                self.use_log()
             should_reload = False
             self.execute_commands()
             if ( not should_quit ) and ( not should_adjourn ) and ( not should_reload ) :
@@ -105,7 +106,7 @@ class API:
                 break	       	 
         f.close()
     def use_log(self):
-        algorithms = inspect.getmembers( algorithms, inspect.ismethod)
+        list_algorithms = inspect.getmembers( algorithms, inspect.ismethod)
         #***Make sure we can only get algorithms without aux_ in __name__
         f = open("api.log","a")
         lines = f.readlines()
@@ -117,17 +118,36 @@ class API:
                 break
         for line in lines:
             if "Official: Min_time: " in line:
-                self.confidence = float( line.partition("Official: Min_time: ")[2] )
+                self.confidence = int( line.partition("Official: Min_time: ")[2] )
                 break
         for line in lines:
             if "Official: Max_time: " in line:
-                self.confidence = float( line.partition("Official: Max_time: ")[2] )
+                self.confidence = int( line.partition("Official: Max_time: ")[2] )
                 break
         for line in lines:
             if "Official: Min_trials: " in line:
-                self.confidence = float( line.partition("Official: Min_trials: ")[2] )
+                self.confidence = int( line.partition("Official: Min_trials: ")[2] )
                 break
         for line in lines:
             if "Official: Max_trials: " in line:
-                self.confidence = float( line.partition("Official: Max_trials: ")[2] )
+                self.confidence = int( line.partition("Official: Max_trials: ")[2] )
                 break
+        for a in list_algorithms:
+            for b in list_algorithms:
+                DEFAULT = 0.5
+                current_confidence = DEFAULT
+                key = "Official: Current Confidence: " + str(a) + " " + str(b) + " "
+                for line in lines:
+                    if "Official: Reset " + str(a) + " " + str(b) in line:
+                        break
+                    if "Official: Reset " + str(a) + " " + "all" in line:
+                        break
+                    if "Official: Reset " + "all" + " " + str(b) in line:
+                        break
+                    if "Official: Reset " + "all" + " " + "all" in line:
+                        break
+                    if key in line:
+                        current_confidence = float( line.partition(key)[2] )
+                        break
+                self.comparisons[ (a,b) ] = current_confidence 
+                    
