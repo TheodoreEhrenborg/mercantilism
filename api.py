@@ -6,12 +6,9 @@ def main():
     the_api = API()
     the_api.run()
 class API:
-    import time
+    import time, algorithms, inspect
     def __init__(self):
-        self.previous_command_time = 0
-        self.should_quit = False
-        self.should_adjourn = False
-        self.should_reload = False
+        pass
     def get_time(self,line):
         '''Returns the number before the first ':' '''
         i = line.index(':')
@@ -39,6 +36,7 @@ class API:
         this method executes the other commands first, and
         then ends. The caller has to deal with quit, adjourn,
         or reload.'''
+        self.should_adjourn = False
         commands = self.get_new_commands()
         f = open("api.log","a")
         highest_priority = None
@@ -48,6 +46,8 @@ class API:
                 should_quit = True
             elif i = 'adjourn':
                 should_adjourn = True
+            elif time.localtime()[3] >= 14 and time.localtime()[4] >= 30:
+                should_reload = True
             elif i = 'reload':
                 should_reload = True
             elif i = 
@@ -55,6 +55,15 @@ class API:
                 f.write( time.asctime() + ": " + "Could not understand command!" )            
     def run(self):
         #I need a way to run this during daytime.***
+        self.previous_command_time = 0
+        self.should_quit = False
+        self.should_adjourn = False
+        self.should_reload = False
+        self.confidence = 0.99
+        self.max_time = 300 * 100
+        self.min_time = 30
+        self.max_trials = 100
+        self.min_trials = 5
         try:
             f.open("api.log","r")
             l = f.readlines()
@@ -67,18 +76,19 @@ class API:
             self.execute_commands()
             if ( not should_quit ) and ( not should_adjourn ):
                 #Read the log and update the algorithm list and priorities
+            should_reload = False
             self.execute_commands()
             if ( not should_quit ) and ( not should_adjourn ) and ( not should_reload ) :
                 #Choose a comparison and do it. Repeat. Check for commands every 5 min
             if ( not should_quit ) and ( should_adjourn ):
-                f = open("api.log","a")
-                f.write( time.asctime() + ": " + "Adjourning" )
-                f.close()
                 self.adjourn()
         f = open("api.log","a")
         f.write( time.asctime() + ": " + "Official: Quitting" )
         f.close()
     def adjourn(self):
+        f = open("api.log","a")
+        f.write( time.asctime() + ": " + "Adjourning" )
+        f.close()
         while should_adjourn:
             time.sleep( 300 )
             self.execute_commands()
@@ -94,3 +104,30 @@ class API:
                 process_active = True
                 break	       	 
         f.close()
+    def use_log(self):
+        algorithms = inspect.getmembers( algorithms, inspect.ismethod)
+        #***Make sure we can only get algorithms without aux_ in __name__
+        f = open("api.log","a")
+        lines = f.readlines()
+        f.close()
+        lines = lines.reverse()
+        for line in lines:
+            if "Official: Confidence: " in line:
+                self.confidence = float( line.partition("Official: Confidence: ")[2] )
+                break
+        for line in lines:
+            if "Official: Min_time: " in line:
+                self.confidence = float( line.partition("Official: Min_time: ")[2] )
+                break
+        for line in lines:
+            if "Official: Max_time: " in line:
+                self.confidence = float( line.partition("Official: Max_time: ")[2] )
+                break
+        for line in lines:
+            if "Official: Min_trials: " in line:
+                self.confidence = float( line.partition("Official: Min_trials: ")[2] )
+                break
+        for line in lines:
+            if "Official: Max_trials: " in line:
+                self.confidence = float( line.partition("Official: Max_trials: ")[2] )
+                break
