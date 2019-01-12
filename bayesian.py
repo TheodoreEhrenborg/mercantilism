@@ -1,3 +1,4 @@
+'''Calculates the probability/significance'''
 def main(game_results, trials = 1e6):
     #import Monte Carlo integration algorithm from scikit-monaco library
     from skmonaco import mcquad
