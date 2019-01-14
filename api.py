@@ -186,5 +186,38 @@ class API:
         for current_pair in self.comparisons.keys():
             if self.comparisons[current_pair] == closest:
                 break
+        #Now that we have a current_pair, we check the probability
+        self.check_probability(current_pair)
         
+    def check_probablility(self, algorithm_tuple):
+        f = open("api.log","r")
+        lines = f.readlines()
+        f.close()
+        lines = lines.reverse()
+        a, b = algorithm_tuple
+        DEFAULT = 0.5
+        current_confidence = DEFAULT
+        to_write = "Official: Current Confidence: " + str(a) + " " + str(b) + " "
+        key = "Official: Game where " + str(a) + " is invaded by " + str(b) + "."
+        found = False
+        for line in lines:
+            if "Official: Reset " + str(a) + " " + str(b) in line:
+                break
+            if "Official: Reset " + str(a) + " " + "all" in line:
+                break
+            if "Official: Reset " + "all" + " " + str(b) in line:
+                break
+            if "Official: Reset " + "all" + " " + "all" in line:
+                break
+            if key in line:
+                current_game_tuple = eval( line.partition(key)[2] )
+                invader_score = current_game_tuple[ self.NUM_PLAYERS - 1 ]
+                #*** Wait. Do I keep the invader_score or the type of score (win, loss, tie, etc.?)
+                found = True
+                break
+        self.comparisons[ (a,b) ] = current_confidence 
+        if not found:
+            f = open("api.log","a")
+            f.write( time.asctime() + ": " + to_write + str(current_confidence) + "\n" )
+            f.close()
         
