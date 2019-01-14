@@ -6,7 +6,7 @@ def main():
     the_api = API()
     the_api.run()
 class API:
-    import time, algorithms, inspect
+    import time, algorithms, inspect, bayseian
     def __init__(self):
         pass
     def get_time(self,line):
@@ -72,6 +72,7 @@ class API:
                 f.write( time.asctime() + ": " + "Could not understand command!" + "\n" )            
     def run(self):
         #I need a way to run this during daytime.***
+        self.NUM_PLAYERS = 5
         self.previous_command_time = 0
         self.should_quit = False
         self.should_adjourn = False
@@ -98,6 +99,7 @@ class API:
             self.execute_commands()
             if ( not self.should_quit ) and ( not self.should_adjourn ) and ( not self.should_reload ) :
                 #Choose a comparison and do it. Repeat. Check for commands every 5 min
+                self.do_comparisons()
             if ( not self.should_quit ) and ( self.should_adjourn ):
                 self.adjourn()
         f = open("api.log","a")
@@ -174,3 +176,15 @@ class API:
                     f = open("api.log","a")
                     f.write( time.asctime() + ": " + key + str(current_confidence) + "\n" )
                     f.close()
+    def do_comparisons(self):
+        '''Choose a comparison and do it. Repeat. Check for commands every 5 min'''
+        most_recent_check = time.time()
+        closest = 0
+        for x in self.comparisons.values():
+            if abs( x - 0.5) < abs(closest - 0.5):
+                closest = x
+        for current_pair in self.comparisons.keys():
+            if self.comparisons[current_pair] == closest:
+                break
+        
+        
