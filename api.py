@@ -82,6 +82,7 @@ class API:
         self.min_time = 30
         self.max_trials = 100
         self.min_trials = 5
+        self.DEFAULT = 0.5
         try:
             f.open("api.log","r")
             l = f.readlines()
@@ -154,8 +155,7 @@ class API:
         self.comparsions = {}
         for a in list_algorithms:
             for b in list_algorithms:
-                DEFAULT = 0.5
-                current_confidence = DEFAULT
+                current_confidence = self.DEFAULT
                 key = "Official: Current Confidence: " + str(a) + " " + str(b) + " "
                 found = False
                 for line in lines:
@@ -171,7 +171,7 @@ class API:
                         current_confidence = float( line.partition(key)[2] )
                         found = True
                         break
-                self.comparisons[ (a,b) ] = current_confidence 
+                self.comparisons[ (a,b) ] = (current_confidence, 0, 0)#(confidence, num_trials, total_time) 
                 if not found:
                     f = open("api.log","a")
                     f.write( time.asctime() + ": " + key + str(current_confidence) + "\n" )
@@ -181,25 +181,39 @@ class API:
         most_recent_check = time.time()
         closest = 0
         for x in self.comparisons.values():
-            if abs( x - 0.5) < abs(closest - 0.5):
-                closest = x
+            if abs( x[0] - 0.5) < abs(closest - 0.5):
+                closest = x[0]
         for current_pair in self.comparisons.keys():
-            if self.comparisons[current_pair] == closest:
+            if self.comparisons[current_pair][0] == closest:
                 break
         #Now that we have a current_pair, we check the probability
+        fixed, invader = current_pair
         self.check_probability(current_pair)
-        
+        algorithm_list = []
+        for x in range(self.NUM_PLAYERS-1):
+            algorithm_list.append( fixed )
+        algorithm_list.append( invader )
+        algorithm_tuple = tuple( algorithm_list )
+        g = Game( algorithm_tuple )
+        g.run()
+        if time.time() - most_recent_check > 300:
+            self.execute_commands()
+            #*** Finish check for processes and finish this process
     def check_probablility(self, algorithm_tuple):
         f = open("api.log","r")
         lines = f.readlines()
         f.close()
         lines = lines.reverse()
         a, b = algorithm_tuple
-        DEFAULT = 0.5
-        current_confidence = DEFAULT
+        current_confidence = self.DEFAULT
         to_write = "Official: Current Confidence: " + str(a) + " " + str(b) + " "
         key = "Official: Game where " + str(a) + " is invaded by " + str(b) + "."
         found = False
+        all_game_results = []
+        for x in range(NUM_PLAYERS + 1):
+            all_game_results.append(0)
+        all_game_trials = 0
+        all_game_time = 0
         for line in lines:
             if "Official: Reset " + str(a) + " " + str(b) in line:
                 break
@@ -210,14 +224,22 @@ class API:
             if "Official: Reset " + "all" + " " + "all" in line:
                 break
             if key in line:
-                current_game_tuple = eval( line.partition(key)[2] )
-                invader_score = current_game_tuple[ self.NUM_PLAYERS - 1 ]
-                #*** Wait. Do I keep the invader_score or the type of score (win, loss, tie, etc.?)
-                found = True
-                break
-        self.comparisons[ (a,b) ] = current_confidence 
+                all_game_trials += 1
+                this_game_results = eval( line.partition(key)[2] )
+                all_game_time += this_game_results[1]
+                current_game_tuple = this_game_results[0]
+                invader_score = current_game_tuple[ len(current_game_tuple) - 1 ]
+                #I keep the invader_score the type of score (win, tie, loss)
+                if invader_score = 0:
+                    all_game_results[ len(all_game_results) - 1 ] = all_game_results[ len(all_game_results) - 1 ] + 1
+                else:
+                    inverse = float(self.NUM_PLAYERS)/invader_score
+                    all_game_results[ inverse - 1 ] = all_game_results[ inverse - 1 ] + 1
+        all_game_results = tuple( all_game_results )
+        current_confidence = bayesian.main( all_game_results )
+        self.comparisons[ (a,b) ] = (current_confidence, all_game_trials, all_game_time ) 
         if not found:
             f = open("api.log","a")
             f.write( time.asctime() + ": " + to_write + str(current_confidence) + "\n" )
             f.close()
-        
+            
