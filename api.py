@@ -77,6 +77,7 @@ class API:
     def run(self):
         #I need a way to run this during daytime.***
         self.NUM_PLAYERS = 5
+        self.TOKENS = range(1, 15+1)
         self.previous_command_time = 0
         self.should_quit = False
         self.should_adjourn = False
@@ -203,7 +204,7 @@ class API:
             games = []
             keep_going = True
             while not should_stop:
-                g = Game( algorithm_tuple )
+                g = Game( algorithm_tuple, self.TOKENS )
                 g.run()
                 games.append( g )
                 if time.time() - most_recent_check > 300:
@@ -271,4 +272,15 @@ class API:
             f = open("api.log","a")
             f.write( time.asctime() + ": " + to_write + str(current_confidence) + "\n" )
             f.close()
-            
+class Game:
+    import random, time
+    def __init__(self, algorithms, tokens):
+        self.tokens = list(tokens)
+        self.algorithms = {}
+        for x in algorithms:
+            self.algorithms[x] = 0 #Contains algorithms and the sum of the tokens they won and other things too *** 
+        self.name = str(int( time.time() )) + ":" + str(random.randint(0,10**9)) 
+        
+    def run(self):
+        
+        
