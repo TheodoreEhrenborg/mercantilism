@@ -104,8 +104,9 @@ class API:
             if ( not self.should_quit ) and ( not self.should_adjourn ):
                 #Choose a comparison and do it. Repeat. Check for commands every 5 min
                 self.do_comparisons()
-            if ( not self.should_quit ) and ( self.should_adjourn ):
+            if  ( not self.should_quit ) and ( self.should_adjourn  or self.check_processes() ):
                 self.adjourn()
+        self.execute_commands()
         f = open("api.log","a")
         f.write( time.asctime() + ": " + "Official: Quitting" )
         f.close()
@@ -114,7 +115,7 @@ class API:
         f = open("api.log","a")
         f.write( time.asctime() + ": " + "Adjourning" )
         f.close()
-        while self.should_adjourn and not self.should_quit:
+        while ( not self.should_quit ) and ( self.should_adjourn  or self.check_processes() ):
             time.sleep( 300 )
             self.execute_commands()
     def check_for_proceses(self):
@@ -183,26 +184,50 @@ class API:
     def do_comparisons(self):
         '''Choose a comparison and do it. Repeat. Check for commands every 5 min'''
         most_recent_check = time.time()
-        closest = 0
-        for x in self.comparisons.values():
-            if abs( x[0] - 0.5) < abs(closest - 0.5):
-                closest = x[0]
-        for current_pair in self.comparisons.keys():
-            if self.comparisons[current_pair][0] == closest:
-                break
-        #Now that we have a current_pair, we check the probability
-        fixed, invader = current_pair
-        self.check_probability(current_pair)
-        algorithm_list = []
-        for x in range(self.NUM_PLAYERS-1):
-            algorithm_list.append( fixed )
-        algorithm_list.append( invader )
-        algorithm_tuple = tuple( algorithm_list )
-        g = Game( algorithm_tuple )
-        g.run()
-        if time.time() - most_recent_check > 300:
-            self.execute_commands()
-            #*** Finish check for processes and finish this process
+        while (not self.should_quit) and (not self.should_adjourn) and ( not self.check_processes() ):
+            closest = 0
+            for x in self.comparisons.values():
+                if abs( x[0] - 0.5) < abs(closest - 0.5):
+                    closest = x[0]
+            for current_pair in self.comparisons.keys():
+                if self.comparisons[current_pair][0] == closest:
+                    break
+            #Now that we have a current_pair, we check the probability
+            fixed, invader = current_pair
+            self.check_probability(current_pair)
+            algorithm_list = []
+            for x in range(self.NUM_PLAYERS-1):
+                algorithm_list.append( fixed )
+            algorithm_list.append( invader )
+            algorithm_tuple = tuple( algorithm_list )
+            games = []
+            keep_going = True
+            while not should_stop:
+                g = Game( algorithm_tuple )
+                g.run()
+                games.append( g )
+                if time.time() - most_recent_check > 300:
+                    processes_running = self.check_processes()
+                    if not processes_running:
+                        for g in games
+                            g.write()
+                    games = []
+                    should_stop = processes_running
+                    self.execute_commands()
+                    should_stop = should_stop and self.should_quit and self.should_adjourn
+                    self.check_probability( current_pair )
+                    should_stop = should_stop and self.experimental_conditions(current_pair)
+    def experimental_conditions(self, current_pair):
+        current_confidence, all_game_trials, all_game_time  = self.comparisons[current_pair]
+        if all_game_time < self.min_time:
+            return True
+        if all_game_time > self.max_time:
+            return False
+        if all_game_trials < self.min_trials:
+            return True
+        if all_game_trials > self.max_trials:
+            return False
+        return 1 - self.confidence < current_confidence and current_confidence < self.confidence
     def check_probablility(self, algorithm_tuple):
         f = open("api.log","r")
         lines = f.readlines()
