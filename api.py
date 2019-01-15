@@ -3,8 +3,10 @@
 It keeps the main log and decides which algorithms to test 
 against each other.'''
 def main():
-    the_api = API()
-    the_api.run()
+    should_run = True
+    while should_run:
+        the_api = API()
+        should_run = the_api.run()
 class API:
     import time, algorithms, inspect, bayseian
     def __init__(self):
@@ -47,7 +49,7 @@ class API:
             elif i = 'adjourn':
                 self.should_adjourn = True
             elif time.localtime()[3] >= 14 and time.localtime()[4] >= 30:
-                self.should_reload = True
+                self.should_adjourn = True
             elif i = 'reload':
                 self.should_reload = True
             elif 'reset' in i:
@@ -69,7 +71,9 @@ class API:
                 f.write( time.asctime() + ": Official M" + i[1:] + "\n" )
                 self.should_reload = True
             else:
-                f.write( time.asctime() + ": " + "Could not understand command!" + "\n" )            
+                f.write( time.asctime() + ": " + "Could not understand command!" + "\n" )
+            if self.should_reload:
+                self.should_quit = True
     def run(self):
         #I need a way to run this during daytime.***
         self.NUM_PLAYERS = 5
@@ -91,14 +95,13 @@ class API:
                 raise Exception("It seems that the previous session of API did not quit!")
         catch IOError:
             pass
+        self.execute_commands()
+        if ( not self.should_quit ) and ( not self.should_adjourn ):
+            #Read the log and update the algorithm list and priorities
+            self.use_log()
         while not self.should_quit:
             self.execute_commands()
             if ( not self.should_quit ) and ( not self.should_adjourn ):
-                #Read the log and update the algorithm list and priorities
-                self.use_log()
-            self.should_reload = False
-            self.execute_commands()
-            if ( not self.should_quit ) and ( not self.should_adjourn ) and ( not self.should_reload ) :
                 #Choose a comparison and do it. Repeat. Check for commands every 5 min
                 self.do_comparisons()
             if ( not self.should_quit ) and ( self.should_adjourn ):
@@ -106,11 +109,12 @@ class API:
         f = open("api.log","a")
         f.write( time.asctime() + ": " + "Official: Quitting" )
         f.close()
+        return self.should_reload
     def adjourn(self):
         f = open("api.log","a")
         f.write( time.asctime() + ": " + "Adjourning" )
         f.close()
-        while self.should_adjourn:
+        while self.should_adjourn and not self.should_quit:
             time.sleep( 300 )
             self.execute_commands()
     def check_for_proceses(self):
