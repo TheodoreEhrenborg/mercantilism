@@ -266,7 +266,7 @@ class API:
                 all_game_time += this_game_results[1]
                 current_game_tuple = this_game_results[0]
                 invader_score = current_game_tuple[ len(current_game_tuple) - 1 ]
-                #I keep the invader_score the type of score (win, tie, loss)
+                #I keep the type of score (win, tie, loss)
                 if invader_score = 0:
                     all_game_results[ len(all_game_results) - 1 ] = all_game_results[ len(all_game_results) - 1 ] + 1
                 else:
@@ -292,12 +292,12 @@ class Game:
         #Each element of this list is itself a list containing the algorithm, its current score, and
         #a list (where elements with larger indexes are later) of this algorithm's moves.
         for x in algorithm_tuple:
-            self.algorithm_list.append( [ x, 0, [] ] ) 
+            self.algorithm_list.append( [ x, 0, [] ] )
+        self.algorithm_tuple = algorithm_tuple
         self.name = str(int( time.time() )) + ":" + str(random.randint(0,10**9))
         #Each algorithm receives a list of the tokens left, of everyone's scores,
         #and everyone's prior moves. However, the opponents will be put in a 
         #random order.
-        
         while len(self.tokens) > 1:
             current_moves = []
             for i in range(len(self.algorithm_list)):
@@ -343,7 +343,15 @@ class Game:
                 self.results.append( float( len(self.algorithm_list) ) / count )
             else:
                 self.results.append( 0 )
-                
-                 
-        
+    def write(self):
+        '''Writes the results of the game (both who won and the time) to Results/api.log. '''
+        fixed = True
+        for i in range(len(self.algorithm_tuple)-1):
+            if self.algorithm_tuple[i] != self.algorithm_tuple[i+1]:
+                fixed = False
+        if fixed:
+            key = "Official: Game where " + str(self.algorithm_tuple[0]) + " is invaded by " + str(self.algorithm_tuple[len(self.algorithm_tuple) -1 ] ) + "."
+        else:
+            key = "Official: Game with this player_tuple: " + str(player_tuple) + "."
+            
         
