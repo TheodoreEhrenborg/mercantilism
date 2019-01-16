@@ -8,7 +8,6 @@ def main():
         the_api = API()
         should_run = the_api.run()
 class API:
-    import time, algorithms, inspect, bayseian
     def __init__(self):
         pass
     def get_time(self,line):
@@ -38,6 +37,7 @@ class API:
         this method executes the other commands first, and
         then ends. The caller has to deal with quit, adjourn,
         or reload.'''
+        import time
         self.should_adjourn = False
         commands = self.get_new_commands()
         f = open("api.log","a")
@@ -102,7 +102,7 @@ class API:
             self.use_log()
         while not self.should_quit:
             self.execute_commands()
-            if ( not self.should_quit ) and ( not self.should_adjourn ):
+            if ( not self.should_quit ) and ( not self.should_adjourn ) and (not self.check_processes() ) :
                 #Choose a comparison and do it. Repeat. Check for commands every 5 min
                 self.do_comparisons()
             if  ( not self.should_quit ) and ( self.should_adjourn  or self.check_processes() ):
@@ -113,13 +113,14 @@ class API:
         f.close()
         return self.should_reload
     def adjourn(self):
+        import time
         f = open("api.log","a")
         f.write( time.asctime() + ": " + "Adjourning" )
         f.close()
         while ( not self.should_quit ) and ( self.should_adjourn  or self.check_processes() ):
             time.sleep( 300 )
             self.execute_commands()
-    def check_for_proceses(self):
+    def check_for_processes(self):
         '''Checks whether a CPU-intensive process is running.'''
         import os
         os.system("top -stats command -l 1 > top-output.txt")#Write the activity monitor to a file    
@@ -132,6 +133,7 @@ class API:
         f.close()
         return process_active
     def use_log(self):
+        import time
         list_algorithms = inspect.getmembers( algorithms, inspect.ismethod)
         #***Make sure we can only get algorithms without aux_ in __name__
         f = open("api.log","r")
@@ -184,6 +186,7 @@ class API:
                     f.close()
     def do_comparisons(self):
         '''Choose a comparison and do it. Repeat. Check for commands every 5 min'''
+        import time
         most_recent_check = time.time()
         while (not self.should_quit) and (not self.should_adjourn) and ( not self.check_processes() ):
             closest = 0
@@ -214,6 +217,10 @@ class API:
                             g.write()
                     games = []
                     should_stop = processes_running
+                    if processes_running:
+                        f = open("api.log","a")
+                        f.write( time.asctime() + ": " + "Other CPU-intensive Process Detected" )
+                        f.close()       
                     self.execute_commands()
                     should_stop = should_stop and self.should_quit and self.should_adjourn
                     self.check_probability( current_pair )
@@ -230,6 +237,7 @@ class API:
             return False
         return 1 - self.confidence < current_confidence and current_confidence < self.confidence
     def check_probablility(self, algorithm_tuple):
+        import time, bayesian
         f = open("api.log","r")
         lines = f.readlines()
         f.close()
@@ -276,11 +284,13 @@ class Game:
     import random, time
     def __init__(self, algorithms, tokens):
         self.tokens = list(tokens)
-        self.algorithms = {}
+        self.algorithms = []
+        #Each element of this list is itself a list containing the algorithm, its current score, and
+        #a list (where elements with larger indexes are later) of this algorithm's moves.
         for x in algorithms:
-            self.algorithms[x] = 0 #Contains algorithms and the sum of the tokens they won and other things too *** 
-        self.name = str(int( time.time() )) + ":" + str(random.randint(0,10**9)) 
-        
+            self.algorithms.append( [ x, 0, [] ] ) 
+        self.name = str(int( time.time() )) + ":" + str(random.randint(0,10**9))        
     def run(self):
-        
+        while len(self.tokens) > 1:
+            pass
         
