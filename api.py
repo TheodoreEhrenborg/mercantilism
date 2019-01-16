@@ -186,7 +186,7 @@ class API:
                     f.close()
     def do_comparisons(self):
         '''Choose a comparison and do it. Repeat. Check for commands every 5 min'''
-        import time
+        import time, copy
         most_recent_check = time.time()
         while (not self.should_quit) and (not self.should_adjourn) and ( not self.check_processes() ):
             closest = 0
@@ -207,8 +207,7 @@ class API:
             games = []
             keep_going = True
             while not should_stop:
-                g = Game( algorithm_tuple, self.TOKENS )
-                g.run()
+                g = Game( copy.copy(algorithm_tuple), copy.copy(self.TOKENS) )
                 games.append( g )
                 if time.time() - most_recent_check > 300:
                     processes_running = self.check_processes()
@@ -281,16 +280,70 @@ class API:
             f.write( time.asctime() + ": " + to_write + str(current_confidence) + "\n" )
             f.close()
 class Game:
-    import random, time
-    def __init__(self, algorithms, tokens):
+    def get_results():
+        return tuple( self.results )
+    def __init__(self, algorithm_tuple, tokens):
+        import algorithms, random, collections, copy
+        '''Calculates a list containing the utility points of
+        each player'''
+        #*** This really ought to write its thinking in a log.
         self.tokens = list(tokens)
-        self.algorithms = []
+        self.algorithm_list = []
         #Each element of this list is itself a list containing the algorithm, its current score, and
         #a list (where elements with larger indexes are later) of this algorithm's moves.
-        for x in algorithms:
-            self.algorithms.append( [ x, 0, [] ] ) 
-        self.name = str(int( time.time() )) + ":" + str(random.randint(0,10**9))        
-    def run(self):
+        for x in algorithm_tuple:
+            self.algorithm_list.append( [ x, 0, [] ] ) 
+        self.name = str(int( time.time() )) + ":" + str(random.randint(0,10**9))
+        #Each algorithm receives a list of the tokens left, of everyone's scores,
+        #and everyone's prior moves. However, the opponents will be put in a 
+        #random order.
+        
         while len(self.tokens) > 1:
-            pass
+            current_moves = []
+            for i in range(len(self.algorithm_list)):
+                others = copy.copy(self.algorithm_list)
+                player_list = others.pop(i)
+                random.shuffle( others )
+                data = []
+                data.append( player_list[1:] )
+                for x in others:
+                    data.append( x[1:] )#Does player_tuple[0] call the algorithm? ***
+                current_moves.append( player_list[0]( copy.deepcopy(self.tokens), copy.deepcopy(data) ) )
+            c = Counter(current_moves)
+            for i in range(len(self.algorithm_list)):
+                player_list = self.algorithm_list[i]
+                player_list[2].append(current_moves[i])
+                if c[current_moves[i]] == 1:
+                    player_list[1] += current_moves[i]
+            new = []
+            for x in self.tokens:
+                if x not in current_moves:
+                    new.append(x)
+            self.tokens = new
+        if len(self.tokens) == 1:
+            item = self.tokens.pop(0)
+            for player_list in self.algorithm_list:
+                player_list[2].append( item )
+                if len(self.algorithm_list) == 1:#In the unusual 1-player case, the last token is won
+                    player_list[1] += item
+        max = 0
+        for player_list in self.algorithm_list:
+            score = player_list[1]
+            if max < score:
+                max = score
+        self.results = []
+        count = 0
+        for player_list in self.algorithm_list:
+            score = player_list[1]
+            if max = score:
+                count += 1
+        for player_list in self.algorithm_list:
+            score = player_list[1]
+            if max = score:
+                self.results.append( float( len(self.algorithm_list) ) / count )
+            else:
+                self.results.append( 0 )
+                
+                 
+        
         
