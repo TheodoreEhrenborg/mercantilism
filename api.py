@@ -315,7 +315,7 @@ class Game:
                 f = open( "Results/games.log", "a")
                 f.write( time.asctime() + ": Game " + self.name + ". Calling Player " + str(i) + " which is " + str(player_list[0] )  + "\n" )
                 f.close()
-                this_move = player_list[0]( copy.deepcopy(self.tokens), copy.deepcopy(data) )
+                this_move = player_list[0]( copy.deepcopy(self.tokens), copy.deepcopy(data), self.name )
                 current_moves.append( this_move )
                 f = open( "Results/games.log", "a")
                 f.write( time.asctime() + ": Game " + self.name + ". Player " + str(i) + " responds " + str(this_move )  + "\n" )
