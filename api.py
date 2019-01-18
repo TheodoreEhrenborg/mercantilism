@@ -40,7 +40,7 @@ class API:
         import time
         self.should_adjourn = False
         commands = self.get_new_commands()
-        f = open("api.log","a")
+        f = open("Results/api.log","a")
         highest_priority = None
         for i in commands:
             f.write( time.asctime() + ": " + "Got command \'" + i + "\'" + "\n" )
@@ -89,7 +89,7 @@ class API:
         self.min_trials = 5
         self.DEFAULT = 0.5
         try:
-            f.open("api.log","r")
+            f.open("Results/api.log","r")
             l = f.readlines()
             f.close()
             if "Official: Quitting" not in l[ len(l) - 1 ]:
@@ -108,13 +108,13 @@ class API:
             if  ( not self.should_quit ) and ( self.should_adjourn  or self.check_processes() ):
                 self.adjourn()
         self.execute_commands()
-        f = open("api.log","a")
+        f = open("Results/api.log","a")
         f.write( time.asctime() + ": " + "Official: Quitting" )
         f.close()
         return self.should_reload
     def adjourn(self):
         import time
-        f = open("api.log","a")
+        f = open("Results/api.log","a")
         f.write( time.asctime() + ": " + "Adjourning" )
         f.close()
         while ( not self.should_quit ) and ( self.should_adjourn  or self.check_processes() ):
@@ -136,7 +136,7 @@ class API:
         import time
         list_algorithms = inspect.getmembers( algorithms, inspect.ismethod)
         #***Make sure we can only get algorithms without aux_ in __name__
-        f = open("api.log","r")
+        f = open("Results/api.log","r")
         lines = f.readlines()
         f.close()
         lines = lines.reverse()
@@ -181,7 +181,7 @@ class API:
                         break
                 self.comparisons[ (a,b) ] = (current_confidence, 0, 0)#(confidence, num_trials, total_time) 
                 if not found:
-                    f = open("api.log","a")
+                    f = open("Results/api.log","a")
                     f.write( time.asctime() + ": " + key + str(current_confidence) + "\n" )
                     f.close()
     def do_comparisons(self):
@@ -217,7 +217,7 @@ class API:
                     games = []
                     should_stop = processes_running
                     if processes_running:
-                        f = open("api.log","a")
+                        f = open("Results/api.log","a")
                         f.write( time.asctime() + ": " + "Other CPU-intensive Process Detected" )
                         f.close()       
                     self.execute_commands()
@@ -237,7 +237,7 @@ class API:
         return 1 - self.confidence < current_confidence and current_confidence < self.confidence
     def check_probablility(self, algorithm_tuple):
         import time, bayesian
-        f = open("api.log","r")
+        f = open("Results/api.log","r")
         lines = f.readlines()
         f.close()
         lines = lines.reverse()
@@ -276,17 +276,18 @@ class API:
         current_confidence = bayesian.main( all_game_results )
         self.comparisons[ (a,b) ] = (current_confidence, all_game_trials, all_game_time ) 
         if not found:
-            f = open("api.log","a")
+            f = open("Results/api.log","a")
             f.write( time.asctime() + ": " + to_write + str(current_confidence) + "\n" )
             f.close()
 class Game:
     def get_results():
         return tuple( self.results )
     def __init__(self, algorithm_tuple, tokens):
-        import algorithms, random, collections, copy
+        import algorithms, random, collections, copy, time
         '''Calculates a list containing the utility points of
         each player'''
         #*** This really ought to write its thinking in a log.
+        start_time = time.time()
         self.tokens = list(tokens)
         self.algorithm_list = []
         #Each element of this list is itself a list containing the algorithm, its current score, and
@@ -298,6 +299,9 @@ class Game:
         #Each algorithm receives a list of the tokens left, of everyone's scores,
         #and everyone's prior moves. However, the opponents will be put in a 
         #random order.
+        f = open( "Results/games.log", "a")
+        f.write( time.asctime() + ": Game " + self.name + ". The tokens are " + str(self.tokens) + ". The players are " + str( self.algorithm_tuple ) + "\n" )
+        f.close()
         while len(self.tokens) > 1:
             current_moves = []
             for i in range(len(self.algorithm_list)):
@@ -308,7 +312,14 @@ class Game:
                 data.append( player_list[1:] )
                 for x in others:
                     data.append( x[1:] )#Does player_tuple[0] call the algorithm? ***
-                current_moves.append( player_list[0]( copy.deepcopy(self.tokens), copy.deepcopy(data) ) )
+                f = open( "Results/games.log", "a")
+                f.write( time.asctime() + ": Game " + self.name + ". Calling Player " + str(i) + " which is " + str(player_list[0] )  + "\n" )
+                f.close()
+                this_move = player_list[0]( copy.deepcopy(self.tokens), copy.deepcopy(data) )
+                current_moves.append( this_move )
+                f = open( "Results/games.log", "a")
+                f.write( time.asctime() + ": Game " + self.name + ". Player " + str(i) + " responds " + str(this_move )  + "\n" )
+                f.close()
             c = Counter(current_moves)
             for i in range(len(self.algorithm_list)):
                 player_list = self.algorithm_list[i]
@@ -320,12 +331,28 @@ class Game:
                 if x not in current_moves:
                     new.append(x)
             self.tokens = new
+            temp_scores = []
+            for x in self.algorithm_list:
+                temp_scores.append( x[1] )
+            f = open( "Results/games.log", "a")
+            f.write( time.asctime() + ": Game " + self.name + ". The tokens are " + str(self.tokens) + ". The intermediate scores are " + str(temp_scores)  + "\n" )
+            f.close()
         if len(self.tokens) == 1:
             item = self.tokens.pop(0)
+            i = 0
             for player_list in self.algorithm_list:
+                i += 1
                 player_list[2].append( item )
+                f = open( "Results/games.log", "a")
+                f.write( time.asctime() + ": Game " + self.name + ". Player " + str(i) + " (having one move left) gets " + str(item)  + "\n" )
+                f.close()
                 if len(self.algorithm_list) == 1:#In the unusual 1-player case, the last token is won
                     player_list[1] += item
+        for x in self.algorithm_list:
+                temp_scores.append( x[1] )
+        f = open( "Results/games.log", "a")
+        f.write( time.asctime() + ": Game " + self.name + ". The tokens are " + str(self.tokens) + ". The intermediate scores are " + str(temp_scores)  + "\n" )
+        f.close()
         max = 0
         for player_list in self.algorithm_list:
             score = player_list[1]
@@ -343,15 +370,26 @@ class Game:
                 self.results.append( float( len(self.algorithm_list) ) / count )
             else:
                 self.results.append( 0 )
-    def write(self):
-        '''Writes the results of the game (both who won and the time) to Results/api.log. '''
+        self.duration = time.time() - self.start_time
         fixed = True
         for i in range(len(self.algorithm_tuple)-1):
             if self.algorithm_tuple[i] != self.algorithm_tuple[i+1]:
                 fixed = False
+        to_write = "Official: "
         if fixed:
-            key = "Official: Game where " + str(self.algorithm_tuple[0]) + " is invaded by " + str(self.algorithm_tuple[len(self.algorithm_tuple) -1 ] ) + "."
-        else:
-            key = "Official: Game with this player_tuple: " + str(player_tuple) + "."
-            
+            to_write += "Game where " + str(self.algorithm_tuple[0]) + " is invaded by " + str(self.algorithm_tuple[len(self.algorithm_tuple) -1 ] ) + ".\n\t"
+        to_write += "The game had this player_tuple: " + str(self.algorithm_tuple) + ".\n\t"
+        to_write += "Here is the score_tuple: " + str(self.results) + "\n\t"
+        to_write += "This game's name is " + self.name + "\n\t"
+        to_write += "This game took " + str( self.duration ) + " seconds.\n"
+        self.to_write = to_write
+        f = open( "Results/games.log", "a")
+        f.write( time.asctime() + ": " + self.to_write )
+        f.close()
+    def write(self):
+        '''Writes the results of the game (both who won and the time) to Results/api.log. '''
+        import time
+        f = open( "Results/api.log", "a")
+        f.write( time.asctime() + ": " + self.to_write )
+        f.close()
         
