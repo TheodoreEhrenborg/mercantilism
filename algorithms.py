@@ -4,7 +4,7 @@ def play_highest(tokens, data, game_name):
     '''Plays the highest token left.'''
     import time
     f = open("Results/play_highest.log","a")
-    f.write(time.asctime() + ": Got message from Game " + game_name + ". Tokens received " + str(tokens) + ". Data received " + str(data)." + "\n")
+    f.write(time.asctime() + ": Got message from Game " + game_name + ". Tokens received " + str(tokens) + ". Data received " + str(data) + ". \n")
     choice = max( tokens )
     f.write(time.asctime() + ": Chose " + str(choice) + "\n")
     f.close()
@@ -13,7 +13,7 @@ def uniform(tokens, data, game_name):
     '''Plays a token randomly, chosen based on a uniform distribution.'''
     import time, random
     f = open("Results/uniform.log","a")
-    f.write(time.asctime() + ": Got message from Game " + game_name + ". Tokens received " + str(tokens) + ". Data received " + str(data)." + "\n")
+    f.write(time.asctime() + ": Got message from Game " + game_name + ". Tokens received " + str(tokens) + ". Data received " + str(data) + ". \n")
     choice = random.choice( tokens )
     f.write(time.asctime() + ": Chose " + str(choice) + "\n")
     f.close()

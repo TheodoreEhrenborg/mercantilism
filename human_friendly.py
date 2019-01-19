@@ -1,7 +1,6 @@
 '''This module manages the interaction with the user and
 sends the user's commands to a file read by the artificial
 primary investigator.'''
-import time, api, multiprocessing
 normal = '''The computer is currently running Theodore's AP Research project
               between midnight and 2:30 pm. Type 'quit' to safely quit the program.
               Type 'options' to get more options.'''
@@ -36,10 +35,22 @@ error = '''Sorry, I did not recognize that command. Are you sure you typed it co
 starting = '''Starting the Artificial Primary Investigator (API)'''
 quitting = '''I told the Artificial Primary Investigator (API) to quit. I'll tell you when it has quit.'''
 done_quitting = '''The API has quit. I have quit too.'''
-def main():
+work_during_day = '''WARNING: The API is set up to always work, which could affect the results
+                         Only proceed if you are testing the program, and please reset everything
+                         afterwards.'''
+def main(daytime_run = False):
+    import time, api, multiprocessing, os
+    reload(api)
+    try:
+        f = open("Results/human_friendly_to_api.txt","a")
+        f.close()
+    except IOError:
+        os.system("mkdir Results")
     print time.asctime() + ": " + starting
-    t1 = multiprocesssing.Process( target = api.main )
-    t1.run()
+    if daytime_run:
+        print time.asctime() + ": " + work_during_day
+    t1 = multiprocessing.Process( target = api.main, args = [daytime_run] )
+    t1.start()
     #Starts the API here, using multi-processing
     #so human_friendly will be free to continue
     response = ""
@@ -53,9 +64,9 @@ def main():
             else:
                 print time.asctime() + ": " + error
         #Do something based on the response
-        if response = 'options':
+        if response == 'options':
             print time.asctime() + ": " + options
-        elif response = 'quit':
+        elif response == 'quit':
             break
         else:
             #Contact API with the message
@@ -64,7 +75,7 @@ def main():
             f.close()      
     #Contact API and tell it to quit
     f = open("Results/human_friendly_to_api.txt","a")
-    f.write( str( time.time() ) + ":" response + '\n' )
+    f.write( str( time.time() ) + ":" + response + '\n' )
     f.close()
     print time.asctime() + ": " + quitting
     #Wait until the API quits

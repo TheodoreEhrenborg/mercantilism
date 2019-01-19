@@ -2,11 +2,11 @@
 (API). It only run programs at night to keep CPU speed constant.
 It keeps the main log and decides which algorithms to test 
 against each other.'''
-def main():
+def main(daytime_run = False):
     should_run = True
     while should_run:
         the_api = API()
-        should_run = the_api.run()
+        should_run = the_api.run(daytime_run)
 class API:
     def __init__(self):
         pass
@@ -15,22 +15,25 @@ class API:
         i = line.index(':')
         return float(line[0:i])
     def get_command(self,line):
-        '''Returns the string after the first ':' '''
+        '''Returns the string after the first ':' and before the newline'''
         i = line.index(':')
-        return line[i+1:]
+        return line[i+1:-1]
     def get_new_commands(self):
         ''' Looks in the appropriate file and returns a list
         of the new commands from human_friendly '''
-        f = open("Results/human_friendly_to_api.txt", "r")
-        lines = f.readlines()
-        f.close()
+        try:
+            f = open("Results/human_friendly_to_api.txt", "r")
+            lines = f.readlines()
+            f.close()
+        except IOError:
+            lines = []
         result = []
         for line in lines:
             t = self.get_time( line )
-            if t > previous_command_time:
+            if t > self.previous_command_time:
                 result.append( self.get_command( line ) )
                 previous_command_time = t
-       return result
+        return result
     def execute_commands(self):
         '''Looks for commands and executes them -- puts them on the log.
         If a command is quit, adjourn, or reload,
@@ -42,15 +45,15 @@ class API:
         commands = self.get_new_commands()
         f = open("Results/api.log","a")
         highest_priority = None
+        if time.localtime()[3] >= 14 and time.localtime()[4] >= 30 and not self.daytime_run:
+            self.should_adjourn = True
         for i in commands:
             f.write( time.asctime() + ": " + "Got command \'" + i + "\'" + "\n" )
-            if i = 'quit':
+            if i == 'quit':
                 self.should_quit = True
-            elif i = 'adjourn':
+            elif i == 'adjourn':
                 self.should_adjourn = True
-            elif time.localtime()[3] >= 14 and time.localtime()[4] >= 30:
-                self.should_adjourn = True
-            elif i = 'reload':
+            elif i == 'reload':
                 self.should_reload = True
             elif 'reset' in i:
                 f.write( time.asctime() + ": Official R" + i[1:] + "\n" ) 
@@ -72,13 +75,15 @@ class API:
                 self.should_reload = True
             else:
                 f.write( time.asctime() + ": " + "Could not understand command!" + "\n" )
-            if self.should_reload:
-                self.should_quit = True
-    def run(self):
+        if self.should_reload:
+            self.should_quit = True
+        f.close()
+    def run(self,daytime_run = False):
         #I need a way to run this during daytime.***
+        import os,time
         self.NUM_PLAYERS = 5
         self.TOKENS = range(1, 15+1)
-        self.previous_command_time = 0
+        self.previous_command_time = time.time()
         self.should_quit = False
         self.should_adjourn = False
         self.should_reload = False
@@ -88,58 +93,76 @@ class API:
         self.max_trials = 100
         self.min_trials = 5
         self.DEFAULT = 0.5
+        self.sleep_time = 300
+        self.daytime_run = daytime_run
+        if self.daytime_run:
+            self.sleep_time = 3
+#        print self.sleep_time
         try:
-            f.open("Results/api.log","r")
+            f = open("Results/api.log","r")
+        except IOError:
+#            os.system("mkdir Results") #human_friendly already does this
+            f = open("Results/api.log","w")
+            f.close()
+        else:
             l = f.readlines()
             f.close()
-            if "Official: Quitting" not in l[ len(l) - 1 ]:
-                raise Exception("It seems that the previous session of API did not quit!")
-        catch IOError:
-            pass
+            if len(l) > 0:
+                if "Official: Quitting" not in l[ len(l) - 1 ]:
+                    raise Exception("It seems that the previous session of API did not quit!")       
         self.execute_commands()
+#        self.should_quit = True
         if ( not self.should_quit ) and ( not self.should_adjourn ):
             #Read the log and update the algorithm list and priorities
             self.use_log()
         while not self.should_quit:
             self.execute_commands()
-            if ( not self.should_quit ) and ( not self.should_adjourn ) and (not self.check_processes() ) :
+            if ( not self.should_quit ) and ( not self.should_adjourn ) and (not self.check_for_processes() ) :
                 #Choose a comparison and do it. Repeat. Check for commands every 5 min
                 self.do_comparisons()
-            if  ( not self.should_quit ) and ( self.should_adjourn  or self.check_processes() ):
+            if  ( not self.should_quit ) and ( self.should_adjourn  or self.check_for_processes() ):
                 self.adjourn()
         self.execute_commands()
         f = open("Results/api.log","a")
-        f.write( time.asctime() + ": " + "Official: Quitting" )
+        f.write( time.asctime() + ": " + "Official: Quitting\n" )
         f.close()
         return self.should_reload
     def adjourn(self):
         import time
         f = open("Results/api.log","a")
-        f.write( time.asctime() + ": " + "Adjourning" )
+        f.write( time.asctime() + ": " + "Adjourning" + "\n" )
         f.close()
-        while ( not self.should_quit ) and ( self.should_adjourn  or self.check_processes() ):
-            time.sleep( 300 )
+        while ( not self.should_quit ) and ( self.should_adjourn  or self.check_for_processes() ):
+#            print self.sleep_time
+            time.sleep( self.sleep_time )
             self.execute_commands()
     def check_for_processes(self):
         '''Checks whether a CPU-intensive process is running.'''
         import os
-        os.system("top -stats command -l 1 > top-output.txt")#Write the activity monitor to a file    
-        f=open("top-output.txt","r")
+        if self.daytime_run:
+            return False #Ignore any processes
+        os.system("top -stats command -l 1 > Results/top-output.txt")#Write the activity monitor to a file    
+        f=open("Results/top-output.txt","r")
         process_active = False
         for line in f:
             if ('firefox' in line) or ('Google Chrome' in line) or ('Safari' in line and 'SafariCloudHisto' not in line and 'com.apple.Safari' not in line and 'SafariBook' not in line) or ('mprime' in line) or ('Mathematica' in line):
                 process_active = True
                 break	       	 
         f.close()
+#        if not process_active:
+#            os.system("rm -f top-output.txt")
         return process_active
     def use_log(self):
-        import time
+        import time, algorithms,inspect
+        reload(algorithms)
         list_algorithms = inspect.getmembers( algorithms, inspect.ismethod)
+        print list_algorithms
+        self.should_quit = True
         #***Make sure we can only get algorithms without aux_ in __name__
         f = open("Results/api.log","r")
         lines = f.readlines()
         f.close()
-        lines = lines.reverse()
+        lines.reverse()
         for line in lines:
             if "Official: Confidence: " in line:
                 self.confidence = float( line.partition("Official: Confidence: ")[2] )
@@ -160,7 +183,7 @@ class API:
             if "Official: Max_trials: " in line:
                 self.confidence = int( line.partition("Official: Max_trials: ")[2] )
                 break
-        self.comparsions = {}
+        self.comparisons = {}
         for a in list_algorithms:
             for b in list_algorithms:
                 current_confidence = self.DEFAULT
@@ -188,7 +211,12 @@ class API:
         '''Choose a comparison and do it. Repeat. Check for commands every 5 min'''
         import time, copy
         most_recent_check = time.time()
-        while (not self.should_quit) and (not self.should_adjourn) and ( not self.check_processes() ):
+        if len(self.comparisons) == 0:
+            f = open("Results/api.log","a")
+            f.write( time.asctime() + ": Uh-oh. There are no comparisons to make.\n" )
+            f.close()
+            return
+        while (not self.should_quit) and (not self.should_adjourn) and ( not self.check_for_processes() ):
             closest = 0
             for x in self.comparisons.values():
                 if abs( x[0] - 0.5) < abs(closest - 0.5):
@@ -210,15 +238,15 @@ class API:
                 g = Game( copy.copy(algorithm_tuple), copy.copy(self.TOKENS) )
                 games.append( g )
                 if time.time() - most_recent_check > 300:
-                    processes_running = self.check_processes()
+                    processes_running = self.check_for_processes()
                     if not processes_running:
-                        for g in games
+                        for g in games:
                             g.write()
                     games = []
                     should_stop = processes_running
                     if processes_running:
                         f = open("Results/api.log","a")
-                        f.write( time.asctime() + ": " + "Other CPU-intensive Process Detected" )
+                        f.write( time.asctime() + ": " + "Other CPU-intensive Process Detected\n" )
                         f.close()       
                     self.execute_commands()
                     should_stop = should_stop and self.should_quit and self.should_adjourn
@@ -267,7 +295,7 @@ class API:
                 current_game_tuple = this_game_results[0]
                 invader_score = current_game_tuple[ len(current_game_tuple) - 1 ]
                 #I keep the type of score (win, tie, loss)
-                if invader_score = 0:
+                if invader_score == 0:
                     all_game_results[ len(all_game_results) - 1 ] = all_game_results[ len(all_game_results) - 1 ] + 1
                 else:
                     inverse = float(self.NUM_PLAYERS)/invader_score
@@ -362,11 +390,11 @@ class Game:
         count = 0
         for player_list in self.algorithm_list:
             score = player_list[1]
-            if max = score:
+            if max == score:
                 count += 1
         for player_list in self.algorithm_list:
             score = player_list[1]
-            if max = score:
+            if max == score:
                 self.results.append( float( len(self.algorithm_list) ) / count )
             else:
                 self.results.append( 0 )
