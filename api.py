@@ -283,14 +283,19 @@ class API:
         lines.reverse()
         a, b = algorithm_tuple
         current_confidence = self.DEFAULT
-        to_write = "Official: Current Confidence: " + str(a) + " " + str(b) + " "
-        master_key = "Official: Game where " + str(a) + " is invaded by " + str(b) + "."
+        to_write_confidence = "Official: Current Confidence: " + str(a) + " " + str(b) + " "
+        to_write_trials = "Official: Total Trials: " + str(a) + " " + str(b) + " "
+        to_write_time = "Official: Total Time: " + str(a) + " " + str(b) + " "
+#        master_key = "Official: Game where " + str(a) + " is invaded by " + str(b) + "."
+        master_key = "Official: Game:"
+        for i in range(self.NUM_PLAYERS - 1):
+            master_key += " " + str(a)
+            master_key += " " + str(b)
         time_key = "This game took "
         results_key = "Here is the score_tuple: "
-        found = False
         all_game_results = []
-        for x in range(self.NUM_PLAYERS + 1):
-            all_game_results.append(0)
+        for i in range(2**self.NUM_PLAYERS ):
+            all_game_results.append( 0 )
         all_game_trials = 0
         all_game_time = 0
 #        this_game_time = 0
@@ -313,21 +318,42 @@ class API:
                 all_game_trials += 1
 #                this_game_results = eval( line.partition(key)[2] )
                 all_game_time += this_game_time
+                all_game_results[ self.get_index( current_game_tuple ) ] += 1
 #                current_game_tuple = this_game_results[0]
-                invader_score = current_game_tuple[ len(current_game_tuple) - 1 ]
-                #I keep the type of score (win, tie, loss)
-                if invader_score == 0:
-                    all_game_results[ len(all_game_results) - 1 ] = all_game_results[ len(all_game_results) - 1 ] + 1
-                else:
-                    inverse = int( float(self.NUM_PLAYERS)/invader_score )
-                    all_game_results[ inverse - 1 ] = all_game_results[ inverse - 1 ] + 1
+#                for i in range(self.NUM_PLAYERS):
+#                    this_player_score = current_game_tuple[ i ]
+#                last_index = self.NUM_PLAYERS
+#                #I keep the type of score (win, tie, loss)
+#                    if this_score == 0:
+#                        all_game_results[ i ][last_index] = all_game_results[ i ][last_index] + 1
+#                    else:
+#                        inverse = int( float(self.NUM_PLAYERS)/this_player_score )
+#                        all_game_results[i][ inverse - 1 ] = all_game_results[i][ inverse - 1 ] + 1
         all_game_results = tuple( all_game_results )
         current_confidence = bayesian.main( all_game_results )
         self.comparisons[ (a,b) ] = (current_confidence, all_game_trials, all_game_time ) 
-        if not found:
-            f = open("Results/api.log","a")
-            f.write( time.asctime() + ": " + to_write + str(current_confidence) + "\n" )
-            f.close()
+        f = open("Results/api.log","a")
+        f.write( time.asctime() + ": " + to_write_confidence + str(current_confidence) + "\n" )
+        f.write( time.asctime() + ": " + to_write_time + str(all_game_time) + "\n" )
+        f.write( time.asctime() + ": " + to_write_trials + str(all_game_trials) + "\n" )
+        f.close()
+    def get_index(self, result_tuple):
+        '''Takes a tuple like (2.5, 0, 2.5, 0, 0) and makes it into
+        (1,0,1,0,0), then converts the base two number 10100 into
+        base ten -- 20.'''
+        new = []
+        for x in result_tuple:
+            if x == 0:
+                new.append(0)
+            else:
+                new.append(1)
+        new.reverse()
+        coeff = 1
+        total = 0
+        for x in new:
+            total += x * coeff
+            coeff *= 2
+        return total
 class Game:
     def get_results():
         return tuple( self.results )
@@ -420,14 +446,10 @@ class Game:
             else:
                 self.results.append( 0 )
         self.duration = time.time() - self.start_time
-        fixed = True
-        for i in range(len(self.algorithm_tuple)-2):
-            if self.algorithm_tuple[i] != self.algorithm_tuple[i+1]:
-                fixed = False
-        to_write = "Official: "
-        if fixed:
-            to_write += "Game where " + str(self.algorithm_tuple[0]) + " is invaded by " + str(self.algorithm_tuple[len(self.algorithm_tuple) -1 ] ) + ".\n\t"
-        to_write += "The game had this player_tuple: " + str(self.algorithm_tuple) + ".\n\t"
+        to_write = "Official: Game:"
+        for x in self.algorithm_tuple:
+            to_write += " " + str(x)
+        to_write += "\n\t"
         to_write += "Here is the score_tuple: " + str(self.results) + "\n\t"
         to_write += "This game's name is " + self.name + "\n\t"
         to_write += "This game took " + str( self.duration ) + " seconds.\n"
