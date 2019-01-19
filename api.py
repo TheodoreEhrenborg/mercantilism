@@ -190,27 +190,28 @@ class API:
         self.comparisons = {}
         for a in list_algorithms:
             for b in list_algorithms:
-                current_confidence = self.DEFAULT
-                key = "Official: Current Confidence: " + str(a) + " " + str(b) + " "
-                found = False
-                for line in lines:
-                    if "Official: Reset " + str(a) + " " + str(b) in line:
-                        break
-                    if "Official: Reset " + str(a) + " " + "all" in line:
-                        break
-                    if "Official: Reset " + "all" + " " + str(b) in line:
-                        break
-                    if "Official: Reset " + "all" + " " + "all" in line:
-                        break
-                    if key in line:
-                        current_confidence = float( line.partition(key)[2] )
-                        found = True
-                        break
-                self.comparisons[ (a,b) ] = (current_confidence, 0, 0)#(confidence, num_trials, total_time) 
-                if not found:
-                    f = open("Results/api.log","a")
-                    f.write( time.asctime() + ": " + key + str(current_confidence) + "\n" )
-                    f.close()
+                if a != b:
+                    current_confidence = self.DEFAULT
+                    key = "Official: Current Confidence: " + str(a) + " " + str(b) + " "
+                    found = False
+                    for line in lines:
+                        if "Official: Reset " + str(a) + " " + str(b) in line:
+                            break
+                        if "Official: Reset " + str(a) + " " + "all" in line:
+                            break
+                        if "Official: Reset " + "all" + " " + str(b) in line:
+                            break
+                        if "Official: Reset " + "all" + " " + "all" in line:
+                            break
+                        if key in line:
+                            current_confidence = float( line.partition(key)[2] )
+                            found = True
+                            break
+                    self.comparisons[ (a,b) ] = (current_confidence, 0, 0)#(confidence, num_trials, total_time) 
+                    if not found:
+                        f = open("Results/api.log","a")
+                        f.write( time.asctime() + ": " + key + str(current_confidence) + "\n" )
+                        f.close()
     def do_comparisons(self):
         '''Choose a comparison and do it. Repeat. Check for commands every 5 min'''
         import time, copy
@@ -237,11 +238,17 @@ class API:
             algorithm_list.append( invader )
             algorithm_tuple = tuple( algorithm_list )
             games = []
-            keep_going = True
+            should_stop = False
+            game_count = 0#After 100 games, the computer must stop to check probabilities.
+            #Right now a really fast game can take 0.05 seconds, so in 5 minutes
+            #the computer runs 6000 games, which is probably too much.
             while not should_stop:
                 g = Game( copy.copy(algorithm_tuple), copy.copy(self.TOKENS) )
                 games.append( g )
-                if time.time() - most_recent_check > 300:
+                game_count += 1
+                if time.time() - most_recent_check > 300 or game_count >= 100:
+                    most_recent_check = time.time()
+                    game_count = 0
                     processes_running = self.check_for_processes()
                     if not processes_running:
                         for g in games:
@@ -253,9 +260,9 @@ class API:
                         f.write( time.asctime() + ": " + "Other CPU-intensive Process Detected\n" )
                         f.close()       
                     self.execute_commands()
-                    should_stop = should_stop and self.should_quit and self.should_adjourn
+                    should_stop = should_stop or self.should_quit or self.should_adjourn
                     self.check_probability( current_pair )
-                    should_stop = should_stop and self.experimental_conditions(current_pair)
+                    should_stop = should_stop or self.experimental_conditions(current_pair)
     def experimental_conditions(self, current_pair):
         current_confidence, all_game_trials, all_game_time  = self.comparisons[current_pair]
         if all_game_time < self.min_time:
@@ -277,13 +284,16 @@ class API:
         a, b = algorithm_tuple
         current_confidence = self.DEFAULT
         to_write = "Official: Current Confidence: " + str(a) + " " + str(b) + " "
-        key = "Official: Game where " + str(a) + " is invaded by " + str(b) + "."
+        master_key = "Official: Game where " + str(a) + " is invaded by " + str(b) + "."
+        time_key = "This game took "
+        results_key = "Here is the score_tuple: "
         found = False
         all_game_results = []
         for x in range(self.NUM_PLAYERS + 1):
             all_game_results.append(0)
         all_game_trials = 0
         all_game_time = 0
+#        this_game_time = 0
         for line in lines:
             if "Official: Reset " + str(a) + " " + str(b) in line:
                 break
@@ -293,17 +303,23 @@ class API:
                 break
             if "Official: Reset " + "all" + " " + "all" in line:
                 break
-            if key in line:
+            if time_key in line:
+                new_line = line.partition(time_key)[2]
+                new_line = new_line.strip("\n seconds.")
+                this_game_time = eval(new_line)
+            if results_key in line:
+                current_game_tuple = eval( line.partition(results_key)[2] )
+            if master_key in line:
                 all_game_trials += 1
-                this_game_results = eval( line.partition(key)[2] )
-                all_game_time += this_game_results[1]
-                current_game_tuple = this_game_results[0]
+#                this_game_results = eval( line.partition(key)[2] )
+                all_game_time += this_game_time
+#                current_game_tuple = this_game_results[0]
                 invader_score = current_game_tuple[ len(current_game_tuple) - 1 ]
                 #I keep the type of score (win, tie, loss)
                 if invader_score == 0:
                     all_game_results[ len(all_game_results) - 1 ] = all_game_results[ len(all_game_results) - 1 ] + 1
                 else:
-                    inverse = float(self.NUM_PLAYERS)/invader_score
+                    inverse = int( float(self.NUM_PLAYERS)/invader_score )
                     all_game_results[ inverse - 1 ] = all_game_results[ inverse - 1 ] + 1
         all_game_results = tuple( all_game_results )
         current_confidence = bayesian.main( all_game_results )
@@ -320,7 +336,7 @@ class Game:
         reload(algorithms)
         '''Calculates a list containing the utility points of
         each player'''
-        start_time = time.time()
+        self.start_time = time.time()
         self.tokens = list(tokens)
         self.algorithm_list = []
         #Each element of this list is itself a list containing the algorithm, its current score, and
@@ -353,7 +369,7 @@ class Game:
                 f = open( "Results/games.log", "a")
                 f.write( time.asctime() + ": Game " + self.name + ". Player " + str(i) + " responds " + str(this_move )  + "\n" )
                 f.close()
-            c = Counter(current_moves)
+            c = collections.Counter(current_moves)
             for i in range(len(self.algorithm_list)):
                 player_list = self.algorithm_list[i]
                 player_list[2].append(current_moves[i])
@@ -405,7 +421,7 @@ class Game:
                 self.results.append( 0 )
         self.duration = time.time() - self.start_time
         fixed = True
-        for i in range(len(self.algorithm_tuple)-1):
+        for i in range(len(self.algorithm_tuple)-2):
             if self.algorithm_tuple[i] != self.algorithm_tuple[i+1]:
                 fixed = False
         to_write = "Official: "
