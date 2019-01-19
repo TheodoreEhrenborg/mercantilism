@@ -79,7 +79,6 @@ class API:
             self.should_quit = True
         f.close()
     def run(self,daytime_run = False):
-        #I need a way to run this during daytime.***
         import os,time
         self.NUM_PLAYERS = 5
         self.TOKENS = range(1, 15+1)
@@ -155,10 +154,15 @@ class API:
     def use_log(self):
         import time, algorithms,inspect
         reload(algorithms)
-        list_algorithms = inspect.getmembers( algorithms, inspect.ismethod)
-        print list_algorithms
-        self.should_quit = True
+        temp = inspect.getmembers( algorithms, inspect.isfunction)       
+#        print list_algorithms
+#        self.should_quit = True
         #***Make sure we can only get algorithms without aux_ in __name__
+        list_algorithms = []
+        for x in temp:
+            wrapped = Wrapper(x)
+            if wrapped.get_name()[0:4] != "aux_":
+                list_algorithms.append( wrapped )
         f = open("Results/api.log","r")
         lines = f.readlines()
         f.close()
@@ -263,19 +267,20 @@ class API:
         if all_game_trials > self.max_trials:
             return False
         return 1 - self.confidence < current_confidence and current_confidence < self.confidence
-    def check_probablility(self, algorithm_tuple):
+    def check_probability(self, algorithm_tuple):
         import time, bayesian
+        reload(bayesian)
         f = open("Results/api.log","r")
         lines = f.readlines()
         f.close()
-        lines = lines.reverse()
+        lines.reverse()
         a, b = algorithm_tuple
         current_confidence = self.DEFAULT
         to_write = "Official: Current Confidence: " + str(a) + " " + str(b) + " "
         key = "Official: Game where " + str(a) + " is invaded by " + str(b) + "."
         found = False
         all_game_results = []
-        for x in range(NUM_PLAYERS + 1):
+        for x in range(self.NUM_PLAYERS + 1):
             all_game_results.append(0)
         all_game_trials = 0
         all_game_time = 0
@@ -312,9 +317,9 @@ class Game:
         return tuple( self.results )
     def __init__(self, algorithm_tuple, tokens):
         import algorithms, random, collections, copy, time
+        reload(algorithms)
         '''Calculates a list containing the utility points of
         each player'''
-        #*** This really ought to write its thinking in a log.
         start_time = time.time()
         self.tokens = list(tokens)
         self.algorithm_list = []
@@ -343,7 +348,7 @@ class Game:
                 f = open( "Results/games.log", "a")
                 f.write( time.asctime() + ": Game " + self.name + ". Calling Player " + str(i) + " which is " + str(player_list[0] )  + "\n" )
                 f.close()
-                this_move = player_list[0]( copy.deepcopy(self.tokens), copy.deepcopy(data), self.name )
+                this_move = player_list[0].get_function()( copy.deepcopy(self.tokens), copy.deepcopy(data), self.name )
                 current_moves.append( this_move )
                 f = open( "Results/games.log", "a")
                 f.write( time.asctime() + ": Game " + self.name + ". Player " + str(i) + " responds " + str(this_move )  + "\n" )
@@ -420,4 +425,25 @@ class Game:
         f = open( "Results/api.log", "a")
         f.write( time.asctime() + ": " + self.to_write )
         f.close()
-        
+class Wrapper:
+    '''Takes an algorithm from inspect and has a nice interface'''
+    def __init__(self, input_tuple):
+        self.__tuple = input_tuple
+        self.__name = self.__tuple[0]
+        self.__function = self.__tuple[1]
+    def get_name(self):
+        return self.__name
+    def get_function(self):
+        return self.__function
+    def get_tuple(self):
+        return self.__tuple
+    def __repr__(self):
+        return "Wrapper(" + repr(self.get_tuple()) + ")"
+    def __str__(self):
+        return self.get_name()
+    def __neq__(self, other):
+        return not self == other
+    def __eq__(self, other):
+        return self.get_tuple() == other.get_tuple()
+    def __hash__(self):
+        return hash(self.get_tuple())

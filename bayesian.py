@@ -5,7 +5,7 @@ def main(game_results, trials = 1e6):
     #n is the number of players
     n = len( game_results ) - 1
     #integrate all probabilities over the hypercube
-    all_results = mcquad( all_cases , args = [game_results]
+    all_results = mcquad( all_cases , args = [game_results],
                             npoints=trials, xl = zeros(n), xu = ones(n) )
     #Now I need to run below_average_cases. I should figure out the 
     #weights of each outcome -- a win is n points -- and the average 
@@ -17,7 +17,7 @@ def main(game_results, trials = 1e6):
     weights.append( 0 )
     average = 1
     #integrate all below average over the hypercube
-    below_average_results = mcquad( below_average_cases , args = [game_results, weights, average]
+    below_average_results = mcquad( below_average_cases , args = [game_results, weights, average],
                             npoints=trials, xl = zeros(n), xu = ones(n) )
     #Divide to get the chance that 1 is not ES against 2
     return below_average_results[0] / all_results[0]
@@ -40,7 +40,7 @@ def all_cases( point_tuple, game_results):
             + ", len(game_results) = " + str(len(game_results)) )
     point = list( point_tuple )
     point.sort()
-    point = (0,) + point + (1,)
+    point = [0,] + point + [1,]
     density = 1.0
     for i in range( len(game_results) ):
         how_many_games = game_results[i]
@@ -55,7 +55,7 @@ def below_average_cases( point_tuple, game_results, weights, average):
     where the invader's score is below average. '''
     point = list( point_tuple )
     point.sort()
-    point = (0,) + point + (1,)
+    point = [0,] + point + [1,]
     expected_utility = 0
     for i in range( len(weights) ):
         expected_utility += weights[i] *  ( point[i+1] - point[i] )
