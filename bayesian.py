@@ -172,7 +172,7 @@ def main3(game_results, trials = 1e5):
     average = 1
     #integrate all probabilities over the hypercube
     #For n players, a game could end in 2^n - 1 ways
-    result, error = mcquad( both , args = [abridged, weights, average ],
+    result, error = mcquad( both3 , args = [abridged, weights, average ],
                             npoints=trials, xl = zeros(2**n-2), xu = ones(2**n-2) )
     f = open("Results/bayesian.log","a")
     f.write(time.asctime() + ": Calculated total probability = " + str(result[0]) + ", error = " +
@@ -182,7 +182,7 @@ def main3(game_results, trials = 1e5):
     f.close()
     #Divide to get the chance that 1 is not ES against 2
     return result[1] / result[0]
-def both( point_tuple, abridged_game_results, weights, average):
+def both3( point_tuple, abridged_game_results, weights, average):
     point = list( point_tuple )
     point.sort()
     point = [0] + point + [1,]
@@ -191,6 +191,79 @@ def both( point_tuple, abridged_game_results, weights, average):
         how_many_games = abridged_game_results[i]
         interval = point[i+1] - point[i]
         density *= interval ** how_many_games
+    result1 = density
+    expected_utility = 0
+    for i in range( len(weights) ):
+        expected_utility += weights[i] *  ( point[i+1] - point[i] )
+    if expected_utility < average:
+        result2 = result1
+    elif expected_utility == average:
+        result2 = 0.5 * result1
+    else:
+        result2 = 0
+    return np.array( [result1,result2] ) 
+def main4(game_results, trials = 1e5):
+    '''Uses five dimensions with multiplicities'''
+    #Note that game_results is of the form ( x , y , ... , w )
+    #where each value is the number of times a game has had a certain outcome (like the first and third players tie)
+    #However, the first element of game_results is zero because all players cannot all lose
+    #import Monte Carlo integration algorithm from scikit-monaco library
+    import time, math
+    from skmonaco import mcquad
+    f = open("Results/bayesian.log","a")
+    f.write(time.asctime() + ": Got game_results = " + str(game_results) + 
+            " Got trials = " + str(trials) + "\n")
+    f.close()
+    #n is the number of players
+    n = int( math.log( len(game_results) , 2) )
+    compressed = []
+    multiplicities = []
+    weights = []
+    for x in range(n+1):
+        compressed.append(0)
+        multiplicities.append(0)
+        weights.append(0)
+    for i in range( 1, len(game_results) ):
+        base_2 = to_base_2(i)
+        c = count(base_2)
+        if base_2[-1] == 0:
+            compressed[0] += game_results[i]
+            multiplicities[0] += 1
+            weights[0] = 0 #Note that losses come first, then wins, 2-ties, ..., n-ties
+        else:
+            compressed[c] += game_results[i]
+            multiplicities[c] += 1
+            weights[c] =  float(n)/c
+    print compressed, weights, multiplicities
+    #Now I need to run below_average_cases. I should figure out the 
+    #weights of each outcome -- a win is n points -- and the average 
+    #utility points to beat. I'll do that here instead of in the 
+    #thousands of runs of below_average_cases.
+    average = 1
+    abridged = game_results[1:]
+    #integrate all probabilities over the hypercube
+    #For n players, a game could end in 2^n - 1 ways
+    result, error = mcquad( both4 , args = [compressed, weights, average, multiplicities ],
+                            npoints=trials, xl = zeros(n), xu = ones(n) )
+    f = open("Results/bayesian.log","a")
+    f.write(time.asctime() + ": Calculated total probability = " + str(result[0]) + ", error = " +
+            str(error[0]) + "\n")
+    f.write(time.asctime() + ": Calculated below average probability = " + str(result[1]) + ", error = " +
+            str(error[1]) + "\n")
+    f.close()
+    #Divide to get the chance that 1 is not ES against 2
+    return result[1] / result[0]
+def both4( point_tuple, compressed_game_results, weights, average, multiplicities):
+    point = list( point_tuple )
+    point.sort()
+    point = [0] + point + [1,]
+    density = 1.0
+    for i in range( len(compressed_game_results) ):
+        how_many_games = compressed_game_results[i]
+        m = multiplicities[i]
+        interval = point[i+1] - point[i]
+        density *= interval ** how_many_games
+#        density *= m ** interval
     result1 = density
     expected_utility = 0
     for i in range( len(weights) ):
