@@ -56,22 +56,22 @@ class API:
             elif i == 'reload':
                 self.should_reload = True
             elif 'reset' in i:
-                f.write( time.asctime() + ": Official R" + i[1:] + "\n" ) 
+                f.write( time.asctime() + ": Official: R" + i[1:] + "\n" ) 
                 self.should_reload = True
             elif 'confidence' in i and 'current' not in i:
-                f.write( time.asctime() + ": Official C" + i[1:] + "\n" )
+                f.write( time.asctime() + ": Official: C" + i[1:] + "\n" )
                 self.should_reload = True
             elif 'max_trials' in i:
-                f.write( time.asctime() + ": Official M" + i[1:] + "\n" )
+                f.write( time.asctime() + ": Official: M" + i[1:] + "\n" )
                 self.should_reload = True
             elif 'min_trials' in i:
-                f.write( time.asctime() + ": Official M" + i[1:] + "\n" )
+                f.write( time.asctime() + ": Official: M" + i[1:] + "\n" )
                 self.should_reload = True
             elif 'max_time' in i:
-                f.write( time.asctime() + ": Official M" + i[1:] + "\n" )
+                f.write( time.asctime() + ": Official: M" + i[1:] + "\n" )
                 self.should_reload = True
             elif 'min_time' in i:
-                f.write( time.asctime() + ": Official M" + i[1:] + "\n" )
+                f.write( time.asctime() + ": Official: M" + i[1:] + "\n" )
                 self.should_reload = True
             else:
                 f.write( time.asctime() + ": " + "Could not understand command!" + "\n" )
@@ -88,7 +88,7 @@ class API:
         self.should_reload = False
         self.confidence = 0.99
         self.max_time = 300 * 100
-        self.min_time = 30
+        self.min_time = 0.2
         self.max_trials = 100
         self.min_trials = 5
         self.DEFAULT = 0.5
@@ -173,19 +173,19 @@ class API:
                 break
         for line in lines:
             if "Official: Min_time: " in line:
-                self.confidence = int( line.partition("Official: Min_time: ")[2] )
+                self.min_time = int( line.partition("Official: Min_time: ")[2] )
                 break
         for line in lines:
             if "Official: Max_time: " in line:
-                self.confidence = int( line.partition("Official: Max_time: ")[2] )
+                self.max_time = int( line.partition("Official: Max_time: ")[2] )
                 break
         for line in lines:
             if "Official: Min_trials: " in line:
-                self.confidence = int( line.partition("Official: Min_trials: ")[2] )
+                self.min_trials = int( line.partition("Official: Min_trials: ")[2] )
                 break
         for line in lines:
             if "Official: Max_trials: " in line:
-                self.confidence = int( line.partition("Official: Max_trials: ")[2] )
+                self.max_trials = int( line.partition("Official: Max_trials: ")[2] )
                 break
         self.comparisons = {}
         for a in list_algorithms:
@@ -239,14 +239,14 @@ class API:
             algorithm_tuple = tuple( algorithm_list )
             games = []
             should_stop = False
-            game_count = 0#After 100 games, the computer must stop to check probabilities.
+            game_count = 0#After 10 games, the computer must stop to check probabilities.
             #Right now a really fast game can take 0.05 seconds, so in 5 minutes
             #the computer runs 6000 games, which is probably too much.
             while not should_stop:
                 g = Game( copy.copy(algorithm_tuple), copy.copy(self.TOKENS) )
                 games.append( g )
                 game_count += 1
-                if time.time() - most_recent_check > 300 or game_count >= 100:
+                if time.time() - most_recent_check > 300 or game_count >= 10:
                     most_recent_check = time.time()
                     game_count = 0
                     processes_running = self.check_for_processes()
@@ -261,9 +261,11 @@ class API:
                         f.close()       
                     self.execute_commands()
                     should_stop = should_stop or self.should_quit or self.should_adjourn
-                    self.check_probability( current_pair )
-                    should_stop = should_stop or self.experimental_conditions(current_pair)
+                    if not should_stop:
+                        self.check_probability( current_pair )
+                        should_stop = should_stop or not( self.experimental_conditions(current_pair) )
     def experimental_conditions(self, current_pair):
+        '''Returns True if the current pair should continue to be tested'''
         current_confidence, all_game_trials, all_game_time  = self.comparisons[current_pair]
         if all_game_time < self.min_time:
             return True
@@ -273,7 +275,9 @@ class API:
             return True
         if all_game_trials > self.max_trials:
             return False
-        return 1 - self.confidence < current_confidence and current_confidence < self.confidence
+        low = 1 - self.confidence
+        high = self.confidence
+        return  low < current_confidence and high > current_confidence
     def check_probability(self, algorithm_tuple):
         import time, bayesian
         reload(bayesian)
@@ -286,14 +290,18 @@ class API:
         to_write_confidence = "Official: Current Confidence: " + str(a) + " " + str(b) + " "
         to_write_trials = "Official: Total Trials: " + str(a) + " " + str(b) + " "
         to_write_time = "Official: Total Time: " + str(a) + " " + str(b) + " "
+        to_write_sum = "Official: Total Score: " + str(a) + " " + str(b) + " "
 #        master_key = "Official: Game where " + str(a) + " is invaded by " + str(b) + "."
         master_key = "Official: Game:"
         for i in range(self.NUM_PLAYERS - 1):
             master_key += " " + str(a)
-            master_key += " " + str(b)
+        master_key += " " + str(b)
         time_key = "This game took "
         results_key = "Here is the score_tuple: "
         all_game_results = []
+        sum_game_results = []
+        for i in range(self.NUM_PLAYERS):
+            sum_game_results.append( 0 )
         for i in range(2**self.NUM_PLAYERS ):
             all_game_results.append( 0 )
         all_game_trials = 0
@@ -318,6 +326,7 @@ class API:
                 all_game_trials += 1
 #                this_game_results = eval( line.partition(key)[2] )
                 all_game_time += this_game_time
+                sum_game_results = self.list_add( sum_game_results, current_game_tuple )
                 all_game_results[ self.get_index( current_game_tuple ) ] += 1
 #                current_game_tuple = this_game_results[0]
 #                for i in range(self.NUM_PLAYERS):
@@ -330,13 +339,22 @@ class API:
 #                        inverse = int( float(self.NUM_PLAYERS)/this_player_score )
 #                        all_game_results[i][ inverse - 1 ] = all_game_results[i][ inverse - 1 ] + 1
         all_game_results = tuple( all_game_results )
-        current_confidence = bayesian.main( all_game_results )
+        if all_game_trials > 0:
+            current_confidence = bayesian.main( all_game_results )
         self.comparisons[ (a,b) ] = (current_confidence, all_game_trials, all_game_time ) 
         f = open("Results/api.log","a")
         f.write( time.asctime() + ": " + to_write_confidence + str(current_confidence) + "\n" )
         f.write( time.asctime() + ": " + to_write_time + str(all_game_time) + "\n" )
         f.write( time.asctime() + ": " + to_write_trials + str(all_game_trials) + "\n" )
+        f.write( time.asctime() + ": " + to_write_sum + str(sum_game_results) + "\n" )
         f.close()
+    def list_add(self, a, b):
+        c = []
+        if len(a) != len(b):
+            raise Exception( str(len(a)) + " != " + str(len(b)) )
+        for i in range(len(a)):
+            c.append( a[i] + b[i] )
+        return c
     def get_index(self, result_tuple):
         '''Takes a tuple like (2.5, 0, 2.5, 0, 0) and makes it into
         (1,0,1,0,0), then converts the base two number 10100 into

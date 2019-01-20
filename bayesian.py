@@ -11,7 +11,7 @@ def main(game_results, trials = 1e5):
             " Got trials = " + str(trials) + "\n")
     f.close()
     #n is the number of players
-    n = math.log(len( game_results - 1  ) , 2)
+    n = int( math.log( len(game_results) , 2) )
     abridged = game_results[1:]
     #integrate all probabilities over the hypercube
     #For n players, a game could end in 2^n - 1 ways
@@ -94,6 +94,7 @@ def to_base_2(x):
             result.append(0)
         x = x/2
     result.reverse()
+    return result
 def count( l ):
     c = 0
     for x in l:
