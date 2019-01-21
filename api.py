@@ -441,6 +441,7 @@ class Game:
                 f.close()
                 if len(self.algorithm_list) == 1:#In the unusual 1-player case, the last token is won
                     player_list[1] += item
+        temp_scores = []
         for x in self.algorithm_list:
                 temp_scores.append( x[1] )
         f = open( "Results/games.log", "a")
