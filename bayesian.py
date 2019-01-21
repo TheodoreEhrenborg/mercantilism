@@ -209,7 +209,7 @@ def main4(game_results, trials = 1e5):
     #However, the first element of game_results is zero because all players cannot all lose
     #import Monte Carlo integration algorithm from scikit-monaco library
     import time, math
-    from skmonaco import mcquad
+    from skmonaco import mcquad, mcmiser
     f = open("Results/bayesian.log","a")
     f.write(time.asctime() + ": Got game_results = " + str(game_results) + 
             " Got trials = " + str(trials) + "\n")
@@ -234,7 +234,7 @@ def main4(game_results, trials = 1e5):
             compressed[c] += game_results[i]
             multiplicities[c] += 1
             weights[c] =  float(n)/c
-    print compressed, weights, multiplicities
+#    print compressed, weights, multiplicities
     #Now I need to run below_average_cases. I should figure out the 
     #weights of each outcome -- a win is n points -- and the average 
     #utility points to beat. I'll do that here instead of in the 
@@ -258,12 +258,16 @@ def both4( point_tuple, compressed_game_results, weights, average, multiplicitie
     point.sort()
     point = [0] + point + [1,]
     density = 1.0
+#    average_multiplier = 0
     for i in range( len(compressed_game_results) ):
         how_many_games = compressed_game_results[i]
         m = multiplicities[i]
         interval = point[i+1] - point[i]
+#        average_multiplier += interval * m
         density *= interval ** how_many_games
+        density *= interval ** (m-1)
 #        density *= m ** interval
+#    density *= average_multiplier
     result1 = density
     expected_utility = 0
     for i in range( len(weights) ):

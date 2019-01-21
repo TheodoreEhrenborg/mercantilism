@@ -340,7 +340,7 @@ class API:
 #                        all_game_results[i][ inverse - 1 ] = all_game_results[i][ inverse - 1 ] + 1
         all_game_results = tuple( all_game_results )
         if all_game_trials > 0:
-            current_confidence = bayesian.main( all_game_results )
+            current_confidence = bayesian.main4( all_game_results )
         self.comparisons[ (a,b) ] = (current_confidence, all_game_trials, all_game_time ) 
         f = open("Results/api.log","a")
         f.write( time.asctime() + ": " + to_write_confidence + str(current_confidence) + "\n" )
