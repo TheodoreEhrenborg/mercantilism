@@ -279,3 +279,36 @@ def both4( point_tuple, compressed_game_results, weights, average, multiplicitie
     else:
         result2 = 0
     return np.array( [result1,result2] ) 
+class SuperFloat:
+    def __init__(self, f, exp = 0):
+        import math
+        self.__exp = int( math.log( f, 10 ) )
+        self.__value = f * 10 ** -self.exp
+        self.__exp += exp
+    def get_exp(self):
+        return self.__exp
+    def get_value(self)
+        return self.__value
+    def __add__(self,other):
+        if not isinstance(other, SuperFloat):
+            raise Exception("Other is not a SuperFloat")
+        if self.get_exp() > other.get_exp():
+            other_float = other.get_value() * (other.get_exp() - self.get_exp())
+            return SuperFloat( self.get_value() + other_float, self.get_exp())
+        else:
+            self_float = self.get_value() * (self.get_exp() - other.get_exp())
+            return SuperFloat( other.get_value() + self_float, other.get_exp())
+    def __sub__(self,other):
+        if not isinstance(other, SuperFloat):
+            raise Exception("Other is not a SuperFloat")
+        return self + self.SuperFloat( -1 * other.get_value(), other.get_exp())
+    def __mul__(self,other):
+        if not isinstance(other, SuperFloat):
+            raise Exception("Other is not a SuperFloat")
+        return SuperFloat( self.get_value() * other.get_value(), self.get_exp() + other.get_exp())
+    def __div__(self,other):
+        if not isinstance(other, SuperFloat):
+            raise Exception("Other is not a SuperFloat")
+        return SuperFloat( self.get_value() / other.get_value(), self.get_exp() - other.get_exp())
+        
+        
