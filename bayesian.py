@@ -243,7 +243,8 @@ def main4(game_results, trials = 1e5):
     abridged = game_results[1:]
     #integrate all probabilities over the hypercube
     #For n players, a game could end in 2^n - 1 ways
-    result, error = mcquad( both4 , args = [compressed, weights, average, multiplicities ],
+    cushion = sample(compressed_game_results, multiplicities)
+    result, error = mcquad( both4 , args = [compressed, weights, average, multiplicities, cushion ],
                             npoints=trials, xl = zeros(n), xu = ones(n) )
     f = open("Results/bayesian.log","a")
     f.write(time.asctime() + ": Calculated total probability = " + str(result[0]) + ", error = " +
@@ -253,22 +254,22 @@ def main4(game_results, trials = 1e5):
     f.close()
     #Divide to get the chance that 1 is not ES against 2
     return result[1] / result[0]
-def both4( point_tuple, compressed_game_results, weights, average, multiplicities):
+def both4( point_tuple, compressed_game_results, weights, average, multiplicities, cushion):
     point = list( point_tuple )
     point.sort()
     point = [0] + point + [1,]
-    density = 1.0
+    density = SuperFloat(1.0)
 #    average_multiplier = 0
     for i in range( len(compressed_game_results) ):
         how_many_games = compressed_game_results[i]
         m = multiplicities[i]
-        interval = point[i+1] - point[i]
+        interval = SuperFloat( point[i+1] - point[i] )
 #        average_multiplier += interval * m
         density *= interval ** how_many_games
         density *= interval ** (m-1)
 #        density *= m ** interval
 #    density *= average_multiplier
-    result1 = density
+    result1 = (density / cushion).as_float()
     expected_utility = 0
     for i in range( len(weights) ):
         expected_utility += weights[i] *  ( point[i+1] - point[i] )
@@ -279,6 +280,31 @@ def both4( point_tuple, compressed_game_results, weights, average, multiplicitie
     else:
         result2 = 0
     return np.array( [result1,result2] ) 
+def sample( compressed_game_results, multiplicities, trials = 1e2):
+    '''Returns a SuperFloat indicating the highest density found'''
+    import random
+    i = 0
+    current_max = SuperFloat(0)
+    while i < trials:
+        i+=1
+        point = []
+        for x in range( n ):
+            point.append( random.random() )
+        point.sort()
+        point = [0] + point + [1,]
+        density = SuperFloat(1.0)
+#    average_multiplier = 0
+        for i in range( len(compressed_game_results) ):
+            how_many_games = compressed_game_results[i]
+            m = multiplicities[i]
+            interval = SuperFloat( point[i+1] - point[i] )
+#        average_multiplier += interval * m
+            density *= interval ** how_many_games
+            density *= interval ** (m-1)
+#        density *= m ** interval
+#    density *= average_multiplier
+        current_max = max( current_max, density)
+    return current_max
 class SuperFloat:
     def __init__(self, f, exp = 0):
         import math
@@ -310,5 +336,24 @@ class SuperFloat:
         if not isinstance(other, SuperFloat):
             raise Exception("Other is not a SuperFloat")
         return SuperFloat( self.get_value() / other.get_value(), self.get_exp() - other.get_exp())
+    def __pow__(self,other):
+        if not isinstance(other, int) or other < 0:
+            raise Exception("Other is not a nonnegative integer")
+        start = SuperFloat( self.get_value(), self.get_exp() )
+        for x in range( other ):
+            start *= self
+        return start
+    def as_float(self):
+        return self.get_value() * 10 ** self.get_exp()
+    def __cmp__(self, other):
+        if not isinstance(other, SuperFloat):
+            raise Exception("Other is not a SuperFloat")
+        x = self - other
+        if x.get_value() == 0:
+            return 0
+        elif x.get_value() > 0:
+            return 1
+        else:
+            return -1
         
         
