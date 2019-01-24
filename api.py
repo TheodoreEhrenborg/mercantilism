@@ -58,6 +58,9 @@ class API:
             elif 'reset' in i:
                 f.write( time.asctime() + ": Official: R" + i[1:] + "\n" ) 
                 self.should_reload = True
+            elif 'redo_confidence' in i:
+                f.write( time.asctime() + ": Official: Redo_confidence" + "\n" ) 
+                self.should_reload = True
             elif 'confidence' in i and 'current' not in i:
                 f.write( time.asctime() + ": Official: Confidence: " + i[10:] + "\n" )
                 self.should_reload = True
@@ -202,6 +205,8 @@ class API:
                         if "Official: Reset " + "all" + " " + str(b) in line:
                             break
                         if "Official: Reset " + "all" + " " + "all" in line:
+                            break
+                        if "Official: Redo_confidence" in line:
                             break
                         if key in line:
                             current_confidence = float( line.partition(key)[2] )
