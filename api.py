@@ -215,7 +215,7 @@ class API:
     def do_comparisons(self):
         '''Choose a comparison and do it. Repeat. Check for commands every 5 min'''
         import time, copy
-        most_recent_check = time.time()
+        #most_recent_check = time.time()
         if len(self.comparisons) == 0:
             f = open("Results/api.log","a")
             f.write( time.asctime() + ": Uh-oh. There are no comparisons to make.\n" )
@@ -231,7 +231,7 @@ class API:
                     break
             #Now that we have a current_pair, we check the probability
             fixed, invader = current_pair
-            self.check_probability(current_pair)
+            #self.check_probability(current_pair)
             algorithm_list = []
             for x in range(self.NUM_PLAYERS-1):
                 algorithm_list.append( fixed )
@@ -240,8 +240,9 @@ class API:
             games = []
             should_stop = False
             game_count = 0#After 110 games, the computer must stop to check probabilities.
-            #Right now a really fast game can take 0.05 seconds, so in 5 minutes
+            #A really fast game can take 0.05 seconds, so in 5 minutes
             #the computer runs 6000 games, which is probably too much.
+            most_recent_check = time.time()
             while not should_stop:
                 g = Game( copy.copy(algorithm_tuple), copy.copy(self.TOKENS) )
                 games.append( g )
