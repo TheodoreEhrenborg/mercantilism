@@ -89,7 +89,7 @@ class API:
         self.confidence = 0.99
         self.max_time = 300 * 100
         self.min_time = 0.2
-        self.max_trials = 100
+        self.max_trials = 1000
         self.min_trials = 5
         self.DEFAULT = 0.5
         self.sleep_time = 300

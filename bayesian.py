@@ -315,6 +315,8 @@ class SuperFloat:
             self.__exp = int( math.log( abs(f), 10 ) )
             self.__value = f * 10 ** -self.__exp
             self.__exp += exp
+            #Here we should use format(2**320, "E").partition("E+") to get the 
+            #exp and value without multiplying by large numbers
     def get_exp(self):
         return self.__exp
     def get_value(self):
