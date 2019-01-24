@@ -58,6 +58,9 @@ class API:
             elif 'reset' in i:
                 f.write( time.asctime() + ": Official: R" + i[1:] + "\n" ) 
                 self.should_reload = True
+            elif 'get_results' in i:
+                f.write(time.asctime() + ": Official: Saving human-readable results" + "\n")
+                self.get_results()
             elif 'redo_confidence' in i:
                 f.write( time.asctime() + ": Official: Redo_confidence" + "\n" ) 
                 self.should_reload = True
@@ -212,7 +215,7 @@ class API:
                             current_confidence = float( line.partition(key)[2] )
                             found = True
                             break
-                    self.comparisons[ (a,b) ] = (current_confidence, 0, 0)#(confidence, num_trials, total_time) 
+                    self.comparisons[ (a,b) ] = (current_confidence, 0, 0, None)#(confidence, num_trials, total_time,sum_trials) 
                     if not found:
                         f = open("Results/api.log","a")
                         f.write( time.asctime() + ": " + key + str(current_confidence) + "\n" )
@@ -347,12 +350,25 @@ class API:
         all_game_results = tuple( all_game_results )
         if all_game_trials > 0:
             current_confidence = bayesian.main4( all_game_results )
-        self.comparisons[ (a,b) ] = (current_confidence, all_game_trials, all_game_time ) 
+        self.comparisons[ (a,b) ] = (current_confidence, all_game_trials, all_game_time, sum_game_results ) 
         f = open("Results/api.log","a")
         f.write( time.asctime() + ": " + to_write_confidence + str(current_confidence) + "\n" )
         f.write( time.asctime() + ": " + to_write_time + str(all_game_time) + "\n" )
         f.write( time.asctime() + ": " + to_write_trials + str(all_game_trials) + "\n" )
         f.write( time.asctime() + ": " + to_write_sum + str(sum_game_results) + "\n" )
+        f.close()
+    def get_results(self):
+        import time
+        name = "Results/Readable_"+ time.asctime() + ".txt"
+        name.replace(" ","_")
+        f = open(name, "a")
+        for c in self.comparisons.values():
+            fixed, invader = c
+            f.write("Fixed: " + fixed + " Invader: " + invader + "\n")
+            f.write( "Current Confidence: " + str(self.comparisons[c][0]) + "\n" )
+            f.write( "Number of trials: " + str(self.comparisons[c][1]) + "\n" )
+            f.write( "Amount of time spent: " + str(self.comparisons[c][2]) + "\n" )
+            f.write( "Summed results of games: " + str(self.comparisons[c][3]) + "\n\n" )
         f.close()
     def list_add(self, a, b):
         c = []
