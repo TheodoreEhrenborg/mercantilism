@@ -243,7 +243,7 @@ def main4(game_results, trials = 1e5):
     abridged = game_results[1:]
     #integrate all probabilities over the hypercube
     #For n players, a game could end in 2^n - 1 ways
-    cushion = sample(compressed_game_results, multiplicities)
+    cushion = sample(compressed, multiplicities,n)
     result, error = mcquad( both4 , args = [compressed, weights, average, multiplicities, cushion ],
                             npoints=trials, xl = zeros(n), xu = ones(n) )
     f = open("Results/bayesian.log","a")
@@ -280,20 +280,20 @@ def both4( point_tuple, compressed_game_results, weights, average, multiplicitie
     else:
         result2 = 0
     return np.array( [result1,result2] ) 
-def sample( compressed_game_results, multiplicities, trials = 1e2):
+def sample( compressed_game_results, multiplicities, n, trials = 1e2):
     '''Returns a SuperFloat indicating the highest density found'''
     import random
-    i = 0
+    counter = 0
     current_max = SuperFloat(0)
-    while i < trials:
-        i+=1
+    while counter < trials:
+        counter+=1
+#        print counter
         point = []
         for x in range( n ):
             point.append( random.random() )
         point.sort()
         point = [0] + point + [1,]
         density = SuperFloat(1.0)
-#    average_multiplier = 0
         for i in range( len(compressed_game_results) ):
             how_many_games = compressed_game_results[i]
             m = multiplicities[i]
@@ -308,26 +308,30 @@ def sample( compressed_game_results, multiplicities, trials = 1e2):
 class SuperFloat:
     def __init__(self, f, exp = 0):
         import math
-        self.__exp = int( math.log( f, 10 ) )
-        self.__value = f * 10 ** -self.exp
-        self.__exp += exp
+        if f == 0:
+            self.__value = 0
+            self.__exp = 0
+        else:
+            self.__exp = int( math.log( abs(f), 10 ) )
+            self.__value = f * 10 ** -self.__exp
+            self.__exp += exp
     def get_exp(self):
         return self.__exp
-    def get_value(self)
+    def get_value(self):
         return self.__value
     def __add__(self,other):
         if not isinstance(other, SuperFloat):
             raise Exception("Other is not a SuperFloat")
         if self.get_exp() > other.get_exp():
-            other_float = other.get_value() * (other.get_exp() - self.get_exp())
+            other_float = other.get_value() * 10 **(other.get_exp() - self.get_exp())
             return SuperFloat( self.get_value() + other_float, self.get_exp())
         else:
-            self_float = self.get_value() * (self.get_exp() - other.get_exp())
+            self_float = self.get_value() * 10 ** (self.get_exp() - other.get_exp())
             return SuperFloat( other.get_value() + self_float, other.get_exp())
     def __sub__(self,other):
         if not isinstance(other, SuperFloat):
             raise Exception("Other is not a SuperFloat")
-        return self + self.SuperFloat( -1 * other.get_value(), other.get_exp())
+        return self + SuperFloat( -1 * other.get_value(), other.get_exp())
     def __mul__(self,other):
         if not isinstance(other, SuperFloat):
             raise Exception("Other is not a SuperFloat")
@@ -339,12 +343,12 @@ class SuperFloat:
     def __pow__(self,other):
         if not isinstance(other, int) or other < 0:
             raise Exception("Other is not a nonnegative integer")
-        start = SuperFloat( self.get_value(), self.get_exp() )
+        start = SuperFloat( 1 )
         for x in range( other ):
             start *= self
         return start
     def as_float(self):
-        return self.get_value() * 10 ** self.get_exp()
+        return float(self.get_value() * 10 ** self.get_exp())
     def __cmp__(self, other):
         if not isinstance(other, SuperFloat):
             raise Exception("Other is not a SuperFloat")
@@ -355,5 +359,5 @@ class SuperFloat:
             return 1
         else:
             return -1
-        
-        
+    def __repr__(self):
+        return "SuperFloat(" + str( self.get_value()) +str(" , ") + str( self.get_exp() ) + str(")")

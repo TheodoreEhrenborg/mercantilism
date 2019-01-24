@@ -239,14 +239,14 @@ class API:
             algorithm_tuple = tuple( algorithm_list )
             games = []
             should_stop = False
-            game_count = 0#After 10 games, the computer must stop to check probabilities.
+            game_count = 0#After 110 games, the computer must stop to check probabilities.
             #Right now a really fast game can take 0.05 seconds, so in 5 minutes
             #the computer runs 6000 games, which is probably too much.
             while not should_stop:
                 g = Game( copy.copy(algorithm_tuple), copy.copy(self.TOKENS) )
                 games.append( g )
                 game_count += 1
-                if time.time() - most_recent_check > 300 or game_count >= 10:
+                if time.time() - most_recent_check > 300 or game_count >= 110:
                     most_recent_check = time.time()
                     game_count = 0
                     processes_running = self.check_for_processes()
