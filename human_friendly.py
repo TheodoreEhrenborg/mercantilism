@@ -30,7 +30,9 @@ options = '''Type 'quit' to safely quit the program.
                   any consideration of confidence or trials.
               Type 'min_time value' to tell the API the minimum amount of time (seconds) it must run where one
                   algorithm is testing for being ES against another. min_time overrides 
-                  any consideration of confidence or trials.'''
+                  any consideration of confidence or trials.
+              Type 'redo_confidence' to tell API that it needs to redo all the confidences, but the trials
+                   can be left alone. (This is a good option after you have fixed a bug in bayesian.py.)'''
 error = '''Sorry, I did not recognize that command. Are you sure you typed it correctly?'''
 starting = '''Starting the Artificial Primary Investigator (API)'''
 quitting = '''I told the Artificial Primary Investigator (API) to quit. I'll tell you when it has quit.'''
@@ -87,7 +89,7 @@ def formatted( command ):
       return False
     new = command.split()
     if len(new) == 1:
-        return new[0] in ['quit','options','adjourn','reload']
+        return new[0] in ['quit','options','adjourn','reload','redo_confidence']
     elif len(new) == 3:
         return new[0] in ['reset']
     elif len(new) == 2:
