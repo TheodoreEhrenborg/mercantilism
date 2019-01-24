@@ -59,19 +59,19 @@ class API:
                 f.write( time.asctime() + ": Official: R" + i[1:] + "\n" ) 
                 self.should_reload = True
             elif 'confidence' in i and 'current' not in i:
-                f.write( time.asctime() + ": Official: C" + i[1:] + "\n" )
+                f.write( time.asctime() + ": Official: Confidence: " + i[10:] + "\n" )
                 self.should_reload = True
             elif 'max_trials' in i:
-                f.write( time.asctime() + ": Official: M" + i[1:] + "\n" )
+                f.write( time.asctime() + ": Official: Max_trials: " + i[10:] + "\n" )
                 self.should_reload = True
             elif 'min_trials' in i:
-                f.write( time.asctime() + ": Official: M" + i[1:] + "\n" )
+                f.write( time.asctime() + ": Official: Min_trials: " + i[10:] + "\n" )
                 self.should_reload = True
             elif 'max_time' in i:
-                f.write( time.asctime() + ": Official: M" + i[1:] + "\n" )
+                f.write( time.asctime() + ": Official: Max_time: " + i[8:] + "\n" )
                 self.should_reload = True
             elif 'min_time' in i:
-                f.write( time.asctime() + ": Official: M" + i[1:] + "\n" )
+                f.write( time.asctime() + ": Official: Min_time: " + i[8:] + "\n" )
                 self.should_reload = True
             else:
                 f.write( time.asctime() + ": " + "Could not understand command!" + "\n" )
