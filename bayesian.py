@@ -86,6 +86,8 @@ def below_average_cases( point_tuple, game_results, weights, average):
     else:
         return 0
 def to_base_2(x):
+    '''x is a positive integer. Returns a list that is x in base 2.
+    For instance, 22 becomes [1, 0, 1, 1, 0] and 0 becomes []''' 
     x = int( x )
     result = []
     while x > 0:
@@ -340,12 +342,24 @@ class SuperFloat:
         if not isinstance(other, SuperFloat):
             raise Exception("Other is not a SuperFloat")
         return SuperFloat( self.get_value() / other.get_value(), self.get_exp() - other.get_exp())
-    def __pow__(self,other):
+    def old_pow(self,other):
         if not isinstance(other, int) or other < 0:
             raise Exception("Other is not a nonnegative integer")
         start = SuperFloat( 1 )
         for x in range( other ):
             start *= self
+        return start
+    def __pow__(self,other):
+        if not isinstance(other, int) or other < 0:
+            raise Exception("Other is not a nonnegative integer")
+        start = SuperFloat( 1 )
+        current_square = self
+        in_base_2 = to_base_2(other)
+        in_base_2.reverse()
+        for x in in_base_2:
+            if x:
+                start *= current_square
+            current_square = current_square * current_square 
         return start
     def as_float(self):
         return float(self.get_value() * 10 ** self.get_exp())
