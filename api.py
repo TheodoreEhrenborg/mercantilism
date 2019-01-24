@@ -58,20 +58,26 @@ class API:
             elif 'reset' in i:
                 f.write( time.asctime() + ": Official: R" + i[1:] + "\n" ) 
                 self.should_reload = True
+            elif 'get_results' in i:
+                f.write(time.asctime() + ": Official: Saving human-readable results" + "\n")
+                self.get_results()
+            elif 'redo_confidence' in i:
+                f.write( time.asctime() + ": Official: Redo_confidence" + "\n" ) 
+                self.should_reload = True
             elif 'confidence' in i and 'current' not in i:
-                f.write( time.asctime() + ": Official: C" + i[1:] + "\n" )
+                f.write( time.asctime() + ": Official: Confidence: " + i[10:] + "\n" )
                 self.should_reload = True
             elif 'max_trials' in i:
-                f.write( time.asctime() + ": Official: M" + i[1:] + "\n" )
+                f.write( time.asctime() + ": Official: Max_trials: " + i[10:] + "\n" )
                 self.should_reload = True
             elif 'min_trials' in i:
-                f.write( time.asctime() + ": Official: M" + i[1:] + "\n" )
+                f.write( time.asctime() + ": Official: Min_trials: " + i[10:] + "\n" )
                 self.should_reload = True
             elif 'max_time' in i:
-                f.write( time.asctime() + ": Official: M" + i[1:] + "\n" )
+                f.write( time.asctime() + ": Official: Max_time: " + i[8:] + "\n" )
                 self.should_reload = True
             elif 'min_time' in i:
-                f.write( time.asctime() + ": Official: M" + i[1:] + "\n" )
+                f.write( time.asctime() + ": Official: Min_time: " + i[8:] + "\n" )
                 self.should_reload = True
             else:
                 f.write( time.asctime() + ": " + "Could not understand command!" + "\n" )
@@ -203,11 +209,13 @@ class API:
                             break
                         if "Official: Reset " + "all" + " " + "all" in line:
                             break
+                        if "Official: Redo_confidence" in line:
+                            break
                         if key in line:
                             current_confidence = float( line.partition(key)[2] )
                             found = True
                             break
-                    self.comparisons[ (a,b) ] = (current_confidence, 0, 0)#(confidence, num_trials, total_time) 
+                    self.comparisons[ (a,b) ] = (current_confidence, 0, 0, None)#(confidence, num_trials, total_time,sum_trials) 
                     if not found:
                         f = open("Results/api.log","a")
                         f.write( time.asctime() + ": " + key + str(current_confidence) + "\n" )
@@ -215,7 +223,7 @@ class API:
     def do_comparisons(self):
         '''Choose a comparison and do it. Repeat. Check for commands every 5 min'''
         import time, copy
-        most_recent_check = time.time()
+        #most_recent_check = time.time()
         if len(self.comparisons) == 0:
             f = open("Results/api.log","a")
             f.write( time.asctime() + ": Uh-oh. There are no comparisons to make.\n" )
@@ -231,7 +239,7 @@ class API:
                     break
             #Now that we have a current_pair, we check the probability
             fixed, invader = current_pair
-            self.check_probability(current_pair)
+            #self.check_probability(current_pair)
             algorithm_list = []
             for x in range(self.NUM_PLAYERS-1):
                 algorithm_list.append( fixed )
@@ -240,8 +248,9 @@ class API:
             games = []
             should_stop = False
             game_count = 0#After 110 games, the computer must stop to check probabilities.
-            #Right now a really fast game can take 0.05 seconds, so in 5 minutes
+            #A really fast game can take 0.05 seconds, so in 5 minutes
             #the computer runs 6000 games, which is probably too much.
+            most_recent_check = time.time()
             while not should_stop:
                 g = Game( copy.copy(algorithm_tuple), copy.copy(self.TOKENS) )
                 games.append( g )
@@ -341,12 +350,25 @@ class API:
         all_game_results = tuple( all_game_results )
         if all_game_trials > 0:
             current_confidence = bayesian.main4( all_game_results )
-        self.comparisons[ (a,b) ] = (current_confidence, all_game_trials, all_game_time ) 
+        self.comparisons[ (a,b) ] = (current_confidence, all_game_trials, all_game_time, sum_game_results ) 
         f = open("Results/api.log","a")
         f.write( time.asctime() + ": " + to_write_confidence + str(current_confidence) + "\n" )
         f.write( time.asctime() + ": " + to_write_time + str(all_game_time) + "\n" )
         f.write( time.asctime() + ": " + to_write_trials + str(all_game_trials) + "\n" )
         f.write( time.asctime() + ": " + to_write_sum + str(sum_game_results) + "\n" )
+        f.close()
+    def get_results(self):
+        import time
+        name = "Results/Readable_"+ time.asctime() + ".txt"
+        name.replace(" ","_")
+        f = open(name, "a")
+        for c in self.comparisons.values():
+            fixed, invader = c
+            f.write("Fixed: " + fixed + " Invader: " + invader + "\n")
+            f.write( "Current Confidence: " + str(self.comparisons[c][0]) + "\n" )
+            f.write( "Number of trials: " + str(self.comparisons[c][1]) + "\n" )
+            f.write( "Amount of time spent: " + str(self.comparisons[c][2]) + "\n" )
+            f.write( "Summed results of games: " + str(self.comparisons[c][3]) + "\n\n" )
         f.close()
     def list_add(self, a, b):
         c = []
