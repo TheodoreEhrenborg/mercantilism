@@ -243,7 +243,7 @@ def main4(game_results, trials = 1e5):
     abridged = game_results[1:]
     #integrate all probabilities over the hypercube
     #For n players, a game could end in 2^n - 1 ways
-    cushion = sample(compressed, multiplicities,n)
+    cushion = sample(compressed, multiplicities,n, trials/10)
     result, error = mcquad( both4 , args = [compressed, weights, average, multiplicities, cushion ],
                             npoints=trials, xl = zeros(n), xu = ones(n) )
     f = open("Results/bayesian.log","a")
