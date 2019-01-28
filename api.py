@@ -93,9 +93,9 @@ class API:
         self.should_adjourn = False
         self.should_reload = False
         self.confidence = 0.99
-        self.max_time = 300 * 100
+        self.max_time = 300
         self.min_time = 0.2
-        self.max_trials = 1000
+        self.max_trials = 100
         self.min_trials = 5
         self.DEFAULT = 0.5
         self.sleep_time = 300
@@ -224,19 +224,20 @@ class API:
         '''Choose a comparison and do it. Repeat. Check for commands every 5 min'''
         import time, copy
         #most_recent_check = time.time()
+        #Note that current_confidence, all_game_trials, all_game_time  = self.comparisons[current_pair]
         if len(self.comparisons) == 0:
             f = open("Results/api.log","a")
             f.write( time.asctime() + ": Uh-oh. There are no comparisons to make.\n" )
             f.close()
             return
         while (not self.should_quit) and (not self.should_adjourn) and ( not self.check_for_processes() ):
-            closest = 0
+            num_trials = 10**9
             for x in self.comparisons.values():
-                if abs( x[0] - 0.5) < abs(closest - 0.5):
-                    closest = x[0]
+                if x[1] < num_trials:
+                    num_trials = x[1]
             for current_pair in self.comparisons.keys():
-                if self.comparisons[current_pair][0] == closest:
-                    break
+                if self.comparisons[current_pair][1] == num_trials:
+                    break#We go for the pair with the fewest number of trials
             #Now that we have a current_pair, we check the probability
             fixed, invader = current_pair
             #self.check_probability(current_pair)
@@ -271,7 +272,7 @@ class API:
                     self.execute_commands()
                     should_stop = should_stop or self.should_quit or self.should_adjourn
                     if not should_stop:
-                        self.check_probability( current_pair )
+  #                      self.check_probability( current_pair )
                         should_stop = should_stop or not( self.experimental_conditions(current_pair) )
     def experimental_conditions(self, current_pair):
         '''Returns True if the current pair should continue to be tested'''
@@ -284,9 +285,10 @@ class API:
             return True
         if all_game_trials > self.max_trials:
             return False
-        low = 1 - self.confidence
-        high = self.confidence
-        return  low < current_confidence and high > current_confidence
+        return True
+ #       low = 1 - self.confidence
+ #       high = self.confidence
+ #       return  low < current_confidence and high > current_confidence
     def check_probability(self, algorithm_tuple):
         import time, bayesian
         reload(bayesian)
