@@ -70,11 +70,13 @@ def power_1(tokens, data, game_name):
     '''Plays a token based on a distribution where each token is chosen with 
     weight proportional to its value'''
     return aux_power(tokens, data, game_name, 1)
-def best_human(tokens, data, game_name):
+def best_human_strategy(tokens, data, game_name):
     '''Pick a number (one-third chance it's 2nd highest, one-third 3rd highest,
-    one-third 4th highest). But if it is in first place and my score - 2nd place score
+    one-third 4th highest). But if I am in first place and my score - 2nd place score
     >= highest token left, I pick the highest value token.'''
-    import random
+    import random, time
+    f = open("Results/best_human_strategy.log","a")
+    f.write(time.asctime() + ": Got message from Game " + game_name + ". Tokens received " + str(tokens) + ". Data received " + str(data) + ". \n")
     l = len(tokens)
     tokens.sort().reverse()
     choices = []
@@ -84,5 +86,19 @@ def best_human(tokens, data, game_name):
     if choices == []:
         choices.append(tokens[0])#If there is no second choice, there must be just one token
     default = random.choice( choices )
-    
+    #The first entry in data is this player
+    my_score = data[0][0]
+    highest = True
+    highest_other_score = 0
+    for other in data[1:]:
+        if other[0] >  highest_other_score
+            highest_other_score = other[0]
+    if my_score - highest_other_score >= tokens[0]: #In this case there's no harm in choosing the highest token.
+        f.write(time.asctime() + ": Chose the highest token: " + str(tokens[0]) + "\n")
+        f.close()
+        return tokens[0]
+    else:
+        f.write(time.asctime() + ": Chose a default: " + str(default) + "\n")
+        f.close()
+        return default
       
