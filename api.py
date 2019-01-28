@@ -61,6 +61,7 @@ class API:
             elif 'get_results' in i:
                 f.write(time.asctime() + ": Official: Saving human-readable results" + "\n")
                 self.get_results()
+                self.should_reload = True
             elif 'redo_confidence' in i:
                 f.write( time.asctime() + ": Official: Redo_confidence" + "\n" ) 
                 self.should_reload = True
@@ -230,6 +231,8 @@ class API:
             f.write( time.asctime() + ": Uh-oh. There are no comparisons to make.\n" )
             f.close()
             return
+        for x in self.comparisons.keys():
+            self.check_probability(x)
         while (not self.should_quit) and (not self.should_adjourn) and ( not self.check_for_processes() ):
             num_trials = 10**9
             for x in self.comparisons.values():
@@ -272,11 +275,11 @@ class API:
                     self.execute_commands()
                     should_stop = should_stop or self.should_quit or self.should_adjourn
                     if not should_stop:
-  #                      self.check_probability( current_pair )
+                        self.check_probability( current_pair )
                         should_stop = should_stop or not( self.experimental_conditions(current_pair) )
     def experimental_conditions(self, current_pair):
         '''Returns True if the current pair should continue to be tested'''
-        current_confidence, all_game_trials, all_game_time  = self.comparisons[current_pair]
+        current_confidence, all_game_trials, all_game_time, sum_results  = self.comparisons[current_pair]
         if all_game_time < self.min_time:
             return True
         if all_game_time > self.max_time:
@@ -290,8 +293,8 @@ class API:
  #       high = self.confidence
  #       return  low < current_confidence and high > current_confidence
     def check_probability(self, algorithm_tuple):
-        import time, bayesian
-        reload(bayesian)
+        import time##, bayesian
+        ##reload(bayesian)
         f = open("Results/api.log","r")
         lines = f.readlines()
         f.close()
@@ -350,8 +353,8 @@ class API:
 #                        inverse = int( float(self.NUM_PLAYERS)/this_player_score )
 #                        all_game_results[i][ inverse - 1 ] = all_game_results[i][ inverse - 1 ] + 1
         all_game_results = tuple( all_game_results )
-        if all_game_trials > 0:
-            current_confidence = bayesian.main4( all_game_results )
+        ##if all_game_trials > 0:
+        ##    current_confidence = bayesian.main4( all_game_results )
         self.comparisons[ (a,b) ] = (current_confidence, all_game_trials, all_game_time, sum_game_results ) 
         f = open("Results/api.log","a")
         f.write( time.asctime() + ": " + to_write_confidence + str(current_confidence) + "\n" )
@@ -364,9 +367,9 @@ class API:
         name = "Results/Readable_"+ time.asctime() + ".txt"
         name.replace(" ","_")
         f = open(name, "a")
-        for c in self.comparisons.values():
+        for c in self.comparisons.keys():
             fixed, invader = c
-            f.write("Fixed: " + fixed + " Invader: " + invader + "\n")
+            f.write("Fixed: " + str(fixed) + " Invader: " + str(invader) + "\n")
             f.write( "Current Confidence: " + str(self.comparisons[c][0]) + "\n" )
             f.write( "Number of trials: " + str(self.comparisons[c][1]) + "\n" )
             f.write( "Amount of time spent: " + str(self.comparisons[c][2]) + "\n" )

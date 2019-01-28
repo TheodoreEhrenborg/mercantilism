@@ -78,7 +78,8 @@ def best_human_strategy(tokens, data, game_name):
     f = open("Results/best_human_strategy.log","a")
     f.write(time.asctime() + ": Got message from Game " + game_name + ". Tokens received " + str(tokens) + ". Data received " + str(data) + ". \n")
     l = len(tokens)
-    tokens.sort().reverse()
+    tokens.sort()
+    tokens.reverse()
     choices = []
     for i in range( len( tokens) ):
         if i in [1,2,3]:
@@ -91,7 +92,7 @@ def best_human_strategy(tokens, data, game_name):
     highest = True
     highest_other_score = 0
     for other in data[1:]:
-        if other[0] >  highest_other_score
+        if other[0] >  highest_other_score:
             highest_other_score = other[0]
     if my_score - highest_other_score >= tokens[0]: #In this case there's no harm in choosing the highest token.
         f.write(time.asctime() + ": Chose the highest token: " + str(tokens[0]) + "\n")
