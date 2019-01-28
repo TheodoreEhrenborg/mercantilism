@@ -70,6 +70,19 @@ def power_1(tokens, data, game_name):
     '''Plays a token based on a distribution where each token is chosen with 
     weight proportional to its value'''
     return aux_power(tokens, data, game_name, 1)
-            
+def best_human(tokens, data, game_name):
+    '''Pick a number (one-third chance it's 2nd highest, one-third 3rd highest,
+    one-third 4th highest). But if it is in first place and my score - 2nd place score
+    >= highest token left, I pick the highest value token.'''
+    import random
+    l = len(tokens)
+    tokens.sort().reverse()
+    choices = []
+    for i in range( len( tokens) ):
+        if i in [1,2,3]:
+            choices.append(tokens[i])
+    if choices == []:
+        choices.append(tokens[0])#If there is no second choice, there must be just one token
+    default = random.choice( choices )
     
       
