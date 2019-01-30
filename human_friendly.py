@@ -50,6 +50,11 @@ def main(daytime_run = False):
         f.close()
     except IOError:
         os.system("mkdir Results")
+    try:
+        f = open("Results/Readable/testing.txt","a")
+        f.close()
+    except IOError:
+        os.system("mkdir Results/Readable")
     print time.asctime() + ": " + starting
     if daytime_run:
         print time.asctime() + ": " + work_during_day

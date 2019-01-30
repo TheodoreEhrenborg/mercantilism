@@ -62,6 +62,10 @@ def aux_power(tokens, data, game_name, n):
     f.write(time.asctime() + ": Chose " + str(choice) + "\n")
     f.close()
     return choice
+def power_3(tokens, data, game_name):
+    '''Plays a token based on a distribution where each token is chosen with 
+    weight proportional to (value)^3 '''
+    return aux_power(tokens, data, game_name, 3)
 def power_2(tokens, data, game_name):
     '''Plays a token based on a distribution where each token is chosen with 
     weight proportional to (value)^2 '''

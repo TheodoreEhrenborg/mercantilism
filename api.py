@@ -364,7 +364,7 @@ class API:
         f.close()
     def get_results(self):
         import time
-        name = "Results/Readable_"+ time.asctime() + ".txt"
+        name = "Results/Readable/Readable_"+ time.asctime() + ".txt"
         name.replace(" ","_")
         f = open(name, "a")
         for c in self.comparisons.keys():
