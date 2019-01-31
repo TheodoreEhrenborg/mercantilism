@@ -195,8 +195,10 @@ class API:
                 self.max_trials = int( line.partition("Official: Max_trials: ")[2] )
                 break
         self.comparisons = {}
-        for a in list_algorithms:
-            for b in list_algorithms:
+        for i in range(len(list_algorithms)):
+            for j in range(i, len(list_algorithms)):
+                a = list_algorithms[i]
+                b = list_algorithms[j]
                 if a != b:
                     current_confidence = self.DEFAULT
                     key = "Official: Current Confidence: " + str(a) + " " + str(b) + " "
@@ -231,6 +233,7 @@ class API:
             f.write( time.asctime() + ": Uh-oh. There are no comparisons to make.\n" )
             f.close()
             return
+#        print self.comparisons
         for x in self.comparisons.keys():
             self.check_probability(x)
         while (not self.should_quit) and (not self.should_adjourn) and ( not self.check_for_processes() ):
