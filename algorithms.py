@@ -165,7 +165,7 @@ class Quick_Evolver:
     def choose_token( self, tokens, data, game_name):
         return self.choose_algorithm()(tokens, data, game_name)
     def choose_algorithm( self):
-        '''Given the current information, makes a decision about what token to play'''
+        '''Given the current information, makes a decision about what algorithm to use'''
         import random
         sum = 0
         for x in self.weights:
@@ -197,6 +197,114 @@ class Quick_Evolver:
                 self.weights[r] -= how_far
     def __str__(self):
         return "Quick_Evolver: Weights are " + str(self.weights)
+    def __repr__(self):
+        return str(self)
+class Neural_Evolver:
+    '''Makes a decision using a neural setwork trained through artificial selection'''
+    @classmethod
+    def list_add(cls, a, b):
+        c = []
+        if len(a) != len(b):
+            raise Exception( str( ( len(a), len(b) ) ) )
+        for i in range(len(a)):
+            c.append( a[i] + b[i] )
+        return c
+    @classmethod
+    def list_total(cls, a):
+        total = 0
+        for x in a:
+            total += x
+        return total
+    @classmethod
+    def evolve(cls, generations = 5 , trials_per_generation = 100, mutation_size = 0.1, mutation_chance = 0.2):
+        import copy
+        for gen in range(generations):
+            players = []
+            scores = []
+            parent = Neural_Evolver()
+            players.append(parent)
+            scores.append(0)
+            for i in range(NUM_PLAYERS - 1):
+                p = Neural_Evolver()
+                p.mutate(chance = mutation_chance, how_far = mutation_size)
+                players.append(p)
+                scores.append(0)
+            #Now play games and choose the best player
+            for trial in range(trials_per_generation):
+                g = Game( copy.copy(players), copy.copy(TOKENS) )
+                scores = cls.list_add( g.get_results(), scores)
+            max_score = max(scores)
+            i = scores.index(max_score)
+            best = players[i]
+            best.become_parent()
+        return best
+    def __init__(self, return_to_default = False):
+        try:
+            import keras
+            from keras.models import load_model
+            self.model = load_model('Results/current_model.h5')
+        except IOError:#Is this the right error?
+            self.model = self.get_standard_model()
+            self.become_parent()
+        if return_to_default:
+            self.model = self.get_standard_model()
+    def choose_token( self, tokens, data, game_name):
+        import collections
+        import numpy as np
+        scores = []
+        for item in data:
+            scores.append( float(item[0]) / Neural_Evolver.list_total(TOKENS) )
+        c = collections.Counter(tokens)
+        existing_tokens = []
+        for i in range(1,16):
+            existing_tokens.append( c[i] )
+        the_input = np.array( existing_tokens + scores)
+        output = self.model.predict( the_input )
+        choice = self.get_token_from_weights(output)
+        while c[choice] == 0:
+            choice = self.get_token_from_weights(output)
+        return choice
+    def get_token_from_weights(self, weights):
+        import random
+        sum = Neural_Evolver.list_total(weights)
+        random_choice = random.random() * sum
+        for i in range(len(weights)):
+            random_choice -= weights[i]
+            if random_choice < 0:
+                break
+        else:
+            raise Exception("Uh-oh. The program should never reach this step.")
+        return i + 1
+    def get_standard_model(self):
+        import keras
+        from keras.models import Sequential
+        from keras.layers import Dense, Activation
+        from keras.optimizers import SGD
+        model = Sequential()
+        model.add(Dense(30, activation='relu', input_dim=20)
+        model.add(Dense(30, activation='relu'))
+        model.add(Dense(15, activation='softmax'))
+        model.compile(optimizer='rmsprop',
+          loss='categorical_crossentropy',
+          metrics=['accuracy'])#These terms don't have any significance
+        return model
+    def become_parent(self):
+        import os
+        os.system("rm -f Results/current_model.h5")
+        self.model.save("Results/current_model.h5")
+    def mutate(self, chance = 0.2, how_far = 0.1):
+        import random
+        how_far = abs(how_far)
+        weights = self.model.get_weights()
+        for i in range(len(weights)):#I don't think this is going to work.
+            if random.random() < chance:
+                if random.random() < 0.5:
+                    self.weights[i] += how_far
+                else:
+                    self.weights[i] -= how_far
+        self.model.set_weights( weights )
+    def __str__(self):
+        return "Neural_Evolver: Weights are " + str(self.model.get_weights())
     def __repr__(self):
         return str(self)
 class Game:
