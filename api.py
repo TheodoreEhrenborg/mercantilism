@@ -196,7 +196,7 @@ class API:
                 break
         self.comparisons = {}
         for i in range(len(list_algorithms)):
-            for j in range(i, len(list_algorithms)):
+            for j in range(len(list_algorithms)):
                 a = list_algorithms[i]
                 b = list_algorithms[j]
                 if a != b:
@@ -370,6 +370,7 @@ class API:
         name = "Results/Readable/Readable_"+ time.asctime() + ".txt"
         name.replace(" ","_")
         f = open(name, "a")
+        print len(self.comparisions)
         for c in self.comparisons.keys():
             fixed, invader = c
             f.write("Fixed: " + str(fixed) + " Invader: " + str(invader) + "\n")
