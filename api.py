@@ -366,9 +366,9 @@ class API:
         f.write( time.asctime() + ": " + to_write_sum + str(sum_game_results) + "\n" )
         f.close()
     def get_results(self):
-        import time
-        name = "Results/Readable/Readable_"+ time.asctime() + ".txt"
-        name.replace(" ","_")
+        import time, random
+        name = "Results/Readable/Readable_"+ time.asctime() + " " + str(random.randrange(10**9) )+ ".txt"
+        name = name.replace(" ","_")
         f = open(name, "a")
         print len(self.comparisions)
         for c in self.comparisons.keys():
