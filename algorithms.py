@@ -240,8 +240,8 @@ class Neural_Evolver:
         return best
     def __init__(self, return_to_default = False):
         try:
-            import keras
-            from keras.models import load_model
+#            import tensorflow.keras
+            from tensorflow.keras.models import load_model
             self.model = load_model('Results/current_model.h5')
         except IOError:#Is this the right error?
             self.model = self.get_standard_model()
@@ -258,14 +258,19 @@ class Neural_Evolver:
         existing_tokens = []
         for i in range(1,16):
             existing_tokens.append( c[i] )
+        l = len( existing_tokens ) + len( scores )
         the_input = np.array( existing_tokens + scores)
+        the_input.shape = (1,l)
+        print the_input
         output = self.model.predict( the_input )
-        choice = self.get_token_from_weights(output)
+        print output
+        choice = self.get_token_from_weights(list(output[0]))
         while c[choice] == 0:
-            choice = self.get_token_from_weights(output)
+            choice = self.get_token_from_weights(list(output[0]))
         return choice
     def get_token_from_weights(self, weights):
         import random
+#        weights.shape = (1,)
         sum = Neural_Evolver.list_total(weights)
         random_choice = random.random() * sum
         for i in range(len(weights)):
@@ -276,12 +281,12 @@ class Neural_Evolver:
             raise Exception("Uh-oh. The program should never reach this step.")
         return i + 1
     def get_standard_model(self):
-        import keras
-        from keras.models import Sequential
-        from keras.layers import Dense, Activation
-        from keras.optimizers import SGD
+ #       import tensorflow.keras
+        from tensorflow.keras.models import Sequential
+        from tensorflow.keras.layers import Dense, Activation
+        from tensorflow.keras.optimizers import SGD
         model = Sequential()
-        model.add(Dense(30, activation='relu', input_dim=20)
+        model.add(Dense(30, activation='relu', input_dim=20) )
         model.add(Dense(30, activation='relu'))
         model.add(Dense(15, activation='softmax'))
         model.compile(optimizer='rmsprop',
@@ -299,9 +304,9 @@ class Neural_Evolver:
         for i in range(len(weights)):#I don't think this is going to work.
             if random.random() < chance:
                 if random.random() < 0.5:
-                    self.weights[i] += how_far
+                    weights[i] += how_far
                 else:
-                    self.weights[i] -= how_far
+                    weights[i] -= how_far
         self.model.set_weights( weights )
     def __str__(self):
         return "Neural_Evolver: Weights are " + str(self.model.get_weights())
