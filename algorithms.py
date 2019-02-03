@@ -210,6 +210,14 @@ class Neural_Evolver:
             c.append( a[i] + b[i] )
         return c
     @classmethod
+    def list_multiply(cls, a, b):
+        c = []
+        if len(a) != len(b):
+            raise Exception( str( ( len(a), len(b) ) ) )
+        for i in range(len(a)):
+            c.append( a[i] * b[i] )
+        return c
+    @classmethod
     def list_total(cls, a):
         total = 0
         for x in a:
@@ -217,43 +225,63 @@ class Neural_Evolver:
         return total
     @classmethod
     def evolve(cls, generations = 5 , trials_per_generation = 100, mutation_size = 0.1, mutation_chance = 0.2):
-        import copy
-        for gen in range(generations):
-            players = []
+        import copy,time
+        players = []
+        for i in range(NUM_PLAYERS):
+            p = Neural_Evolver()
+            players.append(p)
+        gen = 0
+        while gen < generations:
+            gen += 1
+            t = time.time()
             scores = []
-            parent = Neural_Evolver()
-            players.append(parent)
-            scores.append(0)
-            for i in range(NUM_PLAYERS - 1):
-                p = Neural_Evolver()
-                p.mutate(chance = mutation_chance, how_far = mutation_size)
-                players.append(p)
+            for i in range(NUM_PLAYERS):
+                p = players[i]
+                p.load()
+                if i > 0:
+                    p.mutate(chance = mutation_chance, how_far = mutation_size)
                 scores.append(0)
             #Now play games and choose the best player
             for trial in range(trials_per_generation):
-                g = Game( copy.copy(players), copy.copy(TOKENS) )
+#                g = Game( copy.copy(players), copy.copy(TOKENS) )
+                g = Game( players, copy.copy(TOKENS) )
                 scores = cls.list_add( g.get_results(), scores)
             max_score = max(scores)
             i = scores.index(max_score)
             best = players[i]
             best.become_parent()
-        return best
+            print max_score / (trials_per_generation), time.time() - t
+#            clear_session()
+#            for p in players:
+#                p.delete()
+#            print best
+#        return best.model.get_weights()[0][0]
+#        return max_score / (trials_per_generation)
     def __init__(self, return_to_default = False):
+#        try:
+##            import tensorflow.keras
+#            from tensorflow.keras.models import load_model
+#            self.model = load_model('Results/current_model.h5')
         try:
-#            import tensorflow.keras
-            from tensorflow.keras.models import load_model
-            self.model = load_model('Results/current_model.h5')
+            self.model = self.get_standard_model()
+            self.load()
         except IOError:#Is this the right error?
             self.model = self.get_standard_model()
             self.become_parent()
         if return_to_default:
             self.model = self.get_standard_model()
+    def load(self):
+        import pickle
+        f = open("Results/current_model.p","rb")
+        self.model.set_weights(pickle.load(f))
     def choose_token( self, tokens, data, game_name):
-        import collections
+        import collections,random
         import numpy as np
         scores = []
         for item in data:
             scores.append( float(item[0]) / Neural_Evolver.list_total(TOKENS) )
+        if tokens == []:
+            print "tokens == []"
         c = collections.Counter(tokens)
         existing_tokens = []
         for i in range(1,16):
@@ -261,13 +289,27 @@ class Neural_Evolver:
         l = len( existing_tokens ) + len( scores )
         the_input = np.array( existing_tokens + scores)
         the_input.shape = (1,l)
-        print the_input
+        #print the_input
         output = self.model.predict( the_input )
-        print output
-        choice = self.get_token_from_weights(list(output[0]))
-        while c[choice] == 0:
-            choice = self.get_token_from_weights(list(output[0]))
+        #print output
+        weights = list(output[0])
+#        print weights
+        zeroed_weights = []
+        for i in range(len(TOKENS)):
+            t = TOKENS[i]
+            zeroed_weights.append( weights[i]  * c[t] )
+#        zeroed_weights = Neural_Evolver.list_multiply(list(output[0]),c)
+#        print zeroed_weights
+        if Neural_Evolver.list_total(zeroed_weights) == 0:
+#            print weights, zeroed_weights
+            choice = random.choice( tokens )
+        else:
+            choice = self.get_token_from_weights(zeroed_weights)
         return choice
+    def delete(self):
+        from tensorflow.keras.backend import clear_session
+        clear_session()
+        print self.model
     def get_token_from_weights(self, weights):
         import random
 #        weights.shape = (1,)
@@ -278,7 +320,7 @@ class Neural_Evolver:
             if random_choice < 0:
                 break
         else:
-            raise Exception("Uh-oh. The program should never reach this step.")
+            raise Exception("Uh-oh. The program should never reach this step." + str(random_choice) + str(weights))
         return i + 1
     def get_standard_model(self):
  #       import tensorflow.keras
@@ -293,25 +335,44 @@ class Neural_Evolver:
           loss='categorical_crossentropy',
           metrics=['accuracy'])#These terms don't have any significance
         return model
-    def become_parent(self):
+    def old_become_parent(self):
         import os
         os.system("rm -f Results/current_model.h5")
         self.model.save("Results/current_model.h5")
+    def become_parent(self):
+        import os,pickle
+        os.system("rm -f Results/current_model.p")
+        f = open("Results/current_model.p","wb")
+        pickle.dump( self.model.get_weights(), f)
+        f.close()
     def mutate(self, chance = 0.2, how_far = 0.1):
-        import random
+        import random,numpy
         how_far = abs(how_far)
         weights = self.model.get_weights()
-        for i in range(len(weights)):#I don't think this is going to work.
-            if random.random() < chance:
-                if random.random() < 0.5:
-                    weights[i] += how_far
+        for i in range(len(weights)):
+            ww = weights[i]
+            for j in range(len(ww)):
+                if type(ww[j]) == numpy.float32:
+                    if random.random() < chance:
+                        if random.random() < 0.5:
+                            weights[i][j] += how_far
+                        else:
+                            weights[i][j] -= how_far
                 else:
-                    weights[i] -= how_far
+                    www = ww[j]
+                    for k in range(len(www)):
+                        if random.random() < chance:
+                            if random.random() < 0.5:
+                                weights[i][j][k] += how_far
+                            else:
+                                weights[i][j][k] -= how_far
         self.model.set_weights( weights )
+#    def __str__(self):
+#        return "Neural_Evolver: Weights are " + str(self.model.get_weights())
     def __str__(self):
-        return "Neural_Evolver: Weights are " + str(self.model.get_weights())
+        return "Neural_Evolver"
     def __repr__(self):
-        return str(self)
+        return "Neural_Evolver"
 class Game:
     '''This version of game assumes that the algorithms are objects, not functions'''
     def get_results(self):
@@ -345,6 +406,7 @@ class Game:
                 data.append( player_list[1:] )
                 for x in others:
                     data.append( x[1:] )#Does player_tuple[0] call the algorithm? ***
+#                print self.tokens,data
                 f = open( "Results/games.log", "a")
                 f.write( time.asctime() + ": Game " + self.name + ". Calling Player " + str(i) + " which is " + str(player_list[0] )  + "\n" )
                 f.close()
