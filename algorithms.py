@@ -478,4 +478,65 @@ class Game:
         f = open( "Results/games.log", "a")
         f.write( time.asctime() + ": " + self.to_write )
         f.close()
+def abridged_game(self, tokens, players_choices, scores_so_far, utility_metric):
+    import random, collections, copy
+    '''This version of game receives the position and the current moves.
+    Then it plays one round and returns the utilities based on a 
+    user-chosen function.
+    Calculates a list containing the utility points of
+    each player. Here are the options for utility_metric:
+    'round_points': Utility is the number of points won this round
+    'total_points': Utility is the number of points won in all rounds so far
+    'round_diff': Utility is the difference between the points won in this round 
+                  and the points won by the player (not this one) with the highest points
+                  won this round
+    'total_diff': Utility is the difference between the cumulative score so far and the
+                  cumulative score of the player (not this one) with the highest 
+                  cumulative score
+    'round_winner': Utility is n (the number of players)
+                    if this player received the highest number of points
+                    this round. Utility is 0 otherwise. (Technically, if there is a 2-tie the
+                    two winners each receive n/2 points, etc.)
+    'total_winner': Utility is assigned just like in the previous option, but winners are
+                    determined based on the total amount of points won.
+    ''' 
+    n = len(players_choices)
+    c = collections.Counter(players_choices)
+    round_scores = []
+    for i in range(n):
+        if c[players_choices[i]] == 1:
+            round_scores.append( players_choices[i] )
+            scores_so_far[i] += players_choices[i]
+        else:
+            round_scores.append(0)
+        new = []
+        for x in tokens:
+            if x not in players_choices:
+                new.append(x)
+        tokens = new
+    if utility_metric == 'round_points':
+        return round_scores
+    elif utility_metric == 'total_points':
+        return scores_so_far
+    elif utility_metric == 'round_diff':
+        output = []
+        for i in range(n):
+            other_scores = round_scores[:i] + round_scores[i+1:]
+            output.append( round_scores[i] - max(other_scores) )
+        return output
+    elif utility_metric == 'total_diff':
+        output = []
+        for i in range(n):
+            other_scores = scores_so_far[:i] + scores_so_far[i+1:]
+            output.append( scores_so_far[i] - max(other_scores) )
+        return output
+    elif utility_metric == 'round_winner':
+        highest_score = max(round_scores)
+        num_winners = round_scores.count(highest_score)
+        for i in range(n):
+            
+    else:
+        raise Exception("Could not recognize option " + utility_metric)
+        
+       
 
