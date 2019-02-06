@@ -2,6 +2,8 @@
 (API). It only run programs at night to keep CPU speed constant.
 It keeps the main log and decides which algorithms to test 
 against each other.'''
+import algorithms
+reload(algorithms)
 def main(daytime_run = False):
     should_run = True
     while should_run:
@@ -159,9 +161,9 @@ class API:
 #            os.system("rm -f top-output.txt")
         return process_active
     def use_log(self):
-        import time, algorithms,inspect
-        reload(algorithms)
-        temp = inspect.getmembers( algorithms, inspect.isfunction)       
+        import time, inspect
+        temp = inspect.getmembers( algorithms, inspect.isfunction)
+#        print temp
 #        print list_algorithms
 #        self.should_quit = True
         #***Make sure we can only get algorithms without aux_ in __name__
@@ -370,7 +372,7 @@ class API:
         name = "Results/Readable/Readable_"+ time.asctime() + " " + str(random.randrange(10**9) )+ ".txt"
         name = name.replace(" ","_")
         f = open(name, "a")
-        print len(self.comparisions)
+        print len(self.comparisons)
         for c in self.comparisons.keys():
             fixed, invader = c
             f.write("Fixed: " + str(fixed) + " Invader: " + str(invader) + "\n")
@@ -404,11 +406,11 @@ class API:
             coeff *= 2
         return total
 class Game:
+    Neural_Evolver_Instance = algorithms.Neural_Evolver()
     def get_results():
         return tuple( self.results )
     def __init__(self, algorithm_tuple, tokens):
-        import algorithms, random, collections, copy, time
-        reload(algorithms)
+        import random, collections, copy, time
         '''Calculates a list containing the utility points of
         each player'''
         self.start_time = time.time()
@@ -439,7 +441,10 @@ class Game:
                 f = open( "Results/games.log", "a")
                 f.write( time.asctime() + ": Game " + self.name + ". Calling Player " + str(i) + " which is " + str(player_list[0] )  + "\n" )
                 f.close()
-                this_move = player_list[0].get_function()( copy.deepcopy(self.tokens), copy.deepcopy(data), self.name )
+                if player_list[0].get_name() != "neural_evolve":
+                    this_move = player_list[0].get_function()( copy.deepcopy(self.tokens), copy.deepcopy(data), self.name )
+                else:
+                    this_move = Game.Neural_Evolver_Instance.choose_token( copy.deepcopy(self.tokens), copy.deepcopy(data), self.name )
                 current_moves.append( this_move )
                 f = open( "Results/games.log", "a")
                 f.write( time.asctime() + ": Game " + self.name + ". Player " + str(i) + " responds " + str(this_move )  + "\n" )

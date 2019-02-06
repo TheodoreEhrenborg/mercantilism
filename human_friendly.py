@@ -43,7 +43,7 @@ work_during_day = '''WARNING: The API is set up to always work, which could affe
                          Only proceed if you are testing the program, and please reset everything
                          afterwards.'''
 def main(daytime_run = False):
-    import time, api, multiprocessing, os
+    import time, api, threading, os
     reload(api)
     try:
         f = open("Results/human_friendly_to_api.txt","a")
@@ -58,7 +58,8 @@ def main(daytime_run = False):
     print time.asctime() + ": " + starting
     if daytime_run:
         print time.asctime() + ": " + work_during_day
-    t1 = multiprocessing.Process( target = api.main, args = [daytime_run] )
+#    t1 = multiprocessing.Process( target = api.main, args = [daytime_run] )
+    t1 = threading.Thread( target = api.main, args = [daytime_run] )
     t1.start()
     #Starts the API here, using multi-processing
     #so human_friendly will be free to continue

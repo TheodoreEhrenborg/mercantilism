@@ -199,6 +199,8 @@ class Quick_Evolver:
         return "Quick_Evolver: Weights are " + str(self.weights)
     def __repr__(self):
         return str(self)
+def neural_evolve(tokens, data, game_name):
+    return NEURAL_EVOLVER_INSTANCE.choose_token( tokens, data, game_name )
 class Neural_Evolver:
     '''Makes a decision using a neural setwork trained through artificial selection'''
     @classmethod
@@ -478,7 +480,7 @@ class Game:
         f = open( "Results/games.log", "a")
         f.write( time.asctime() + ": " + self.to_write )
         f.close()
-def abridged_game(self, tokens, players_choices, scores_so_far, utility_metric):
+def aux_abridged_game(self, tokens, players_choices, scores_so_far, utility_metric):
     import random, collections, copy
     '''This version of game receives the position and the current moves.
     Then it plays one round and returns the utilities based on a 
@@ -534,9 +536,9 @@ def abridged_game(self, tokens, players_choices, scores_so_far, utility_metric):
         highest_score = max(round_scores)
         num_winners = round_scores.count(highest_score)
         for i in range(n):
-            
+            pass
+    elif True:
+        pass
     else:
         raise Exception("Could not recognize option " + utility_metric)
-        
-       
-
+#NEURAL_EVOLVER_INSTANCE = Neural_Evolver()
