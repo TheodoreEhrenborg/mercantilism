@@ -275,7 +275,7 @@ class Neural_Evolver:
         import numpy as np
         scores = []
         for item in data:
-            scores.append( float(item[0]) / list_total(TOKENS) )
+            scores.append( float(item[0]) / aux_list_total(TOKENS) )
         if tokens == []:
             print "tokens == []"
         c = collections.Counter(tokens)
@@ -296,7 +296,7 @@ class Neural_Evolver:
             zeroed_weights.append( weights[i]  * c[t] )
 #        zeroed_weights = Neural_Evolver.list_multiply(list(output[0]),c)
 #        print zeroed_weights
-        if list_total(zeroed_weights) == 0:
+        if aux_list_total(zeroed_weights) == 0:
 #            print weights, zeroed_weights
             choice = random.choice( tokens )
         else:
@@ -309,7 +309,7 @@ class Neural_Evolver:
     def get_token_from_weights(self, weights):
         import random
 #        weights.shape = (1,)
-        sum = list_total(weights)
+        sum = aux_list_total(weights)
         random_choice = random.random() * sum
         for i in range(len(weights)):
             random_choice -= weights[i]
@@ -499,6 +499,8 @@ def aux_abridged_game(tokens, players_choices, scores_so_far, utility_metric):
     n = len(players_choices)
     c = collections.Counter(players_choices)
     round_scores = []
+    scores_so_far = list(scores_so_far)
+    tokens = list(tokens)
     for i in range(n):
         if c[players_choices[i]] == 1:
             round_scores.append( players_choices[i] )
@@ -548,16 +550,20 @@ def aux_abridged_game(tokens, players_choices, scores_so_far, utility_metric):
         return output
     else:
         raise Exception("Could not recognize option " + utility_metric)
-def list_total(a):
+def aux_list_total(a):
     total = 0
     for x in a:
         total += x
     return total
 def aux_stochastic(tokens, data, game_name, utility_metric, start = 25, memory = 50, available = 25, end = 200):
     import random
+    utility_record = {}
     n = len(data)
+    tokens = tuple(tokens)
+    scores_so_far = []
     for item in data:
         scores_so_far.append( item[0]  )
+    scores_so_far = tuple(scores_so_far)
     actual_choices = []
     for i in range(n):
         temp = []
@@ -570,7 +576,9 @@ def aux_stochastic(tokens, data, game_name, utility_metric, start = 25, memory =
         count += 1
         for i in range(n):
             #Now we've chosen a player
-            remembered_indices = random.shuffle(range(   min(   memory, len(actual_choices[i])  )   ))[0:available]
+            temp = range(   min(   memory, len(actual_choices[i])  )   )
+            random.shuffle( temp )
+            remembered_indices = temp[0:available]
             my_utilities = []
             for l in tokens:
                 my_utilities.append( [] )
@@ -578,16 +586,22 @@ def aux_stochastic(tokens, data, game_name, utility_metric, start = 25, memory =
                 player_moves = []
                 for k in range(n):
                     player_moves.append( actual_choices[k][j] )
-                for l in tokens:
+                for l in range(len(tokens)):
                     imagined_player_moves = player_moves[:]
-                    imagined_player_moves[i] = l
+                    imagined_player_moves[i] = tokens[l]
+                    imagined_player_moves = tuple(imagined_player_moves)
                     #Now play the game and update utilities
-                    #If I saved a dictionary I might be able to speed up calculations
-                    temp_utilities = aux_abridged_game(tokens, imagined_player_moves, scores_so_far, utility_metric)
+                    #Saving a dictionary speeds it up by a factor of 17, starting with tokens from 1 to 15
+                    try: 
+                        temp_utilities = utility_record[(tokens, imagined_player_moves, scores_so_far, utility_metric)]
+                    except KeyError:
+                        temp_utilities = aux_abridged_game(tokens, imagined_player_moves, scores_so_far, utility_metric)
+                        utility_record[(tokens, imagined_player_moves, scores_so_far, utility_metric)] = temp_utilities
+#                    temp_utilities = aux_abridged_game(tokens, imagined_player_moves, scores_so_far, utility_metric)
                     my_utilities[l].append( temp_utilities[i] )
-            summed = 0
+            summed = []
             for x in my_utilities:
-                summed = list_total(x)
+                summed.append(  aux_list_total(x) )
             best_move = tokens[ summed.index( max(summed) ) ]
             actual_choices[i].append( best_move )
     return random.choice( actual_choices[0][-memory:] )

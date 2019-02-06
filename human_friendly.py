@@ -38,7 +38,7 @@ options = '''Type 'quit' to safely quit the program.
 error = '''Sorry, I did not recognize that command. Are you sure you typed it correctly?'''
 starting = '''Starting the Artificial Primary Investigator (API)'''
 quitting = '''I told the Artificial Primary Investigator (API) to quit. It will quit in a few minutes.'''
-done_quitting = '''The API has quit. I have quit too.'''
+#done_quitting = '''I have quit.'''
 work_during_day = '''WARNING: The API is set up to always work, which could affect the results
                          Only proceed if you are testing the program, and please reset everything
                          afterwards.'''
@@ -92,9 +92,9 @@ def main(daytime_run = False):
     f.write( str( time.time() ) + ":" + response + '\n' )
     f.close()
     print time.asctime() + ": " + quitting
-    #Wait until the API quits
+#    #Wait until the API quits
 #    t1.join()
-    print time.asctime() + ": " + done_quitting
+#    print time.asctime() + ": " + done_quitting
 def formatted( command ):
     '''Detects whether command is acceptable.'''
     if 'official' in command:
