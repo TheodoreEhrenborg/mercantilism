@@ -37,13 +37,13 @@ options = '''Type 'quit' to safely quit the program.
                   saved in the Results folder.'''
 error = '''Sorry, I did not recognize that command. Are you sure you typed it correctly?'''
 starting = '''Starting the Artificial Primary Investigator (API)'''
-quitting = '''I told the Artificial Primary Investigator (API) to quit. I'll tell you when it has quit.'''
+quitting = '''I told the Artificial Primary Investigator (API) to quit. It will quit in a few minutes.'''
 done_quitting = '''The API has quit. I have quit too.'''
 work_during_day = '''WARNING: The API is set up to always work, which could affect the results
                          Only proceed if you are testing the program, and please reset everything
                          afterwards.'''
 def main(daytime_run = False):
-    import time, api, threading, os
+    import time, api, os
     reload(api)
     try:
         f = open("Results/human_friendly_to_api.txt","a")
@@ -59,10 +59,14 @@ def main(daytime_run = False):
     if daytime_run:
         print time.asctime() + ": " + work_during_day
 #    t1 = multiprocessing.Process( target = api.main, args = [daytime_run] )
-    t1 = threading.Thread( target = api.main, args = [daytime_run] )
-    t1.start()
-    #Starts the API here, using multi-processing
-    #so human_friendly will be free to continue
+#    t1 = threading.Thread( target = api.main, args = [daytime_run] )
+#    t1.start()
+#    #Starts the API here, using multi-processing
+#    #so human_friendly will be free to continue
+    if not daytime_run:
+        os.system("python -c 'import api;api.main()' &")
+    else:
+        os.system("python -c 'import api;api.main(True)' &")
     response = ""
     while True:
         print time.asctime() + ": " + normal
@@ -89,7 +93,7 @@ def main(daytime_run = False):
     f.close()
     print time.asctime() + ": " + quitting
     #Wait until the API quits
-    t1.join()
+#    t1.join()
     print time.asctime() + ": " + done_quitting
 def formatted( command ):
     '''Detects whether command is acceptable.'''
