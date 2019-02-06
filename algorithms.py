@@ -537,9 +537,21 @@ def aux_abridged_game(self, tokens, players_choices, scores_so_far, utility_metr
         highest_score = max(round_scores)
         num_winners = round_scores.count(highest_score)
         for i in range(n):
-            if round_scores...
-    elif True:
-        pass
+            if round_scores[i] == highest_score:
+                output.append( float(n) / num_winners )
+            else:
+                output.append(0)
+        return output
+    elif utility_metric == 'total_winner':
+        output = []
+        highest_score = max(scores_so_far)
+        num_winners = scores_so_far.count(highest_score)
+        for i in range(n):
+            if scores_so_far[i] == highest_score:
+                output.append( float(n) / num_winners )
+            else:
+                output.append(0)
+        return output
     else:
         raise Exception("Could not recognize option " + utility_metric)
 #NEURAL_EVOLVER_INSTANCE = Neural_Evolver()
