@@ -220,12 +220,6 @@ class Neural_Evolver:
             c.append( a[i] * b[i] )
         return c
     @classmethod
-    def list_total(cls, a):
-        total = 0
-        for x in a:
-            total += x
-        return total
-    @classmethod
     def evolve(cls, generations = 5 , trials_per_generation = 100, mutation_size = 0.1, mutation_chance = 0.2):
         import copy,time
         players = []
@@ -281,7 +275,7 @@ class Neural_Evolver:
         import numpy as np
         scores = []
         for item in data:
-            scores.append( float(item[0]) / Neural_Evolver.list_total(TOKENS) )
+            scores.append( float(item[0]) / list_total(TOKENS) )
         if tokens == []:
             print "tokens == []"
         c = collections.Counter(tokens)
@@ -302,7 +296,7 @@ class Neural_Evolver:
             zeroed_weights.append( weights[i]  * c[t] )
 #        zeroed_weights = Neural_Evolver.list_multiply(list(output[0]),c)
 #        print zeroed_weights
-        if Neural_Evolver.list_total(zeroed_weights) == 0:
+        if list_total(zeroed_weights) == 0:
 #            print weights, zeroed_weights
             choice = random.choice( tokens )
         else:
@@ -315,7 +309,7 @@ class Neural_Evolver:
     def get_token_from_weights(self, weights):
         import random
 #        weights.shape = (1,)
-        sum = Neural_Evolver.list_total(weights)
+        sum = list_total(weights)
         random_choice = random.random() * sum
         for i in range(len(weights)):
             random_choice -= weights[i]
@@ -480,7 +474,7 @@ class Game:
         f = open( "Results/games.log", "a")
         f.write( time.asctime() + ": " + self.to_write )
         f.close()
-def aux_abridged_game(self, tokens, players_choices, scores_so_far, utility_metric):
+def aux_abridged_game(tokens, players_choices, scores_so_far, utility_metric):
     import random, collections, copy
     '''This version of game receives the position and the current moves.
     Then it plays one round and returns the utilities based on a 
@@ -554,10 +548,16 @@ def aux_abridged_game(self, tokens, players_choices, scores_so_far, utility_metr
         return output
     else:
         raise Exception("Could not recognize option " + utility_metric)
-#NEURAL_EVOLVER_INSTANCE = Neural_Evolver()
+def list_total(a):
+    total = 0
+    for x in a:
+        total += x
+    return total
 def aux_stochastic(tokens, data, game_name, utility_metric, start = 25, memory = 50, available = 25, end = 200):
     import random
     n = len(data)
+    for item in data:
+        scores_so_far.append( item[0]  )
     actual_choices = []
     for i in range(n):
         temp = []
@@ -570,19 +570,24 @@ def aux_stochastic(tokens, data, game_name, utility_metric, start = 25, memory =
         count += 1
         for i in range(n):
             #Now we've chosen a player
-            remembered_indices = random.shuffle(range(len(actual_choices[i])))[0:available]
-            utilities = []
+            remembered_indices = random.shuffle(range(   min(   memory, len(actual_choices[i])  )   ))[0:available]
+            my_utilities = []
             for l in tokens:
-                utilities.append( [] )
+                my_utilities.append( [] )
             for j in remembered_indices:
                 player_moves = []
                 for k in range(n):
-                    player_moves.append( actual_moves[k][j] )
+                    player_moves.append( actual_choices[k][j] )
                 for l in tokens:
                     imagined_player_moves = player_moves[:]
                     imagined_player_moves[i] = l
                     #Now play the game and update utilities
-         
-    
-    
-    
+                    #If I saved a dictionary I might be able to speed up calculations
+                    temp_utilities = aux_abridged_game(tokens, imagined_player_moves, scores_so_far, utility_metric)
+                    my_utilities[l].append( temp_utilities[i] )
+            summed = 0
+            for x in my_utilities:
+                summed = list_total(x)
+            best_move = tokens[ summed.index( max(summed) ) ]
+            actual_choices[i].append( best_move )
+    return random.choice( actual_choices[0][-memory:] )
