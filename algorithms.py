@@ -533,10 +533,11 @@ def aux_abridged_game(self, tokens, players_choices, scores_so_far, utility_metr
             output.append( scores_so_far[i] - max(other_scores) )
         return output
     elif utility_metric == 'round_winner':
+        output = []
         highest_score = max(round_scores)
         num_winners = round_scores.count(highest_score)
         for i in range(n):
-            pass
+            if round_scores...
     elif True:
         pass
     else:
