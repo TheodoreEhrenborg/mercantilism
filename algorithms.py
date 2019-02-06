@@ -555,3 +555,34 @@ def aux_abridged_game(self, tokens, players_choices, scores_so_far, utility_metr
     else:
         raise Exception("Could not recognize option " + utility_metric)
 #NEURAL_EVOLVER_INSTANCE = Neural_Evolver()
+def aux_stochastic(tokens, data, game_name, utility_metric, start = 25, memory = 50, available = 25, end = 200):
+    import random
+    n = len(data)
+    actual_choices = []
+    for i in range(n):
+        temp = []
+        for j in range(start):
+            temp.append( random.choice(tokens) )
+        actual_choices.append( temp )
+    #At this point actual_choices has been initialized with random moves
+    count = start
+    while count <= end:
+        count += 1
+        for i in range(n):
+            #Now we've chosen a player
+            remembered_indices = random.shuffle(range(len(actual_choices[i])))[0:available]
+            utilities = []
+            for l in tokens:
+                utilities.append( [] )
+            for j in remembered_indices:
+                player_moves = []
+                for k in range(n):
+                    player_moves.append( actual_moves[k][j] )
+                for l in tokens:
+                    imagined_player_moves = player_moves[:]
+                    imagined_player_moves[i] = l
+                    #Now play the game and update utilities
+         
+    
+    
+    
