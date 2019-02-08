@@ -202,7 +202,7 @@ class Quick_Evolver:
 def neural_evolve(tokens, data, game_name):
     return NEURAL_EVOLVER_INSTANCE.choose_token( tokens, data, game_name )
 class Neural_Evolver:
-    '''Makes a decision using a neural setwork trained through artificial selection'''
+    '''Makes a decision using a neural network trained through artificial selection'''
     @classmethod
     def list_add(cls, a, b):
         c = []
@@ -268,7 +268,7 @@ class Neural_Evolver:
             self.model = self.get_standard_model()
     def load(self):
         import pickle
-        f = open("Results/current_model.p","rb")
+        f = open("Results/neural_evolver_current_model.p","rb")
         self.model.set_weights(pickle.load(f))
     def choose_token( self, tokens, data, game_name):
         import collections,random
@@ -280,7 +280,7 @@ class Neural_Evolver:
             print "tokens == []"
         c = collections.Counter(tokens)
         existing_tokens = []
-        for i in range(1,16):
+        for i in TOKENS:
             existing_tokens.append( c[i] )
         l = len( existing_tokens ) + len( scores )
         the_input = np.array( existing_tokens + scores)
@@ -302,10 +302,6 @@ class Neural_Evolver:
         else:
             choice = self.get_token_from_weights(zeroed_weights)
         return choice
-    def delete(self):
-        from tensorflow.keras.backend import clear_session
-        clear_session()
-        print self.model
     def get_token_from_weights(self, weights):
         import random
 #        weights.shape = (1,)
@@ -327,18 +323,14 @@ class Neural_Evolver:
         model.add(Dense(30, activation='relu', input_dim=20) )
         model.add(Dense(30, activation='relu'))
         model.add(Dense(15, activation='softmax'))
-        model.compile(optimizer='rmsprop',
+        model.compile(optimizer='sgd',
           loss='categorical_crossentropy',
           metrics=['accuracy'])#These terms don't have any significance
         return model
-    def old_become_parent(self):
-        import os
-        os.system("rm -f Results/current_model.h5")
-        self.model.save("Results/current_model.h5")
     def become_parent(self):
         import os,pickle
-        os.system("rm -f Results/current_model.p")
-        f = open("Results/current_model.p","wb")
+        os.system("rm -f Results/neural_evolver_current_model.p")
+        f = open("Results/neural_evolver_current_model.p","wb")
         pickle.dump( self.model.get_weights(), f)
         f.close()
     def mutate(self, chance = 0.2, how_far = 0.1):
@@ -363,6 +355,88 @@ class Neural_Evolver:
                             else:
                                 weights[i][j][k] -= how_far
         self.model.set_weights( weights )
+#    def __str__(self):
+#        return "Neural_Evolver: Weights are " + str(self.model.get_weights())
+    def __str__(self):
+        return "Neural_Evolver"
+    def __repr__(self):
+        return "Neural_Evolver"
+class Neural_Nash:
+    '''Makes a decision using aux_stochastic and a neural setwork trained through backpropagation'''
+    @classmethod
+    def list_add(cls, a, b):
+        c = []
+        if len(a) != len(b):
+            raise Exception( str( ( len(a), len(b) ) ) )
+        for i in range(len(a)):
+            c.append( a[i] + b[i] )
+        return c
+    @classmethod
+    def list_multiply(cls, a, b):
+        c = []
+        if len(a) != len(b):
+            raise Exception( str( ( len(a), len(b) ) ) )
+        for i in range(len(a)):
+            c.append( a[i] * b[i] )
+        return c
+    def __init__(self, return_to_default = False):
+        try:
+            self.model = self.get_standard_model()
+            self.load()
+        except IOError:#Is this the right error?
+            self.model = self.get_standard_model()
+            self.become_parent()
+        if return_to_default:
+            self.model = self.get_standard_model()
+    def load(self):
+        import pickle
+        f = open("Results/neural_nash_current_model.p","rb")
+        self.model.set_weights(pickle.load(f))
+    def evaluate_position( self, tokens, data, game_name):
+        scores = []
+        for item in data:
+            scores.append( item[0] )
+        return self.aux_evaluate_position( tokens, scores)
+    def aux_evaluate_position( self, tokens, current_scores)
+        import collections,random
+        import numpy as np
+        scores = []
+        for item in current_scores:
+            scores.append( float(item) / aux_list_total(TOKENS) )
+        c = collections.Counter(tokens)
+        existing_tokens = []
+        for i in TOKENS:
+            existing_tokens.append( c[i] )
+        l = len( existing_tokens ) + len( scores )
+        the_input = np.array( existing_tokens + scores)
+        the_input.shape = (1,l)
+        #print the_input
+        results = self.model.predict( the_input )
+        #print results
+        results_as_list = list(results[0])
+        output = []
+        for x in results_as_list:
+            output.append( NUM_PLAYERS * x)
+        return output
+    def get_standard_model(self): 
+ #       import tensorflow.keras
+        from tensorflow.keras.models import Sequential
+        from tensorflow.keras.layers import Dense, Activation
+        from tensorflow.keras.optimizers import SGD
+        model = Sequential()
+        model.add(Dense(30, activation='relu', input_dim=20) )
+        model.add(Dense(30, activation='relu'))
+        model.add(Dense(5, activation='softmax'))
+        model.compile(optimizer='sgd',
+          loss='categorical_crossentropy',
+          metrics=['accuracy'])
+        return model
+    def become_parent(self):
+        import os,pickle
+        os.system("rm -f Results/neural_nash_current_model.p")
+        f = open("Results/neural_nash_current_model.p","wb")
+        pickle.dump( self.model.get_weights(), f)
+        f.close()
 #    def __str__(self):
 #        return "Neural_Evolver: Weights are " + str(self.model.get_weights())
     def __str__(self):
@@ -495,7 +569,11 @@ def aux_abridged_game(tokens, players_choices, scores_so_far, utility_metric):
                     two winners each receive n/2 points, etc.)
     'total_winner': Utility is assigned just like in the previous option, but winners are
                     determined based on the total amount of points won.
-    ''' 
+    When utility_metric is a Neural_Nash instance: The sum of utility assigned is n. 
+                    Utility is always positive. The rest 
+                    is up to the neural network, which ought to assign utilities that
+                    match expected utilities in the real game.
+    '''
     n = len(players_choices)
     c = collections.Counter(players_choices)
     round_scores = []
@@ -548,6 +626,8 @@ def aux_abridged_game(tokens, players_choices, scores_so_far, utility_metric):
             else:
                 output.append(0)
         return output
+    elif isinstance( utility_metric, Neural_Nash):
+        return utility_metric.aux_evaluate_position( tokens, scores_so_far)
     else:
         raise Exception("Could not recognize option " + utility_metric)
 def aux_list_total(a):
@@ -604,4 +684,18 @@ def aux_stochastic(tokens, data, game_name, utility_metric, start = 25, memory =
                 summed.append(  aux_list_total(x) )
             best_move = tokens[ summed.index( max(summed) ) ]
             actual_choices[i].append( best_move )
+    if isinstance(utility_metric, Neural_Nash):
+        results = []
+        for x in range(n):
+            results.append(0)
+        for x in range(memory):
+            addend = []
+            for y in range(n):
+                addend.append( actual_choices[y][x] )
+            results = Neural_Nash.list_add( addend, results)
+        new_results = []
+        for item in results:
+            new_results.append( float(item)/memory )
+        #Now I need to pickle these results along with the tokens and scores_so_far. But I shouldn't
+        #overwrite the data that is already there
     return random.choice( actual_choices[0][-memory:] )
