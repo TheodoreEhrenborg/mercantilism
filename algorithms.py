@@ -1,10 +1,12 @@
 '''This file contains the various algorithms that play the game.
 Methods starting with aux_ are not playing the game.'''
+import numpy as np
+import random, collections, time, copy, pickle, os
 TOKENS = range(1,16)
 NUM_PLAYERS = 5
 def play_highest(tokens, data, game_name):
     '''Plays the highest token left.'''
-    import time
+#    import time
     f = open("Results/play_highest.log","a")
     f.write(time.asctime() + ": Got message from Game " + game_name + ". Tokens received " + str(tokens) + ". Data received " + str(data) + ". \n")
     choice = max( tokens )
@@ -13,7 +15,7 @@ def play_highest(tokens, data, game_name):
     return choice
 def uniform(tokens, data, game_name):
     '''Plays a token randomly, chosen based on a uniform distribution.'''
-    import time, random
+#    import time, random
     f = open("Results/uniform.log","a")
     f.write(time.asctime() + ": Got message from Game " + game_name + ". Tokens received " + str(tokens) + ". Data received " + str(data) + ". \n")
     choice = random.choice( tokens )
@@ -23,7 +25,7 @@ def uniform(tokens, data, game_name):
 def aux_exp(tokens, data, game_name, n):
     '''Plays a token based on a distribution where each token is chosen with 
     weight proportional to n^(value) '''
-    import time, random
+#    import time, random
     f = open("Results/exp.log","a")
     f.write(time.asctime() + ": Got message from Game " + game_name + ". Tokens received " + str(tokens) + ". Data received " + str(data) +  ". n = "  + str(n) + "\n")
     sum = 0
@@ -47,7 +49,7 @@ def exp_2(tokens, data, game_name):
 def aux_power(tokens, data, game_name, n):
     '''Plays a token based on a distribution where each token is chosen with 
     weight proportional to (value)^n '''
-    import time, random
+#    import time, random
     f = open("Results/power.log","a")
     f.write(time.asctime() + ": Got message from Game " + game_name + ". Tokens received " + str(tokens) + ". Data received " + str(data) +  ". n = "  + str(n) + "\n")
     sum = 0
@@ -80,7 +82,7 @@ def best_human_strategy(tokens, data, game_name):
     '''Pick a number (one-third chance it's 2nd highest, one-third 3rd highest,
     one-third 4th highest). But if I am in first place and my score - 2nd place score
     >= highest token left, I pick the highest value token.'''
-    import random, time
+#    import random, time
     f = open("Results/best_human_strategy.log","a")
     f.write(time.asctime() + ": Got message from Game " + game_name + ". Tokens received " + str(tokens) + ". Data received " + str(data) + ". \n")
     l = len(tokens)
@@ -124,7 +126,7 @@ class Quick_Evolver:
         return c
     @classmethod
     def evolve(cls, generations = 5 , trials_per_generation = 100, mutation_size = 0.1, mutation_number = 1):
-        import copy
+#        import copy
         for gen in range(generations):
             players = []
             scores = []
@@ -166,7 +168,7 @@ class Quick_Evolver:
         return self.choose_algorithm()(tokens, data, game_name)
     def choose_algorithm( self):
         '''Given the current information, makes a decision about what algorithm to use'''
-        import random
+#        import random
         sum = 0
         for x in self.weights:
             sum += x
@@ -183,7 +185,7 @@ class Quick_Evolver:
         f.write(str(self.weights))
         f.close()
     def mutate(self, how_many = 1, how_far = 0.1):
-        import random
+#        import random
         how_far = abs(how_far)
         l = len(self.weights)
         for x in range(how_many):
@@ -199,8 +201,8 @@ class Quick_Evolver:
         return "Quick_Evolver: Weights are " + str(self.weights)
     def __repr__(self):
         return str(self)
-def neural_evolve(tokens, data, game_name):
-    return NEURAL_EVOLVER_INSTANCE.choose_token( tokens, data, game_name )
+#def neural_evolve(tokens, data, game_name):
+#    return NEURAL_EVOLVER_INSTANCE.choose_token( tokens, data, game_name )
 class Neural_Evolver:
     '''Makes a decision using a neural network trained through artificial selection'''
     @classmethod
@@ -221,7 +223,7 @@ class Neural_Evolver:
         return c
     @classmethod
     def evolve(cls, generations = 5 , trials_per_generation = 100, mutation_size = 0.1, mutation_chance = 0.2):
-        import copy,time
+#        import copy,time
         players = []
         for i in range(NUM_PLAYERS):
             p = Neural_Evolver()
@@ -267,12 +269,12 @@ class Neural_Evolver:
         if return_to_default:
             self.model = self.get_standard_model()
     def load(self):
-        import pickle
+#        import pickle
         f = open("Results/neural_evolver_current_model.p","rb")
         self.model.set_weights(pickle.load(f))
     def choose_token( self, tokens, data, game_name):
-        import collections,random
-        import numpy as np
+#        import collections,random
+#        import numpy as np
         scores = []
         for item in data:
             scores.append( float(item[0]) / aux_list_total(TOKENS) )
@@ -303,7 +305,7 @@ class Neural_Evolver:
             choice = self.get_token_from_weights(zeroed_weights)
         return choice
     def get_token_from_weights(self, weights):
-        import random
+#        import random
 #        weights.shape = (1,)
         sum = aux_list_total(weights)
         random_choice = random.random() * sum
@@ -328,19 +330,19 @@ class Neural_Evolver:
           metrics=['accuracy'])#These terms don't have any significance
         return model
     def become_parent(self):
-        import os,pickle
+#        import os,pickle
         os.system("rm -f Results/neural_evolver_current_model.p")
         f = open("Results/neural_evolver_current_model.p","wb")
         pickle.dump( self.model.get_weights(), f)
         f.close()
     def mutate(self, chance = 0.2, how_far = 0.1):
-        import random,numpy
+#        import random,numpy
         how_far = abs(how_far)
         weights = self.model.get_weights()
         for i in range(len(weights)):
             ww = weights[i]
             for j in range(len(ww)):
-                if type(ww[j]) == numpy.float32:
+                if type(ww[j]) == np.float32:
                     if random.random() < chance:
                         if random.random() < 0.5:
                             weights[i][j] += how_far
@@ -363,6 +365,50 @@ class Neural_Evolver:
         return "Neural_Evolver"
 class Neural_Nash:
     '''Makes a decision using aux_stochastic and a neural setwork trained through backpropagation'''
+    def do_training(self,generations = 5, games = 1000):
+        count = 0
+        players = []
+        for x in range(NUM_PLAYERS):
+            players.append( self )
+        while count < generations:
+            os.system("rm -f Results/neural_nash_data.p")
+            count += 1
+            #Play a lot of games
+            game_count = 0
+            while game_count < games:
+                game_count += 1
+                g = Game( players, copy.copy(TOKENS) )
+            #Get the improved predictions from those games
+            f = open("Results/neural_nash_data.p","rb")
+            data = pickle.load(f)
+            f.close()
+            #data is a list of tuples, which are ( tokens ,scores, expected_utilities)
+            the_input = []
+            for item in data:
+                temp = []
+                c = collections.Counter(item[0])
+                for t in TOKENS:
+                    temp.append(c[t])
+                for s in item[1]:
+#                    temp.append( float(s)/aux_list_total(TOKENS))
+                    temp.append( s )
+                the_input.append(temp)
+            the_input = np.array(the_input)
+            #Scale the predictions to have a sum of 1
+            the_output = []
+            for item in data:
+                temp = []
+                for x in item[2]:
+                    temp.append( float(x) / NUM_PLAYERS )
+                the_output.append(temp)
+            the_output = np.array(the_output)
+            #Let the neural network train
+#            self.randomize()
+            self.model.fit(the_input, the_output, epochs=1000, batch_size=32)
+            #Become the parent
+            self.become_parent()
+            os.system("cp Results/neural_nash_data.p Results/Old_Logs/neural_nash_data_" + time.asctime().replace(" ","_") + ".p")
+#            time.sleep(1)
     @classmethod
     def list_add(cls, a, b):
         c = []
@@ -379,6 +425,19 @@ class Neural_Nash:
         for i in range(len(a)):
             c.append( a[i] * b[i] )
         return c
+    def randomize(self):
+#        import random,numpy
+        weights = self.model.get_weights()
+        for i in range(len(weights)):
+            ww = weights[i]
+            for j in range(len(ww)):
+                if type(ww[j]) == np.float32:
+                    weights[i][j] = random.random()
+                else:
+                    www = ww[j]
+                    for k in range(len(www)):
+                        weights[i][j][k] = random.random()
+        self.model.set_weights( weights )
     def __init__(self, return_to_default = False):
         try:
             self.model = self.get_standard_model()
@@ -389,7 +448,7 @@ class Neural_Nash:
         if return_to_default:
             self.model = self.get_standard_model()
     def load(self):
-        import pickle
+#        import pickle
         f = open("Results/neural_nash_current_model.p","rb")
         self.model.set_weights(pickle.load(f))
     def evaluate_position( self, tokens, data, game_name):
@@ -397,12 +456,23 @@ class Neural_Nash:
         for item in data:
             scores.append( item[0] )
         return self.aux_evaluate_position( tokens, scores)
-    def aux_evaluate_position( self, tokens, current_scores)
-        import collections,random
-        import numpy as np
+    def aux_evaluate_position( self, tokens, current_scores):
+#        import collections,random
+#        import numpy as np
+        if tokens == []:
+            output = []
+            highest_score = max(current_scores)
+            num_winners = current_scores.count(highest_score)
+            for i in range(NUM_PLAYERS):
+                if current_scores[i] == highest_score:
+                    output.append( float(NUM_PLAYERS) / num_winners )
+                else:
+                    output.append(0)
+            return output
         scores = []
         for item in current_scores:
-            scores.append( float(item) / aux_list_total(TOKENS) )
+            scores.append( item )
+#            scores.append( float(item) / aux_list_total(TOKENS) )
         c = collections.Counter(tokens)
         existing_tokens = []
         for i in TOKENS:
@@ -418,6 +488,9 @@ class Neural_Nash:
         for x in results_as_list:
             output.append( NUM_PLAYERS * x)
         return output
+    def choose_token(self,tokens, data, game_name):
+        aux_stochastic(tokens, data, game_name, self)
+        return random.choice(tokens)
     def get_standard_model(self): 
  #       import tensorflow.keras
         from tensorflow.keras.models import Sequential
@@ -432,7 +505,7 @@ class Neural_Nash:
           metrics=['accuracy'])
         return model
     def become_parent(self):
-        import os,pickle
+#        import os,pickle
         os.system("rm -f Results/neural_nash_current_model.p")
         f = open("Results/neural_nash_current_model.p","wb")
         pickle.dump( self.model.get_weights(), f)
@@ -440,15 +513,15 @@ class Neural_Nash:
 #    def __str__(self):
 #        return "Neural_Evolver: Weights are " + str(self.model.get_weights())
     def __str__(self):
-        return "Neural_Evolver"
+        return "Neural_Nash"
     def __repr__(self):
-        return "Neural_Evolver"
+        return "Neural_Nash"
 class Game:
     '''This version of game assumes that the algorithms are objects, not functions'''
     def get_results(self):
         return tuple( self.results )
     def __init__(self, algorithm_tuple, tokens):
-        import random, collections, copy, time
+#        import random, collections, copy, time
         '''Calculates a list containing the utility points of
         each player'''
         self.start_time = time.time()
@@ -549,7 +622,7 @@ class Game:
         f.write( time.asctime() + ": " + self.to_write )
         f.close()
 def aux_abridged_game(tokens, players_choices, scores_so_far, utility_metric):
-    import random, collections, copy
+#    import random, collections, copy
     '''This version of game receives the position and the current moves.
     Then it plays one round and returns the utilities based on a 
     user-chosen function.
@@ -635,8 +708,20 @@ def aux_list_total(a):
     for x in a:
         total += x
     return total
+def round_points(tokens, data, game_name):
+    return aux_stochastic(tokens, data, game_name, 'round_points')
+def total_points(tokens, data, game_name):
+    return aux_stochastic(tokens, data, game_name, 'total_points')
+def round_diff(tokens, data, game_name):
+    return aux_stochastic(tokens, data, game_name, 'round_diff')
+def total_diff(tokens, data, game_name):
+    return aux_stochastic(tokens, data, game_name, 'total_diff')
+def round_winner(tokens, data, game_name):
+    return aux_stochastic(tokens, data, game_name, 'round_winner')
+def total_winner(tokens, data, game_name):
+    return aux_stochastic(tokens, data, game_name, 'total_winner')
 def aux_stochastic(tokens, data, game_name, utility_metric, start = 25, memory = 50, available = 25, end = 200):
-    import random
+#    import random
     utility_record = {}
     n = len(data)
     tokens = tuple(tokens)
@@ -673,10 +758,10 @@ def aux_stochastic(tokens, data, game_name, utility_metric, start = 25, memory =
                     #Now play the game and update utilities
                     #Saving a dictionary speeds it up by a factor of 17, starting with tokens from 1 to 15
                     try: 
-                        temp_utilities = utility_record[(tokens, imagined_player_moves, scores_so_far, utility_metric)]
+                        temp_utilities = utility_record[(tokens, imagined_player_moves, scores_so_far)]
                     except KeyError:
                         temp_utilities = aux_abridged_game(tokens, imagined_player_moves, scores_so_far, utility_metric)
-                        utility_record[(tokens, imagined_player_moves, scores_so_far, utility_metric)] = temp_utilities
+                        utility_record[(tokens, imagined_player_moves, scores_so_far)] = temp_utilities
 #                    temp_utilities = aux_abridged_game(tokens, imagined_player_moves, scores_so_far, utility_metric)
                     my_utilities[l].append( temp_utilities[i] )
             summed = []
@@ -688,14 +773,33 @@ def aux_stochastic(tokens, data, game_name, utility_metric, start = 25, memory =
         results = []
         for x in range(n):
             results.append(0)
-        for x in range(memory):
-            addend = []
+        for x in range(1,memory):
+            temp  = []
             for y in range(n):
-                addend.append( actual_choices[y][x] )
-            results = Neural_Nash.list_add( addend, results)
+                temp.append( actual_choices[y][-x] )
+            try:
+                expected = utility_record[(tokens, tuple(temp), scores_so_far)]
+            except KeyError:
+                expected = aux_abridged_game(tokens, tuple(temp), scores_so_far, utility_metric)
+                utility_record[(tokens, tuple(temp), scores_so_far)] = temp_utilities
+            results = Neural_Nash.list_add( expected, results)
         new_results = []
         for item in results:
             new_results.append( float(item)/memory )
-        #Now I need to pickle these results along with the tokens and scores_so_far. But I shouldn't
-        #overwrite the data that is already there
+        data = ( tokens ,scores_so_far,new_results)
+        #Now I need to pickle these results along with the 
+        #tokens and scores_so_far. But I shouldn't
+        #overwrite the data that is already there.
+        try:
+            f = open("Results/neural_nash_data.p","rb")
+        except IOError:
+            to_pickle = []
+            to_pickle.append(data)            
+        else:
+            to_pickle = pickle.load(f)
+            to_pickle.append(data)
+            f.close()
+        f = open("Results/neural_nash_data.p","wb")
+        pickle.dump( to_pickle, f )
+#    print actual_choices
     return random.choice( actual_choices[0][-memory:] )
