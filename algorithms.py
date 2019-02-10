@@ -404,7 +404,7 @@ class Neural_Nash:
             the_output = np.array(the_output)
             #Let the neural network train
 #            self.randomize()
-            self.model.fit(the_input, the_output, epochs=1000, batch_size=32)
+            self.model.fit(the_input, the_output, epochs=10, batch_size=32)
             #Become the parent
             self.become_parent()
             os.system("cp Results/neural_nash_data.p Results/Old_Logs/neural_nash_data_" + time.asctime().replace(" ","_") + ".p")
@@ -536,10 +536,10 @@ class Game:
         #Each algorithm receives a list of the tokens left, of everyone's scores,
         #and everyone's prior moves. However, the opponents will be put in a 
         #random order.
-        f = open( "Results/games.log", "a")
+        f = open( "Results/practice_games.log", "a")
         f.write( time.asctime() + ": Game " + self.name + ". The tokens are " + str(self.tokens) + ". The players are " + str( self.algorithm_tuple ) + "\n" )
         f.close()
-        while len(self.tokens) > 1:
+        while len(self.tokens) > 0:
             current_moves = []
             for i in range(len(self.algorithm_list)):
                 others = copy.copy(self.algorithm_list)
@@ -550,12 +550,12 @@ class Game:
                 for x in others:
                     data.append( x[1:] )#Does player_tuple[0] call the algorithm? ***
 #                print self.tokens,data
-                f = open( "Results/games.log", "a")
+                f = open( "Results/practice_games.log", "a")
                 f.write( time.asctime() + ": Game " + self.name + ". Calling Player " + str(i) + " which is " + str(player_list[0] )  + "\n" )
                 f.close()
                 this_move = player_list[0].choose_token( copy.deepcopy(self.tokens), copy.deepcopy(data), self.name )
                 current_moves.append( this_move )
-                f = open( "Results/games.log", "a")
+                f = open( "Results/practice_games.log", "a")
                 f.write( time.asctime() + ": Game " + self.name + ". Player " + str(i) + " responds " + str(this_move )  + "\n" )
                 f.close()
             c = collections.Counter(current_moves)
@@ -572,24 +572,24 @@ class Game:
             temp_scores = []
             for x in self.algorithm_list:
                 temp_scores.append( x[1] )
-            f = open( "Results/games.log", "a")
+            f = open( "Results/practice_games.log", "a")
             f.write( time.asctime() + ": Game " + self.name + ". The tokens are " + str(self.tokens) + ". The intermediate scores are " + str(temp_scores)  + "\n" )
             f.close()
-        if len(self.tokens) == 1:
-            item = self.tokens.pop(0)
-            i = 0
-            for player_list in self.algorithm_list:
-                i += 1
-                player_list[2].append( item )
-                f = open( "Results/games.log", "a")
-                f.write( time.asctime() + ": Game " + self.name + ". Player " + str(i) + " (having one move left) gets " + str(item)  + "\n" )
-                f.close()
-                if len(self.algorithm_list) == 1:#In the unusual 1-player case, the last token is won
-                    player_list[1] += item
+#        if len(self.tokens) == 1:
+#            item = self.tokens.pop(0)
+#            i = 0
+#            for player_list in self.algorithm_list:
+#                i += 1
+#                player_list[2].append( item )
+#                f = open( "Results/games.log", "a")
+#                f.write( time.asctime() + ": Game " + self.name + ". Player " + str(i) + " (having one move left) gets " + str(item)  + "\n" )
+#                f.close()
+#                if len(self.algorithm_list) == 1:#In the unusual 1-player case, the last token is won
+#                    player_list[1] += item
         temp_scores = []
         for x in self.algorithm_list:
                 temp_scores.append( x[1] )
-        f = open( "Results/games.log", "a")
+        f = open( "Results/practice_games.log", "a")
         f.write( time.asctime() + ": Game " + self.name + ". The tokens are " + str(self.tokens) + ". The intermediate scores are " + str(temp_scores)  + "\n" )
         f.close()
         max = 0
@@ -618,7 +618,7 @@ class Game:
         to_write += "This game's name is " + self.name + "\n\t"
         to_write += "This game took " + str( self.duration ) + " seconds.\n"
         self.to_write = to_write
-        f = open( "Results/games.log", "a")
+        f = open( "Results/practice_games.log", "a")
         f.write( time.asctime() + ": " + self.to_write )
         f.close()
 def aux_abridged_game(tokens, players_choices, scores_so_far, utility_metric):
