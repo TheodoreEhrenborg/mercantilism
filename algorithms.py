@@ -222,31 +222,45 @@ class Neural_Evolver:
             c.append( a[i] * b[i] )
         return c
     @classmethod
-    def evolve(cls, generations = 5 , trials_per_generation = 100, mutation_size = 0.1, mutation_chance = 0.2):
+    def evolve(cls, generations = 5 , trials_per_generation = 100, mutation_size = 0.1, mutation_chance = 0.2, population = 15):
 #        import copy,time
         players = []
-        for i in range(NUM_PLAYERS):
-            p = Neural_Evolver()
+        for i in range(population):
+            p = Neural_Evolver(i)
             players.append(p)
+        indices = range( population )
         gen = 0
         while gen < generations:
             gen += 1
             t = time.time()
+            #Now we update the players
             scores = []
-            for i in range(NUM_PLAYERS):
+            for i in range( population ):
                 p = players[i]
                 p.load()
-                if i > 0:
-                    p.mutate(chance = mutation_chance, how_far = mutation_size)
+#                if i > 0:
+#                    p.mutate(chance = mutation_chance, how_far = mutation_size)
                 scores.append(0)
-            #Now play games and choose the best player
+            #Now play games and choose the best players
             for trial in range(trials_per_generation):
 #                g = Game( copy.copy(players), copy.copy(TOKENS) )
-                g = Game( players, copy.copy(TOKENS) )
+                #Which players are playing during this trial?
+                random.shuffle( indices )
+                playing_indices = indices[0:NUM_PLAYERS]
+                non_playing_indices = indices[NUM_PLAYERS:]
+                playing_players = []
+                for i in playing_indices:
+                    playing_players.append( players[i] )
+                g = Game( playing_players, copy.copy(TOKENS) )
+                playing_scores = g.get_results()
+                for i in range(population):
+                    #Non-players get 1 utility point, players get their scores
                 scores = cls.list_add( g.get_results(), scores)
+            #Choose the best players
             max_score = max(scores)
             i = scores.index(max_score)
             best = players[i]
+            #Some of them mutate before being saved
             best.become_parent()
             print max_score / (trials_per_generation), time.time() - t
 #            clear_session()
@@ -255,11 +269,12 @@ class Neural_Evolver:
 #            print best
 #        return best.model.get_weights()[0][0]
 #        return max_score / (trials_per_generation)
-    def __init__(self, return_to_default = False):
+    def __init__(self, return_to_default = False, i = 0):
 #        try:
 ##            import tensorflow.keras
 #            from tensorflow.keras.models import load_model
 #            self.model = load_model('Results/current_model.h5')
+        self. i = i
         try:
             self.model = self.get_standard_model()
             self.load()
@@ -270,7 +285,7 @@ class Neural_Evolver:
             self.model = self.get_standard_model()
     def load(self):
 #        import pickle
-        f = open("Results/neural_evolver_current_model.p","rb")
+        f = open("Results/neural_evolver_current_model" + str(self.i) + ".p","rb")
         self.model.set_weights(pickle.load(f))
     def choose_token( self, tokens, data, game_name):
 #        import collections,random
@@ -331,8 +346,8 @@ class Neural_Evolver:
         return model
     def become_parent(self):
 #        import os,pickle
-        os.system("rm -f Results/neural_evolver_current_model.p")
-        f = open("Results/neural_evolver_current_model.p","wb")
+        os.system("rm -f Results/neural_evolver_current_model" + str(self.i) + ".p")
+        f = open("Results/neural_evolver_current_model" + str(self.i) + ".p","wb")
         pickle.dump( self.model.get_weights(), f)
         f.close()
     def mutate(self, chance = 0.2, how_far = 0.1):
