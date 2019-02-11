@@ -365,9 +365,12 @@ class Neural_Evolver:
         return "Neural_Evolver"
 class Neural_Nash:
     '''Makes a decision using aux_stochastic and a neural setwork trained through backpropagation'''
-    def do_training(self,generations = 5, games = 1000):
+    def do_training(self, generations = 5, games = 1000, max_complexity = None):
         count = 0
         players = []
+        if max_complexity == None:
+            max_complexity = len(TOKENS)
+        self.max_complexity = max_complexity
         for x in range(NUM_PLAYERS):
             players.append( self )
         while count < generations:
@@ -488,17 +491,20 @@ class Neural_Nash:
         for x in results_as_list:
             output.append( NUM_PLAYERS * x)
         return output
-    def choose_token(self,tokens, data, game_name):
-        aux_stochastic(tokens, data, game_name, self)
+    def choose_token(self, tokens, data, game_name):
+        if self.max_complexity >= len(tokens):
+            aux_stochastic(tokens, data, game_name, self)
         return random.choice(tokens)
     def get_standard_model(self): 
  #       import tensorflow.keras
         from tensorflow.keras.models import Sequential
-        from tensorflow.keras.layers import Dense, Activation
+        from tensorflow.keras.layers import Dense, Activation, Dropout
         from tensorflow.keras.optimizers import SGD
         model = Sequential()
         model.add(Dense(30, activation='relu', input_dim=20) )
+        model.add(Dropout(0.5))
         model.add(Dense(30, activation='relu'))
+        model.add(Dropout(0.5))
         model.add(Dense(5, activation='softmax'))
         model.compile(optimizer='sgd',
           loss='categorical_crossentropy',
@@ -620,6 +626,20 @@ class Game:
         self.to_write = to_write
         f = open( "Results/practice_games.log", "a")
         f.write( time.asctime() + ": " + self.to_write )
+        f.close()
+        #data is a list of tuples, which are ( tokens ,scores, expected_utilities)
+        data = [ self.tokens, temp_scores, self.results ]
+        try:
+            f = open("Results/neural_nash_data.p","rb")
+        except IOError:
+            to_pickle = []
+            to_pickle.append(data)            
+        else:
+            to_pickle = pickle.load(f)
+            to_pickle.append(data)
+            f.close()
+        f = open("Results/neural_nash_data.p","wb")
+        pickle.dump( to_pickle, f )
         f.close()
 def aux_abridged_game(tokens, players_choices, scores_so_far, utility_metric):
 #    import random, collections, copy
@@ -801,5 +821,6 @@ def aux_stochastic(tokens, data, game_name, utility_metric, start = 25, memory =
             f.close()
         f = open("Results/neural_nash_data.p","wb")
         pickle.dump( to_pickle, f )
+        f.close()
 #    print actual_choices
     return random.choice( actual_choices[0][-memory:] )
