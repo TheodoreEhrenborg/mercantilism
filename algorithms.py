@@ -254,6 +254,7 @@ class Neural_Evolver:
                 g = Game( playing_players, copy.copy(TOKENS) )
                 playing_scores = g.get_results()
                 for i in range(population):
+                    pass
                     #Non-players get 1 utility point, players get their scores
                 scores = cls.list_add( g.get_results(), scores)
             #Choose the best players
@@ -380,7 +381,7 @@ class Neural_Evolver:
         return "Neural_Evolver"
 class Neural_Nash:
     '''Makes a decision using aux_stochastic and a neural setwork trained through backpropagation'''
-    def do_training(self, generations = 5, games = 1000, max_complexity = None):
+    def do_training(self, generations = 5, games = 1000, max_complexity = None, training_epochs = 10):
         count = 0
         players = []
         if max_complexity == None:
@@ -402,16 +403,21 @@ class Neural_Nash:
             f.close()
             #data is a list of tuples, which are ( tokens ,scores, expected_utilities)
             the_input = []
+            shadow_output = []
             for item in data:
                 temp = []
+                shadow_temp = []
                 c = collections.Counter(item[0])
                 for t in TOKENS:
                     temp.append(c[t])
                 for s in item[1]:
 #                    temp.append( float(s)/aux_list_total(TOKENS))
                     temp.append( s )
+                    shadow_temp.append(s)
+                shadow_output.append(shadow_temp)
                 the_input.append(temp)
             the_input = np.array(the_input)
+            shadow_output = np.array( shadow_output )
             #Scale the predictions to have a sum of 1
             the_output = []
             for item in data:
@@ -420,9 +426,11 @@ class Neural_Nash:
                     temp.append( float(x) / NUM_PLAYERS )
                 the_output.append(temp)
             the_output = np.array(the_output)
+#            the_output = shadow_output
             #Let the neural network train
 #            self.randomize()
-            self.model.fit(the_input, the_output, epochs=10, batch_size=32)
+##            print the_input,the_output
+            self.model.fit(the_input, the_output, epochs = training_epochs, batch_size=32)
             #Become the parent
             self.become_parent()
             os.system("cp Results/neural_nash_data.p Results/Old_Logs/neural_nash_data_" + time.asctime().replace(" ","_") + ".p")
