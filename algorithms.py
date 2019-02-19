@@ -387,9 +387,9 @@ class Neural_Evolver:
         return "Neural_Evolver"
 class Neural_Nash:
     '''Makes a decision using aux_stochastic and a neural setwork trained through backpropagation'''
-    def do_training(self, generations = 5, games = 1000, max_complexity = None, training_epochs = 10, max_time = 10**9):
+    def do_training(self, generations = 5, games = 1000, max_complexity = None, training_epochs = 10, max_gen_time = 10**9):
+        '''max_gen_time is the maximum time allowed to any generation (plus the time it takes to finish a game)'''
         count = 0
-        start_time = time.time()
         players = []
         if max_complexity == None:
             max_complexity = len(TOKENS)
@@ -397,11 +397,12 @@ class Neural_Nash:
         for x in range(NUM_PLAYERS):
             players.append( self )
         while count < generations:
+            start_time = time.time()
             os.system("rm -f Results/neural_nash_data.p")
             count += 1
             #Play a lot of games
             game_count = 0
-            while game_count < games:
+            while game_count < games and time.time() - start_time < max_gen_time:
                 game_count += 1
                 g = Game( players, copy.copy(TOKENS) )
             #Get the improved predictions from those games
@@ -525,6 +526,8 @@ class Neural_Nash:
         if self.max_complexity >= len(tokens):
             aux_stochastic(tokens, data, game_name, self)
         return random.choice(tokens)
+    def actually_choose_token(self, tokens, data, game_name):
+        return aux_stochastic(tokens, data, game_name, self)
     def get_standard_model(self): 
  #       import tensorflow.keras
         from tensorflow.keras.models import Sequential
