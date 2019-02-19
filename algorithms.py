@@ -252,12 +252,18 @@ class Neural_Evolver:
                 for i in playing_indices:
                     playing_players.append( players[i] )
                 g = Game( playing_players, copy.copy(TOKENS) )
-                playing_scores = g.get_results()
-                for i in range(population):
-                    pass
+                playing_players_scores = list(g.get_results())
+                all_scores = copy.copy(playing_players_scores)
+                for x in non_playing_indices:
+                    all_scores.append( 1 )
+                for current_index in range(len(indices)):
+                    actual_index = indices[current_index]
+                    this_players_score = all_scores[current_index]
+                    scores[actual_index] += this_players_scores
                     #Non-players get 1 utility point, players get their scores
-                scores = cls.list_add( g.get_results(), scores)
+                #scores = cls.list_add( g.get_results(), scores)
             #Choose the best players
+            
             max_score = max(scores)
             i = scores.index(max_score)
             best = players[i]
@@ -381,8 +387,9 @@ class Neural_Evolver:
         return "Neural_Evolver"
 class Neural_Nash:
     '''Makes a decision using aux_stochastic and a neural setwork trained through backpropagation'''
-    def do_training(self, generations = 5, games = 1000, max_complexity = None, training_epochs = 10):
+    def do_training(self, generations = 5, games = 1000, max_complexity = None, training_epochs = 10, max_time = 10**9):
         count = 0
+        start_time = time.time()
         players = []
         if max_complexity == None:
             max_complexity = len(TOKENS)
