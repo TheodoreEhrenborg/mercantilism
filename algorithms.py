@@ -222,7 +222,7 @@ class Neural_Evolver:
             c.append( a[i] * b[i] )
         return c
     @classmethod
-    def evolve(cls, generations = 5 , trials_per_generation = 100, mutation_size = 0.1, mutation_chance = 0.2, population = 15):
+    def evolve(cls, generations = 5 , trials_per_generation = 100, mutation_size = 0.1, mutation_chance = 0.2, population = 15, chance_a_player_mutates = 0.5):
 #        import copy,time
         players = []
         for i in range(population):
@@ -238,8 +238,8 @@ class Neural_Evolver:
             for i in range( population ):
                 p = players[i]
                 p.load()
-#                if i > 0:
-#                    p.mutate(chance = mutation_chance, how_far = mutation_size)
+                if random.random < chance_a_player_mutates:
+                    p.mutate(chance = mutation_chance, how_far = mutation_size)
                 scores.append(0)
             #Now play games and choose the best players
             for trial in range(trials_per_generation):
@@ -262,14 +262,24 @@ class Neural_Evolver:
                     scores[actual_index] += this_players_scores
                     #Non-players get 1 utility point, players get their scores
                 #scores = cls.list_add( g.get_results(), scores)
-            #Choose the best players
-            
-            max_score = max(scores)
-            i = scores.index(max_score)
-            best = players[i]
-            #Some of them mutate before being saved
-            best.become_parent()
-            print max_score / (trials_per_generation), time.time() - t
+            #Here's how we choose the best players:
+            #Using the scores as weights, we choose as many indices as there are players in the population.
+            #Indices can be chosen twice.
+            #Then for every index that has been chosen, we go to that player and get it to save its data.
+            #The first player to save does so in place 0, then place 1, ..., then place population-1
+            #Remember that mutation is done at the beginning of the generation.
+            accountant = players[0]
+            #I need one player to use their method.
+            for i in range(population):
+                next_gen_index = accountant.get_token_from_weights( scores ) - 1
+                next_gen_player = players[next_gen_index]
+                next_gen_player.become_parent(which_label = i)
+#            max_score = max(scores)
+#            i = scores.index(max_score)
+#            best = players[i]
+#            #Some of them mutate before being saved
+#            best.become_parent()
+#            print max_score / (trials_per_generation), time.time() - t
 #            clear_session()
 #            for p in players:
 #                p.delete()
@@ -351,10 +361,13 @@ class Neural_Evolver:
           loss='categorical_crossentropy',
           metrics=['accuracy'])#These terms don't have any significance
         return model
-    def become_parent(self):
+    def become_parent(self, which_label = None):
 #        import os,pickle
-        os.system("rm -f Results/neural_evolver_current_model" + str(self.i) + ".p")
-        f = open("Results/neural_evolver_current_model" + str(self.i) + ".p","wb")
+        i = self.i
+        if which_label != None:
+            i = which_label
+        os.system("rm -f Results/neural_evolver_current_model" + str(i) + ".p")
+        f = open("Results/neural_evolver_current_model" + str(i) + ".p","wb")
         pickle.dump( self.model.get_weights(), f)
         f.close()
     def mutate(self, chance = 0.2, how_far = 0.1):
