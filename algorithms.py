@@ -201,6 +201,8 @@ class Quick_Evolver:
         return "Quick_Evolver: Weights are " + str(self.weights)
     def __repr__(self):
         return str(self)
+#def neural_evolve():
+#    pass
 #def neural_evolve(tokens, data, game_name):
 #    return NEURAL_EVOLVER_INSTANCE.choose_token( tokens, data, game_name )
 class Neural_Evolver:
@@ -398,6 +400,8 @@ class Neural_Evolver:
         return "Neural_Evolver"
     def __repr__(self):
         return "Neural_Evolver"
+def neural_nash():
+    pass
 class Neural_Nash:
     '''Makes a decision using aux_stochastic and a neural setwork trained through backpropagation'''
     def do_training(self, generations = 5, games = 1000, max_complexity = None, training_epochs = 10, max_gen_time = 10**9):

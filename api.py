@@ -408,6 +408,7 @@ class API:
         return total
 class Game:
     Neural_Evolver_Instance = algorithms.Neural_Evolver()
+    Neural_Nash_Instance = algorithms.Neural_Nash()
     def get_results():
         return tuple( self.results )
     def __init__(self, algorithm_tuple, tokens):
@@ -442,10 +443,12 @@ class Game:
                 f = open( "Results/games.log", "a")
                 f.write( time.asctime() + ": Game " + self.name + ". Calling Player " + str(i) + " which is " + str(player_list[0] )  + "\n" )
                 f.close()
-                if player_list[0].get_name() != "neural_evolve":
-                    this_move = player_list[0].get_function()( copy.deepcopy(self.tokens), copy.deepcopy(data), self.name )
-                else:
+                if player_list[0].get_name() == "neural_nash":
+                    this_move = Game.Neural_Nash_Instance.acutally_choose_token( copy.deepcopy(self.tokens), copy.deepcopy(data), self.name )
+                elif player_list[0].get_name() == "neural_evolve":
                     this_move = Game.Neural_Evolver_Instance.choose_token( copy.deepcopy(self.tokens), copy.deepcopy(data), self.name )
+                else:
+                    this_move = player_list[0].get_function()( copy.deepcopy(self.tokens), copy.deepcopy(data), self.name )
                 current_moves.append( this_move )
                 f = open( "Results/games.log", "a")
                 f.write( time.asctime() + ": Game " + self.name + ". Player " + str(i) + " responds " + str(this_move )  + "\n" )
