@@ -455,10 +455,10 @@ def both5( point_tuple, compressed_game_results, weights, average, multiplicitie
         expected_utility += weights[i] *  ( point[i+1] - point[i] )
     if expected_utility < average:
         result2 = result1
-    elif expected_utility == average:
-        result2 = 0.5 * result1
-    else:
+    elif expected_utility > average:
         result2 = 0
+    else:
+        result2 = 0.5 * result1
     return np.array( [result1,result2] ) 
 def sample5( compressed_game_results, multiplicities, n, trials = 1e2):
     '''Returns a Decimal indicating the highest density found'''
