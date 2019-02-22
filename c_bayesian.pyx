@@ -1,3 +1,4 @@
+#cython: nonecheck=True
 class SuperFloat:
     def __init__(self, f, exp = 0):
         import math
@@ -110,10 +111,13 @@ def main5(game_results, trials = 1e5, default_cushion = None):
     #integrate all probabilities over the hypercube
     #For n players, a game could end in 2^n - 1 ways
 #    cushion = Decimal(1)
-    if default_cushion == None:
-        cushion = sample5(compressed, multiplicities,n, trials/10)
-    else:
-        cushion = Decimal(default_cushion)
+    best_point_tuple = tuple( normalize( compressed ) )
+    result, error = both5( point_tuple = best_point_tuple, compressed, weights, average, multiplicities, cushion = Decimal(1) )
+    cushion = result[0]
+#    if default_cushion == None:
+#        cushion = sample5(compressed, multiplicities,n, trials/10)
+#    else:
+#        cushion = Decimal(default_cushion)
     result, error = mcquad( both5 , args = [compressed, weights, average, multiplicities, cushion ],
                             npoints=trials, xl = zeros(n), xu = ones(n) )
     f = open("Results/bayesian.log","a")
@@ -175,3 +179,14 @@ def sample5( compressed_game_results, multiplicities, n, trials = 1e2):
 #    density *= average_multiplier
         current_max = max( current_max, density)
     return current_max
+def list_total( l ):
+    t = 0
+    for x in l:
+        t += x
+    return t
+def normalize( l ):
+    t = list_total( l )
+    new = []
+    for x in l:
+        new.append( float(x) / t )
+    return new
