@@ -227,8 +227,8 @@ class Neural_Evolver:
     def evolve(cls, generations = 5 , trials_per_generation = 100, mutation_size = 0.1, mutation_chance = 0.2, population = 15, chance_a_player_mutates = 0.5):
 #        import copy,time
         players = []
-        for i in range(population):
-            p = Neural_Evolver(i)
+        for j in range(population):
+            p = Neural_Evolver(i = j)
             players.append(p)
         indices = range( population )
         gen = 0
@@ -240,7 +240,7 @@ class Neural_Evolver:
             for i in range( population ):
                 p = players[i]
                 p.load()
-                if random.random < chance_a_player_mutates:
+                if random.random() < chance_a_player_mutates:
                     p.mutate(chance = mutation_chance, how_far = mutation_size)
                 scores.append(0)
             #Now play games and choose the best players
@@ -261,7 +261,7 @@ class Neural_Evolver:
                 for current_index in range(len(indices)):
                     actual_index = indices[current_index]
                     this_players_score = all_scores[current_index]
-                    scores[actual_index] += this_players_scores
+                    scores[actual_index] += this_players_score
                     #Non-players get 1 utility point, players get their scores
                 #scores = cls.list_add( g.get_results(), scores)
             #Here's how we choose the best players:
@@ -293,7 +293,7 @@ class Neural_Evolver:
 ##            import tensorflow.keras
 #            from tensorflow.keras.models import load_model
 #            self.model = load_model('Results/current_model.h5')
-        self. i = i
+        self.i = i
         try:
             self.model = self.get_standard_model()
             self.load()
@@ -489,7 +489,8 @@ class Neural_Nash:
                     for k in range(len(www)):
                         weights[i][j][k] = random.random()
         self.model.set_weights( weights )
-    def __init__(self, return_to_default = False):
+    def __init__(self, return_to_default = False, is_training = True):
+        self.is_training = is_training
         try:
             self.model = self.get_standard_model()
             self.load()
@@ -679,18 +680,19 @@ class Game:
         f.close()
         #data is a list of tuples, which are ( tokens ,scores, expected_utilities)
         data = [ self.tokens, temp_scores, self.results ]
-        try:
-            f = open("Results/neural_nash_data.p","rb")
-        except IOError:
-            to_pickle = []
-            to_pickle.append(data)            
-        else:
-            to_pickle = pickle.load(f)
-            to_pickle.append(data)
+        if isinstance( player_list[0], Neural_Nash):
+            try:
+                f = open("Results/neural_nash_data.p","rb")
+            except IOError:
+                to_pickle = []
+                to_pickle.append(data)            
+            else:
+                to_pickle = pickle.load(f)
+                to_pickle.append(data)
+                f.close()
+            f = open("Results/neural_nash_data.p","wb")
+            pickle.dump( to_pickle, f )
             f.close()
-        f = open("Results/neural_nash_data.p","wb")
-        pickle.dump( to_pickle, f )
-        f.close()
 def aux_abridged_game(tokens, players_choices, scores_so_far, utility_metric):
 #    import random, collections, copy
     '''This version of game receives the position and the current moves.
@@ -839,7 +841,7 @@ def aux_stochastic(tokens, data, game_name, utility_metric, start = 25, memory =
                 summed.append(  aux_list_total(x) )
             best_move = tokens[ summed.index( max(summed) ) ]
             actual_choices[i].append( best_move )
-    if isinstance(utility_metric, Neural_Nash):
+    if isinstance(utility_metric, Neural_Nash) and utility_metric.is_training:
         results = []
         for x in range(n):
             results.append(0)
