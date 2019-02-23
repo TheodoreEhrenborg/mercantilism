@@ -257,6 +257,7 @@ class API:
             games = []
             should_stop = False
             LIMIT = 20
+            TIME_LIMIT = 25*60
             game_count = 0#After LIMIT games, the computer must stop to check probabilities.
             #A really fast game can take 0.05 seconds, so in 5 minutes
             #the computer runs 6000 games, which is probably too much.
@@ -265,7 +266,7 @@ class API:
                 g = Game( copy.copy(algorithm_tuple), copy.copy(self.TOKENS) )
                 games.append( g )
                 game_count += 1
-                if time.time() - most_recent_check > 300 or game_count >= LIMIT:
+                if time.time() - most_recent_check > TIME_LIMIT or game_count >= LIMIT:
                     most_recent_check = time.time()
                     game_count = 0
                     processes_running = self.check_for_processes()
