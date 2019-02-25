@@ -370,18 +370,51 @@ class API:
         f.write( time.asctime() + ": " + to_write_sum + str(sum_game_results) + "\n" )
         f.close()
     def get_results(self):
-        import time, random
+        import time, random, math
         name = "Results/Readable/Readable_"+ time.asctime() + " " + str(random.randrange(10**9) )+ ".txt"
         name = name.replace(" ","_")
         f = open(name, "a")
         print len(self.comparisons)
+        results_list = []
         for c in self.comparisons.keys():
             fixed, invader = c
-            f.write("Fixed: " + str(fixed) + " Invader: " + str(invader) + "\n")
+            title = "Fixed: " + str(fixed) + " Invader: " + str(invader) + "\n"
+            f.write(title)
             f.write( "Current Confidence: " + str(self.comparisons[c][0]) + "\n" )
+            num_trials = self.comparisons[c][1]
             f.write( "Number of trials: " + str(self.comparisons[c][1]) + "\n" )
             f.write( "Amount of time spent: " + str(self.comparisons[c][2]) + "\n" )
+            invader_score = self.comparisons[c][3][-1]
             f.write( "Summed results of games: " + str(self.comparisons[c][3]) + "\n\n" )
+            results_list.append( [ title, num_trials, invader_score ] )
+        f.close()
+        results_list.sort()
+        name = "Results/Readable/Analysis_"+ time.asctime() + " " + str(random.randrange(10**9) )+ ".txt"
+        name = name.replace(" ","_")
+        f = open(name, "a")
+        for x in results_list:
+            title = x[0]
+            num_trials = x[1]
+            invader_score = x[2]
+            f.write(title)
+            f.write("Number of trials: " + num_trials + "\n" )
+            f.write("Invader's score: " + invader_score + "\n" )
+            ratio = float(invader_score) / num_trials
+            f.write("Ratio: " + ratio + "\n" )
+            if ratio < 1:
+                f.write("The fixed player IS evolutionarily stable against the invader." + "\n" )
+            elif ratio > 1:
+                f.write("The fixed player is NOT evolutionarily stable against the invader." + "\n" )
+            else:
+                f.write("Unable to make a decision.\n")
+            uncertainty = self.NUM_PLAYERS * math.sqrt( num_trials )
+            lower_bound = invader_score - uncertainty
+            upper_bound = invader_score + uncertainty
+            f.write("Lower bound on invader's score: " + lower_bound + "\n" )
+            f.write("Upper bound on invader's score: " + upper_bound + "\n" )
+            if num_trials >= lower_bound and num_trials <= upper_bound:
+                f.write("It is POSSIBLE that this result is incorrect.\n" )
+            f.write("\n")
         f.close()
     def list_add(self, a, b):
         c = []
