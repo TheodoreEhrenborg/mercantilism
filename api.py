@@ -397,10 +397,10 @@ class API:
             num_trials = x[1]
             invader_score = x[2]
             f.write(title)
-            f.write("Number of trials: " + num_trials + "\n" )
-            f.write("Invader's score: " + invader_score + "\n" )
+            f.write("Number of trials: " + str(num_trials) + "\n" )
+            f.write("Invader's score: " + str(invader_score) + "\n" )
             ratio = float(invader_score) / num_trials
-            f.write("Ratio: " + ratio + "\n" )
+            f.write("Ratio: " + str(ratio) + "\n" )
             if ratio < 1:
                 f.write("The fixed player IS evolutionarily stable against the invader." + "\n" )
             elif ratio > 1:
@@ -410,8 +410,8 @@ class API:
             uncertainty = self.NUM_PLAYERS * math.sqrt( num_trials )
             lower_bound = invader_score - uncertainty
             upper_bound = invader_score + uncertainty
-            f.write("Lower bound on invader's score: " + lower_bound + "\n" )
-            f.write("Upper bound on invader's score: " + upper_bound + "\n" )
+            f.write("Lower bound on invader's score: " + str(lower_bound) + "\n" )
+            f.write("Upper bound on invader's score: " + str(upper_bound) + "\n" )
             if num_trials >= lower_bound and num_trials <= upper_bound:
                 f.write("It is POSSIBLE that this result is incorrect.\n" )
             f.write("\n")
