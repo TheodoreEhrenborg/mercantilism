@@ -374,6 +374,7 @@ class Neural_Evolver:
         f.close()
     def mutate(self, chance = 0.2, how_far = 0.1):
 #        import random,numpy
+        #Note that the actual mutation amount is how_far * random.random() 
         how_far = abs(how_far)
         weights = self.model.get_weights()
         for i in range(len(weights)):
@@ -382,17 +383,17 @@ class Neural_Evolver:
                 if type(ww[j]) == np.float32:
                     if random.random() < chance:
                         if random.random() < 0.5:
-                            weights[i][j] += how_far
+                            weights[i][j] += how_far * random.random()
                         else:
-                            weights[i][j] -= how_far
+                            weights[i][j] -= how_far * random.random()
                 else:
                     www = ww[j]
                     for k in range(len(www)):
                         if random.random() < chance:
                             if random.random() < 0.5:
-                                weights[i][j][k] += how_far
+                                weights[i][j][k] += how_far * random.random()
                             else:
-                                weights[i][j][k] -= how_far
+                                weights[i][j][k] -= how_far * random.random()
         self.model.set_weights( weights )
 #    def __str__(self):
 #        return "Neural_Evolver: Weights are " + str(self.model.get_weights())
