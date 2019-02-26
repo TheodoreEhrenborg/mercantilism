@@ -201,8 +201,8 @@ class Quick_Evolver:
         return "Quick_Evolver: Weights are " + str(self.weights)
     def __repr__(self):
         return str(self)
-#def neural_evolve():
-#    pass
+def neural_evolve():
+    pass
 #def neural_evolve(tokens, data, game_name):
 #    return NEURAL_EVOLVER_INSTANCE.choose_token( tokens, data, game_name )
 class Neural_Evolver:

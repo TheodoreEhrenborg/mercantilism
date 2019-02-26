@@ -443,7 +443,8 @@ class API:
 class Game:
     Neural_Evolver_Instance = algorithms.Neural_Evolver()
     Neural_Nash_Instance = algorithms.Neural_Nash(is_training = False)
-    def get_results():
+    NEURAL_EVOLVER_POPULATION = 100
+    def get_results(self):
         return tuple( self.results )
     def __init__(self, algorithm_tuple, tokens):
         import random, collections, copy, time
@@ -480,6 +481,9 @@ class Game:
                 if player_list[0].get_name() == "neural_nash":
                     this_move = Game.Neural_Nash_Instance.actually_choose_token( copy.deepcopy(self.tokens), copy.deepcopy(data), self.name )
                 elif player_list[0].get_name() == "neural_evolve":
+                    r = random.choice(range(Game.NEURAL_EVOLVER_POPULATION))
+                    Game.Neural_Evolver_Instance.i = r
+                    Game.Neural_Evolver_Instance.load()
                     this_move = Game.Neural_Evolver_Instance.choose_token( copy.deepcopy(self.tokens), copy.deepcopy(data), self.name )
                 else:
                     this_move = player_list[0].get_function()( copy.deepcopy(self.tokens), copy.deepcopy(data), self.name )
