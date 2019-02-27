@@ -68,7 +68,8 @@ cdef aux_evaluate_position( object player, list tokens,
     if tokens == []:
         output = []
         highest_score = max(current_scores)
-        num_winners = current_scores.count(highest_score)
+#        c = collections.Counter(current_scores)
+        num_winners = list(current_scores).count(highest_score)
         for i in range(NUM_PLAYERS):
             if current_scores[i] == highest_score:
                 output.append( float(NUM_PLAYERS) / num_winners )
@@ -161,13 +162,14 @@ cdef aux_stochastic(object player, np.ndarray[np.long_t, ndim=1, negative_indice
                     imagined_player_moves = player_moves[:]
                     imagined_player_moves[i] = tokens[l]
                     imagined_player_moves = list(imagined_player_moves)
-                    #Now play the game and update utilities
-                    #Saving a dictionary speeds it up by a factor of 17, starting with tokens from 1 to 15
-                    try: 
-                        temp_utilities = utility_record[(str(tokens), tuple(imagined_player_moves), str(scores_so_far))]
-                    except KeyError:
-                        temp_utilities = aux_abridged_game(player, tokens, imagined_player_moves, scores_so_far)
-                        utility_record[(str(tokens), tuple(imagined_player_moves), str(scores_so_far))] = temp_utilities
+#                    #Now play the game and update utilities
+#                    #Saving a dictionary speeds it up by a factor of 17, starting with tokens from 1 to 15
+#                    try: 
+#                        temp_utilities = utility_record[(str(tokens), tuple(imagined_player_moves), str(scores_so_far))]
+#                    except KeyError:
+#                        temp_utilities = aux_abridged_game(player, tokens, imagined_player_moves, scores_so_far)
+#                        utility_record[(str(tokens), tuple(imagined_player_moves), str(scores_so_far))] = temp_utilities
+                    temp_utilities = aux_abridged_game(player, tokens, imagined_player_moves, scores_so_far) 
                     my_utilities[l].append( temp_utilities[i] )
             summed = []
             for x in my_utilities:
