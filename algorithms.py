@@ -4,6 +4,8 @@ import numpy as np
 import random, collections, time, copy, pickle, os
 TOKENS = range(1,16)
 NUM_PLAYERS = 5
+def aux_neural_nash_untrainable():
+    pass
 def play_highest(tokens, data, game_name):
     '''Plays the highest token left.'''
 #    import time
