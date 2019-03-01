@@ -4,6 +4,7 @@ import numpy as np
 cimport numpy as np
 import collections, random
 import pickle
+from libc.stdlib cimport rand, RAND_MAX
 cdef long NUM_PLAYERS = 5
 cdef list TOKENS = range(1,16)
 class Neural_Nash_Untrainable_Wrapper:
@@ -25,7 +26,7 @@ class Neural_Nash_Untrainable_Wrapper:
         cdef int i = 0
         for i in range(len(scores_so_far_l)):
             scores_so_far[i] = scores_so_far_l[i]
-        cdef np.ndarray[np.long_t,
+        cdef np.ndarray[np.int_t,
                     ndim=1,
                     negative_indices=False,
                     mode='c'] array_tokens
@@ -34,7 +35,7 @@ class Neural_Nash_Untrainable_Wrapper:
 #        array_tokens = np.array(tokens)
         i = 0
         for i in range(len(tokens)):
-            array_tokens[i] = tokens[i]
+            array_tokens[i] = <int>tokens[i]
         return aux_stochastic(self, array_tokens, scores_so_far)
     def load(self):
 #        import pickle
@@ -95,8 +96,8 @@ cdef aux_evaluate_position( object player, list tokens,
        output.append( NUM_PLAYERS * x)
 #    print tokens, current_scores, output
     return output
-cdef aux_abridged_game(object player, np.ndarray[np.long_t, ndim=1, negative_indices=False, mode='c'] tokens,
-                         list players_choices,
+cdef aux_abridged_game(object player, np.ndarray[np.int_t, ndim=1, negative_indices=False, mode='c'] tokens,
+                          np.ndarray[np.int_t, ndim=1, negative_indices=False, mode='c'] players_choices,
                     	 np.ndarray[np.double_t, ndim=1, negative_indices=False, mode='c'] scores_so_far):
 #    import random, collections, copy
     '''This version of game receives the position and the current moves.
@@ -126,45 +127,61 @@ cdef aux_abridged_game(object player, np.ndarray[np.long_t, ndim=1, negative_ind
         if x not in players_choices:
             new.append(x)
     return aux_evaluate_position(player, new, this_case_scores)
-cdef aux_stochastic(object player, np.ndarray[np.long_t, ndim=1, negative_indices=False, mode='c'] tokens,
+cdef aux_stochastic(object player, np.ndarray[np.int_t, ndim=1, negative_indices=False, mode='c'] tokens,
                     np.ndarray[np.double_t, ndim=1, negative_indices=False, mode='c'] scores_so_far,
                     long start = 25, long memory = 50, long available = 25, long end = 200):
-    utility_record = {}
+    cdef dict utility_record = {}
     cdef long n = len(scores_so_far) #n is the number of players
-    cdef np.ndarray[np.long_t,
+    cdef np.ndarray[np.int_t,
                 ndim=2,
                 negative_indices=False,
                 mode='c'] actual_choices
-    actual_choices = np.zeros( (end, n), dtype = np.long)
-    cdef long i,j,l,k, shadow
+    actual_choices = np.zeros( (end, n), dtype = np.int)
+    cdef long i,j,l,k, 
+    cdef int token_len = len(tokens)
     i = 0
     for i in range(start):
         j = 0
         for j in range(n):
-            actual_choices[i,j] = random.choice(tokens)
+            actual_choices[i,j] = tokens[ int(rand()/(RAND_MAX*1.0) * token_len)  ]
     #At this point actual_choices has been initialized with random moves
-    shadow = 0
+#    cdef long shadow = 0
     cdef long count = start
+ #   cdef np.ndarray[np.long_t,
+ #               ndim=1,
+ #               negative_indices=False,
+ #               mode='c'] remembered_indices
+    cdef np.ndarray[np.double_t,
+                ndim=1,
+                negative_indices=False,
+                mode='c'] my_utilities
+    cdef np.ndarray[np.int_t,
+                ndim=1,
+                negative_indices=False,
+                mode='c'] player_moves
+    cdef np.ndarray[np.int_t,
+                ndim=1,
+                negative_indices=False,
+                mode='c'] imagined_player_moves
+    cdef long currently_remembered_index
     for count in range(start,end):#Now we are in the next decision-time
+        cdef long where_memory_starts = max( count - memory, 0 )
+        cdef long possibly_abridged_memory = count - where_memory_starts
+#        remembered_indices = np.zeros( (possibly_abridged_memory,) , dtype = np.long)
+        my_utilities = np.zeros(   (   token_len , possibly_abridged_memory ) , dtype = np.double)
+        i = 0
         for i in range(n):
            #Now we've chosen a player
-            temp = range(   min(   memory, count )   )
-            random.shuffle( temp )
-            remembered_indices = temp[0:available]
-            my_utilities = []
-            l = 0
-            for l in range(len(tokens)):
-                my_utilities.append( [] )
-            for j in remembered_indices:
-                player_moves = []
-                k = 0
-                for k in range(n):
-                    player_moves.append( actual_choices[count - j,k] )
+            j = 0
+            for j in range(available):
+                currently_remembered_index = int(rand()/(RAND_MAX*1.0) * possibly_abridged_memory) + where_memory_starts
+                player_moves = actual_choices[count - currently_remembered_index]
+                #player_moves is everyone's actual moves at the index we remember
                 l = 0
-                for l in range(len(tokens)):
-                    imagined_player_moves = player_moves[:]
+                for l in range(token_len):#Now we change the tokens I played to see if I could do better
+                    imagined_player_moves = np.copy(player_moves)
                     imagined_player_moves[i] = tokens[l]
-                    imagined_player_moves = list(imagined_player_moves)
+                    #Cythonized through here
                     #Now play the game and update utilities
                     #Saving a dictionary speeds it up by a factor of 17, starting with tokens from 1 to 15
                     try: 
@@ -184,5 +201,5 @@ cdef aux_stochastic(object player, np.ndarray[np.long_t, ndim=1, negative_indice
 #            actual_choices[count,i] =  best_move 
 #            print actual_choices
     cdef int choice_index
-    choice_index = random.randint(1,memory)#Does this end at memory? Yes, it's inclusive.
+    choice_index = 1 + int(rand()/(RAND_MAX*1.0) * memory)#Does this end at memory? Yes, it's inclusive.
     return actual_choices[end-choice_index,0]
