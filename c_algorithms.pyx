@@ -156,7 +156,7 @@ cdef aux_stochastic(object player, np.ndarray[np.int_t, ndim=1, negative_indices
     view_my_utilities = my_utilities
     cdef tuple lookup_tuple
     for count in range(start,end):#Now we are in the next decision-time
-        where_memory_starts = max( count - memory, 0 )
+        where_memory_starts = <int>max( count - memory, 0 )
         possibly_abridged_memory = count - where_memory_starts
         i = 0
         for i in range(token_len):
