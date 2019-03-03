@@ -1,11 +1,13 @@
-# cython: profile=True
-#The first line might make it slower.
+# cython: profile=False
+#The first line might make it slower when profile = True.
 import numpy as np
 cimport numpy as np
-import collections, random
+#from libcpp cimport bool
+from cpython cimport bool
+import collections
 import pickle
 from libc.stdlib cimport rand, RAND_MAX
-cdef long NUM_PLAYERS = 5
+cdef int NUM_PLAYERS = 5
 cdef list TOKENS = range(1,16)
 class Neural_Nash_Untrainable_Wrapper:
     '''Makes a decision using aux_stochastic and a neural network trained through backpropagation.
@@ -63,19 +65,18 @@ class Neural_Nash_Untrainable_Wrapper:
         return "Neural_Nash"
 cdef aux_evaluate_position( object player, list tokens, 
      np.ndarray[np.double_t, ndim=1, negative_indices=False, mode='c'] current_scores):
-#    import collections,random
 #    import numpy as np
+    cdef int i
+    cdef np.ndarray[np.float_t, ndim=1, negative_indices=False, mode='c'] one_d_results = np.zeros( (NUM_PLAYERS,), dtype = np.float)
     if tokens == []:
-        output = []
         highest_score = max(current_scores)
 #        c = collections.Counter(current_scores)
         num_winners = list(current_scores).count(highest_score)
+        i = 0
         for i in range(NUM_PLAYERS):
             if current_scores[i] == highest_score:
-                output.append( float(NUM_PLAYERS) / num_winners )
-            else:
-                output.append(0)
-        return output
+                one_d_results[i] = <float>NUM_PLAYERS / num_winners 
+        return one_d_results
     scores = []
     for item in current_scores:
         scores.append( item )
@@ -87,19 +88,17 @@ cdef aux_evaluate_position( object player, list tokens,
     l = len( existing_tokens ) + len( scores )
     the_input = np.array( existing_tokens + scores)
     the_input.shape = (1,l)
-    #print the_input
+#    print the_input
+#    cdef np.ndarray[np.float_t, ndim=2, negative_indices=False, mode='c'] results = np.zeros( (NUM_PLAYERS,), dtype = np.float_t)
     results = player.model.predict( the_input )
-    #print results
-    results_as_list = list(results[0])
-    output = []
-    for x in results_as_list:
-       output.append( NUM_PLAYERS * x)
-#    print tokens, current_scores, output
-    return output
+#    print results
+    i = 0
+    for i in range(NUM_PLAYERS):
+        one_d_results[i] = <float>(NUM_PLAYERS * results[0,i])
+    return one_d_results
 cdef aux_abridged_game(object player, np.ndarray[np.int_t, ndim=1, negative_indices=False, mode='c'] tokens,
                           np.ndarray[np.int_t, ndim=1, negative_indices=False, mode='c'] players_choices,
-                    	 np.ndarray[np.double_t, ndim=1, negative_indices=False, mode='c'] scores_so_far):
-#    import random, collections, copy
+                         np.ndarray[np.double_t, ndim=1, negative_indices=False, mode='c'] scores_so_far):
     '''This version of game receives the position and the current moves.
     Then it plays one round and returns the utilities for Neural_Nash.
                 The sum of utility assigned is n. 
@@ -108,7 +107,6 @@ cdef aux_abridged_game(object player, np.ndarray[np.int_t, ndim=1, negative_indi
                 match expected utilities in the real game.
     '''
     cdef list new
-    cdef long n = len(players_choices)
     cdef np.ndarray[np.double_t, ndim=1, negative_indices=False, mode='c'] this_case_scores
     this_case_scores = np.copy(scores_so_far)
     c = collections.Counter(players_choices)
@@ -116,7 +114,7 @@ cdef aux_abridged_game(object player, np.ndarray[np.int_t, ndim=1, negative_indi
 #    scores_so_far = list(scores_so_far)
 #    tokens = list(tokens)
     cdef long i = 0
-    for i in range(n):
+    for i in range(NUM_PLAYERS):
         if c[players_choices[i]] == 1:
 #           round_scores.append( players_choices[i] )
             this_case_scores[i] = players_choices[i] + this_case_scores[i]
@@ -131,75 +129,145 @@ cdef aux_stochastic(object player, np.ndarray[np.int_t, ndim=1, negative_indices
                     np.ndarray[np.double_t, ndim=1, negative_indices=False, mode='c'] scores_so_far,
                     long start = 25, long memory = 50, long available = 25, long end = 200):
     cdef dict utility_record = {}
-    cdef long n = len(scores_so_far) #n is the number of players
+    cdef long [:] view_tokens = tokens
     cdef np.ndarray[np.int_t,
                 ndim=2,
                 negative_indices=False,
                 mode='c'] actual_choices
-    actual_choices = np.zeros( (end, n), dtype = np.int)
-    cdef long i,j,l,k, 
-    cdef int token_len = len(tokens)
+    actual_choices = np.zeros( (end, NUM_PLAYERS), dtype = np.int)
+    cdef long [:,:] view_actual_choices = actual_choices
+    cdef int d_length = 4000
+    cdef np.ndarray[np.int_t,
+                ndim=2,
+                negative_indices=False,
+                mode='c'] keys
+    keys = np.zeros( (d_length, NUM_PLAYERS), dtype = np.int)
+    cdef long [:,:] view_keys = keys
+    cdef np.ndarray[np.float_t,
+                ndim=2,
+                negative_indices=False,
+                mode='c'] values = np.zeros( (d_length,NUM_PLAYERS) , dtype = np.float)
+    cdef double[:,:] view_values = values
+    cdef int indices_used = 0
+    cdef int a, aa, aaa
+    cdef bool found_in_dictionary, found_here
+    cdef int i,j,l,k, 
+    cdef int max_index
+    cdef double max_so_far, this_sum
+    cdef int token_len = <int>np.size(tokens)
     i = 0
     for i in range(start):
         j = 0
-        for j in range(n):
-            actual_choices[i,j] = tokens[ int(rand()/(RAND_MAX*1.0) * token_len)  ]
-    #At this point actual_choices has been initialized with random moves
+        for j in range(NUM_PLAYERS):
+            view_actual_choices[i,j] = view_tokens[ <int>(rand()/(RAND_MAX*1.0) * token_len)  ]
+    #At this point view_actual_choices has been initialized with random moves
 #    cdef long shadow = 0
     cdef long count = start
- #   cdef np.ndarray[np.long_t,
- #               ndim=1,
- #               negative_indices=False,
- #               mode='c'] remembered_indices
-    cdef np.ndarray[np.double_t,
-                ndim=1,
+    cdef np.ndarray[np.float_t,
+                ndim=2,
                 negative_indices=False,
-                mode='c'] my_utilities
+                mode='c'] my_utilities = np.zeros( (1,1) , dtype = np.float)
+    cdef double[:,:] view_my_utilities 
+#    cdef np.ndarray[np.float_t,
+#                ndim=1,
+#                negative_indices=False,
+#                mode='c'] temp_utilities = np.zeros( (NUM_PLAYERS,) , dtype = np.float)
+    cdef double[:] view_temp_utilities
     cdef np.ndarray[np.int_t,
                 ndim=1,
                 negative_indices=False,
-                mode='c'] player_moves
+                mode='c'] player_moves = np.zeros( (NUM_PLAYERS,) , dtype = np.int)
+    cdef long [:] view_player_moves = player_moves
     cdef np.ndarray[np.int_t,
                 ndim=1,
                 negative_indices=False,
-                mode='c'] imagined_player_moves
+                mode='c'] imagined_player_moves = np.zeros( (NUM_PLAYERS,) , dtype = np.int)
+    cdef long [:] view_imagined_player_moves = imagined_player_moves
     cdef long currently_remembered_index
+    cdef long where_memory_starts
+    cdef long possibly_abridged_memory
+    cdef int ii
+    cdef tuple tokens_tuple = tuple(tokens)
+    my_utilities = np.zeros(   (   token_len , available ) , dtype = np.double)
+    view_my_utilities = my_utilities
+    cdef tuple lookup_tuple
+    cdef tuple scores_so_far_tuple = tuple(scores_so_far)
     for count in range(start,end):#Now we are in the next decision-time
-        cdef long where_memory_starts = max( count - memory, 0 )
-        cdef long possibly_abridged_memory = count - where_memory_starts
-#        remembered_indices = np.zeros( (possibly_abridged_memory,) , dtype = np.long)
-        my_utilities = np.zeros(   (   token_len , possibly_abridged_memory ) , dtype = np.double)
+        where_memory_starts = max( count - memory, 0 )
+        possibly_abridged_memory = count - where_memory_starts
         i = 0
-        for i in range(n):
+        for i in range(token_len):
+            ii = 0 
+            for ii in range(available):
+                view_my_utilities[i,ii] = 0
+#        remembered_indices = np.zeros( (possibly_abridged_memory,) , dtype = np.long)
+        i = 0
+        for i in range(NUM_PLAYERS):
            #Now we've chosen a player
             j = 0
             for j in range(available):
-                currently_remembered_index = int(rand()/(RAND_MAX*1.0) * possibly_abridged_memory) + where_memory_starts
-                player_moves = actual_choices[count - currently_remembered_index]
+                currently_remembered_index = <int>(rand()/(RAND_MAX*1.0) * possibly_abridged_memory) + where_memory_starts
+                ii = 0 
+                for ii in range(NUM_PLAYERS):
+                    view_player_moves[ii] = view_actual_choices[count - currently_remembered_index,ii]
                 #player_moves is everyone's actual moves at the index we remember
                 l = 0
                 for l in range(token_len):#Now we change the tokens I played to see if I could do better
-                    imagined_player_moves = np.copy(player_moves)
-                    imagined_player_moves[i] = tokens[l]
-                    #Cythonized through here
+                    ii = 0
+                    for ii in range(NUM_PLAYERS):
+                        view_imagined_player_moves[ii] = view_player_moves[ii]
+                    view_imagined_player_moves[i] = view_tokens[l]
+#                    lookup_tuple = tuple(imagined_player_moves)
                     #Now play the game and update utilities
                     #Saving a dictionary speeds it up by a factor of 17, starting with tokens from 1 to 15
-                    try: 
-                        temp_utilities = utility_record[(tuple(tokens), tuple(imagined_player_moves), tuple(scores_so_far))]
-                    except KeyError:
-                        temp_utilities = aux_abridged_game(player, tokens, imagined_player_moves, scores_so_far)
-                        utility_record[(tuple(tokens), tuple(imagined_player_moves), tuple(scores_so_far))] = temp_utilities
-#                    temp_utilities = aux_abridged_game(player, tokens, imagined_player_moves, scores_so_far)
-#                    shadow = shadow + 1
-#                    if not shadow % 1000:
-#                        print shadow 
-                    my_utilities[l].append( temp_utilities[i] )
-            summed = []
-            for x in my_utilities:
-                summed.append(  sum(x) )
-            best_move = tokens[ summed.index( max(summed) ) ]
-#            actual_choices[count,i] =  best_move 
+                    a = d_length - indices_used
+                    found_in_dictionary = False
+                    for a in range(d_length - indices_used, d_length):
+                        aa = 0
+                        found_here = True
+                        for aa in range(NUM_PLAYERS):
+                            found_here = found_here and view_keys[a,aa] == view_imagined_player_moves[aa]
+                            if not found_here:
+                                break
+                        if found_here:
+                            found_in_dictionary = True
+                            break
+                    if found_in_dictionary:
+                        for aa in range(NUM_PLAYERS):
+                            view_temp_utilities[aa] = view_values[a,aa]
+                    else:
+                        view_temp_utilities = aux_abridged_game(player, tokens, imagined_player_moves, scores_so_far)
+                        if d_length > indices_used:#If the dictionary is not yet full
+                            indices_used = indices_used + 1
+                            a = d_length - indices_used
+                            for aa in range(NUM_PLAYERS):
+                                view_values[a,aa] = view_temp_utilities[aa]
+                                view_keys[a,aa] = view_imagined_player_moves[aa]
+#                    try:
+#                        view_temp_utilities = utility_record[lookup_tuple]
+#                    except KeyError:
+#                        view_temp_utilities = aux_abridged_game(player, tokens, imagined_player_moves, scores_so_far)
+#                        utility_record[lookup_tuple] = view_temp_utilities
+##                    view_temp_utilities = aux_abridged_game(player, tokens, imagined_player_moves, scores_so_far)
+##                    shadow = shadow + 1
+##                    if not shadow % 1000:
+##                        print shadow 
+                    view_my_utilities[l,j] = view_temp_utilities[i]
+            l = 0
+            max_so_far = 0 
+            max_index = 0
+            for l in range(token_len):
+                this_sum = 0
+                j = 0
+                for j in range(available):
+                    this_sum = this_sum + view_my_utilities[l,j]
+                if this_sum > max_so_far:
+                    max_so_far = this_sum
+                    max_index = <int>l
+            view_actual_choices[count,i] =  view_tokens[ max_index ] 
 #            print actual_choices
     cdef int choice_index
-    choice_index = 1 + int(rand()/(RAND_MAX*1.0) * memory)#Does this end at memory? Yes, it's inclusive.
-    return actual_choices[end-choice_index,0]
+    choice_index = 1 + <int>(rand()/(RAND_MAX*1.0) * memory)#Does this end at memory? Yes, it's inclusive.
+    print len(utility_record.keys())
+    print indices_used
+    return view_actual_choices[end-choice_index,0]
