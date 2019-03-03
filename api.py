@@ -4,7 +4,6 @@ It keeps the main log and decides which algorithms to test
 against each other.'''
 import algorithms
 reload(algorithms)
-cimport c_algorithms
 def main(daytime_run = False):
     should_run = True
     while should_run:
@@ -242,11 +241,13 @@ class API:
         while (not self.should_quit) and (not self.should_adjourn) and ( not self.check_for_processes() ):
             num_trials = 10**9
             for x in self.comparisons.values():
-                if x[1] < num_trials:
+                if x[1] < num_trials and not self.is_significant(x):
                     num_trials = x[1]
+            if num_trials == 10**9:
+                raise Exception("A comparison was not chosen.")
             for current_pair in self.comparisons.keys():
-                if self.comparisons[current_pair][1] == num_trials:
-                    break#We go for the pair with the fewest number of trials
+                if self.comparisons[current_pair][1] == num_trials and not self.is_significant(self.comparisons[current_pair]):
+                    break#We choose the pair with the fewest number of trials
             #Now that we have a current_pair, we check the probability
             fixed, invader = current_pair
             #self.check_probability(current_pair)
@@ -417,6 +418,14 @@ class API:
                 f.write("It is POSSIBLE that this result is incorrect.\n" )
             f.write("\n")
         f.close()
+    def is_significant(self, comparison):
+        import math
+        num_trials = comparison[1]
+        invader_score = comparison[3][-1]
+        uncertainty = self.NUM_PLAYERS * math.sqrt( num_trials )
+        lower_bound = invader_score - uncertainty
+        upper_bound = invader_score + uncertainty
+        return num_trials < lower_bound or num_trials > upper_bound
     def list_add(self, a, b):
         c = []
         if len(a) != len(b):
@@ -444,7 +453,8 @@ class API:
 class Game:
     Neural_Evolver_Instance = algorithms.Neural_Evolver()
     Neural_Nash_Instance = algorithms.Neural_Nash(is_training = False)
-    Neural_Nash_Untrainable_Instance = c_algorithms.Neural_Nash_Untrainable_Wrapper()
+#    Don't use the next line
+#    Neural_Nash_Untrainable_Instance = c_algorithms.Neural_Nash_Untrainable_Wrapper()
     NEURAL_EVOLVER_POPULATION = 100
     def get_results(self):
         return tuple( self.results )
@@ -482,8 +492,8 @@ class Game:
                 f.close()
                 if player_list[0].get_name() == "neural_nash":
                     this_move = Game.Neural_Nash_Instance.actually_choose_token( copy.deepcopy(self.tokens), copy.deepcopy(data), self.name )
-                elif player_list[0].get_name() == "aux_neural_nash_untrainable":
-                    this_move = Game.Neural_Nash_Untrainable_Instance.actually_choose_token( copy.deepcopy(self.tokens), copy.deepcopy(data))
+#                elif player_list[0].get_name() == "aux_neural_nash_untrainable":
+#                    this_move = Game.Neural_Nash_Untrainable_Instance.actually_choose_token( copy.deepcopy(self.tokens), copy.deepcopy(data))
                 elif player_list[0].get_name() == "neural_evolve":
                     r = random.choice(range(Game.NEURAL_EVOLVER_POPULATION))
                     Game.Neural_Evolver_Instance.i = r
