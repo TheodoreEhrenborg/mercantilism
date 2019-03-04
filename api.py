@@ -408,7 +408,7 @@ class API:
             fixed = x[3]
             if fixed != previously_fixed:
                 if not first:
-                    g.write("Results where " + previously_fixed + " is fixed:\n")
+                    g.write("Results where " + str(previously_fixed) + " is fixed:\n")
                     g.write("Was ES against this many strategies: " + str(fixed_wins) + "\n")
                     g.write("Was in a statistical tie with this many strategies: " + str(fixed_ties) + "\n")
                     g.write("Was not ES against this many strategies: " + str(fixed_losses) + "\n\n")
@@ -448,7 +448,7 @@ class API:
                 fixed_losses += 1
             f.write("\n")
         if not first:
-            g.write("Results where " + previously_fixed + " is fixed:\n")
+            g.write("Results where " + str(previously_fixed) + " is fixed:\n")
             g.write("Was ES against this many strategies: " + str(fixed_wins) + "\n")
             g.write("Was in a statistical tie with this many strategies: " + str(fixed_ties) + "\n")
             g.write("Was not ES against this many strategies: " + str(fixed_losses) + "\n\n")
@@ -469,7 +469,7 @@ class API:
             invader = x[4]
             if invader != previously_invading:
                 if not first:
-                    g.write("Results where " + previously_invading + " is invader:\n")
+                    g.write("Results where " + str(previously_invading) + " is invader:\n")
                     g.write("Could invade this many strategies: " + str(invader_wins) + "\n")
                     g.write("Was in a statistical tie with this many strategies: " + str(invader_ties) + "\n")
                     g.write("Could not invade this many strategies: " + str(invader_losses) + "\n\n")
@@ -508,7 +508,7 @@ class API:
                 invader_losses += 1
             f.write("\n")
         if not first:
-            g.write("Results where " + previously_invading + " is invader:\n")
+            g.write("Results where " + str(previously_invading) + " is invader:\n")
             g.write("Could invade this many strategies: " + str(invader_wins) + "\n")
             g.write("Was in a statistical tie with this many strategies: " + str(invader_ties) + "\n")
             g.write("Could not invade this many strategies: " + str(invader_losses) + "\n\n")
