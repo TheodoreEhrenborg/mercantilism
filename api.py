@@ -63,7 +63,7 @@ class API:
             elif 'get_results' in i:
                 f.write(time.asctime() + ": Official: Saving human-readable results" + "\n")
                 self.get_results()
-                self.should_reload = True
+                #self.should_reload = True #I don't see why the computer has to reload itself 
             elif 'redo_confidence' in i:
                 f.write( time.asctime() + ": Official: Redo_confidence" + "\n" ) 
                 self.should_reload = True
