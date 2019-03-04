@@ -388,10 +388,38 @@ class API:
             f.write( "Amount of time spent: " + str(self.comparisons[c][2]) + "\n" )
             invader_score = self.comparisons[c][3][-1]
             f.write( "Summed results of games: " + str(self.comparisons[c][3]) + "\n\n" )
-            results_list.append( [ title, num_trials, invader_score ] )
+            results_list.append( [ title, num_trials, invader_score, invader ] )
         f.close()
         results_list.sort()
-        name = "Results/Readable/Analysis_"+ time.asctime() + " " + str(random.randrange(10**9) )+ ".txt"
+        name = "Results/Readable/Analysis_by_Fixed_"+ time.asctime() + " " + str(random.randrange(10**9) )+ ".txt"
+        name = name.replace(" ","_")
+        f = open(name, "a")
+        for x in results_list:
+            title = x[0]
+            num_trials = x[1]
+            invader_score = x[2]
+            f.write(title)
+            f.write("Number of trials: " + str(num_trials) + "\n" )
+            f.write("Invader's score: " + str(invader_score) + "\n" )
+            ratio = float(invader_score) / num_trials
+            f.write("Ratio: " + str(ratio) + "\n" )
+            if ratio < 1:
+                f.write("The fixed player IS evolutionarily stable against the invader." + "\n" )
+            elif ratio > 1:
+                f.write("The fixed player is NOT evolutionarily stable against the invader." + "\n" )
+            else:
+                f.write("Unable to make a decision.\n")
+            uncertainty = self.NUM_PLAYERS * math.sqrt( num_trials )
+            lower_bound = invader_score - uncertainty
+            upper_bound = invader_score + uncertainty
+            f.write("Lower bound on invader's score: " + str(lower_bound) + "\n" )
+            f.write("Upper bound on invader's score: " + str(upper_bound) + "\n" )
+            if num_trials >= lower_bound and num_trials <= upper_bound:
+                f.write("It is POSSIBLE that this result is incorrect.\n" )
+            f.write("\n")
+        f.close()
+        results_list.sort(key = lambda x: x[3])
+        name = "Results/Readable/Analysis_by_Invader_"+ time.asctime() + " " + str(random.randrange(10**9) )+ ".txt"
         name = name.replace(" ","_")
         f = open(name, "a")
         for x in results_list:
