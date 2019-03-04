@@ -388,27 +388,50 @@ class API:
             f.write( "Amount of time spent: " + str(self.comparisons[c][2]) + "\n" )
             invader_score = self.comparisons[c][3][-1]
             f.write( "Summed results of games: " + str(self.comparisons[c][3]) + "\n\n" )
-            results_list.append( [ title, num_trials, invader_score, invader ] )
+            results_list.append( [ title, num_trials, invader_score, fixed, invader ] )
         f.close()
         results_list.sort()
         name = "Results/Readable/Analysis_by_Fixed_"+ time.asctime() + " " + str(random.randrange(10**9) )+ ".txt"
         name = name.replace(" ","_")
+        g_name = "Results/Readable/Summary_"+ time.asctime() + " " + str(random.randrange(10**9) )+ ".txt"
+        g = open(g_name, "a")
         f = open(name, "a")
+        previously_fixed = None
+        fixed_wins = 0
+        fixed_ties = 0
+        fixed_losses = 0
+        first = True
         for x in results_list:
             title = x[0]
             num_trials = x[1]
             invader_score = x[2]
+            fixed = x[3]
+            if fixed != previously_fixed:
+                if not first:
+                    g.write("Results where " + previously_fixed + " is fixed:\n")
+                    g.write("Was ES against this many strategies: " + str(fixed_wins) + "\n")
+                    g.write("Was in a statistical tie with this many strategies: " + str(fixed_ties) + "\n")
+                    g.write("Was not ES against this many strategies: " + str(fixed_losses) + "\n\n")
+                    fixed_wins = 0
+                    fixed_ties = 0
+                    fixed_losses = 0
+                previously_fixed = fixed
+            first = False
             f.write(title)
             f.write("Number of trials: " + str(num_trials) + "\n" )
             f.write("Invader's score: " + str(invader_score) + "\n" )
             ratio = float(invader_score) / num_trials
             f.write("Ratio: " + str(ratio) + "\n" )
+            tie = False
             if ratio < 1:
                 f.write("The fixed player IS evolutionarily stable against the invader." + "\n" )
+                seems_like_win = True
             elif ratio > 1:
                 f.write("The fixed player is NOT evolutionarily stable against the invader." + "\n" )
+                seems_like_win = False
             else:
                 f.write("Unable to make a decision.\n")
+                tie = True
             uncertainty = self.NUM_PLAYERS * math.sqrt( num_trials )
             lower_bound = invader_score - uncertainty
             upper_bound = invader_score + uncertainty
@@ -416,16 +439,45 @@ class API:
             f.write("Upper bound on invader's score: " + str(upper_bound) + "\n" )
             if num_trials >= lower_bound and num_trials <= upper_bound:
                 f.write("It is POSSIBLE that this result is incorrect.\n" )
+                fixed_ties += 1
+            elif tie:
+                fixed_ties += 1
+            elif seems_like_win:
+                fixed_wins += 1
+            else:
+                fixed_losses += 1
             f.write("\n")
+        if not first:
+            g.write("Results where " + previously_fixed + " is fixed:\n")
+            g.write("Was ES against this many strategies: " + str(fixed_wins) + "\n")
+            g.write("Was in a statistical tie with this many strategies: " + str(fixed_ties) + "\n")
+            g.write("Was not ES against this many strategies: " + str(fixed_losses) + "\n\n")
         f.close()
-        results_list.sort(key = lambda x: x[3])
+        results_list.sort(key = lambda x: x[4])
         name = "Results/Readable/Analysis_by_Invader_"+ time.asctime() + " " + str(random.randrange(10**9) )+ ".txt"
         name = name.replace(" ","_")
         f = open(name, "a")
+        previously_invading = None
+        invader_wins = 0
+        invader_ties = 0
+        invader_losses = 0
+        first = True
         for x in results_list:
             title = x[0]
             num_trials = x[1]
             invader_score = x[2]
+            invader = x[4]
+            if invader != previously_invading:
+                if not first:
+                    g.write("Results where " + previously_invading + " is invader:\n")
+                    g.write("Could invade this many strategies: " + str(invader_wins) + "\n")
+                    g.write("Was in a statistical tie with this many strategies: " + str(invader_ties) + "\n")
+                    g.write("Could not invade this many strategies: " + str(invader_losses) + "\n\n")
+                    invader_wins = 0
+                    invader_ties = 0
+                    invader_losses = 0
+                previously_invading = invader
+            first = False
             f.write(title)
             f.write("Number of trials: " + str(num_trials) + "\n" )
             f.write("Invader's score: " + str(invader_score) + "\n" )
@@ -433,10 +485,13 @@ class API:
             f.write("Ratio: " + str(ratio) + "\n" )
             if ratio < 1:
                 f.write("The fixed player IS evolutionarily stable against the invader." + "\n" )
+                seems_like_win = False
             elif ratio > 1:
                 f.write("The fixed player is NOT evolutionarily stable against the invader." + "\n" )
+                seems_like_win = true
             else:
                 f.write("Unable to make a decision.\n")
+                tie = True
             uncertainty = self.NUM_PLAYERS * math.sqrt( num_trials )
             lower_bound = invader_score - uncertainty
             upper_bound = invader_score + uncertainty
@@ -444,8 +499,21 @@ class API:
             f.write("Upper bound on invader's score: " + str(upper_bound) + "\n" )
             if num_trials >= lower_bound and num_trials <= upper_bound:
                 f.write("It is POSSIBLE that this result is incorrect.\n" )
+                invader_ties += 1
+            elif tie:
+                invader_ties += 1
+            elif seems_like_win:
+                invader_wins += 1
+            else:
+                invader_losses += 1
             f.write("\n")
+        if not first:
+            g.write("Results where " + previously_invading + " is invader:\n")
+            g.write("Could invade this many strategies: " + str(invader_wins) + "\n")
+            g.write("Was in a statistical tie with this many strategies: " + str(invader_ties) + "\n")
+            g.write("Could not invade this many strategies: " + str(invader_losses) + "\n\n")
         f.close()
+        g.close()
     def is_significant(self, comparison):
         import math
         num_trials = comparison[1]
