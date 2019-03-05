@@ -69,7 +69,7 @@ class SuperFloat:
             return -1
     def __repr__(self):
         return "SuperFloat(" + str( self.get_value()) +str(" , ") + str( self.get_exp() ) + str(")")
-def main5(game_results, trials = 1e5, default_cushion = None):
+def main(game_results, trials = 1e5, default_cushion = None):
     '''Uses five dimensions with multiplicities and the Decimal class'''
     #Note that game_results is of the form ( x , y , ... , w )
     #where each value is the number of times a game has had a certain outcome (like the first and third players tie)
@@ -112,14 +112,15 @@ def main5(game_results, trials = 1e5, default_cushion = None):
     #For n players, a game could end in 2^n - 1 ways
 #    cushion = Decimal(1)
     best_point_tuple = tuple( normalize( compressed ) )
-    result, error = both5( point_tuple = best_point_tuple, compressed, weights, average, multiplicities, cushion = Decimal(1) )
+    result, error = both( point_tuple = best_point_tuple, compressed, weights,
+                         average, multiplicities, cushion = Decimal(1) )
     cushion = result[0]
 #    if default_cushion == None:
 #        cushion = sample5(compressed, multiplicities,n, trials/10)
 #    else:
 #        cushion = Decimal(default_cushion)
-    result, error = mcquad( both5 , args = [compressed, weights, average, multiplicities, cushion ],
-                            npoints=trials, xl = zeros(n), xu = ones(n) )
+    result, error = mcquad( both , args = [compressed, weights, average, multiplicities, cushion ],
+                            npoints = trials, xl = zeros(n), xu = ones(n) )
     f = open("Results/bayesian.log","a")
     f.write(time.asctime() + ": Calculated total probability = " + str(result[0]) + ", error = " +
             str(error[0]) + "\n")
@@ -128,7 +129,7 @@ def main5(game_results, trials = 1e5, default_cushion = None):
     f.close()
     #Divide to get the chance that 1 is not ES against 2
     return (result[1] / result[0], cushion)
-def both5( point_tuple, compressed_game_results, weights, average, multiplicities, cushion):
+def both( point_tuple, compressed_game_results, weights, average, multiplicities, cushion):
     point = list( point_tuple )
     point.sort()
     point = [0] + point + [1,]
