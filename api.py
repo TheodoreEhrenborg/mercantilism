@@ -34,7 +34,7 @@ class API:
             t = self.get_time( line )
             if t > self.previous_command_time:
                 result.append( self.get_command( line ) )
-                previous_command_time = t
+                self.previous_command_time = t
         return result
     def execute_commands(self):
         '''Looks for commands and executes them -- puts them on the log.
