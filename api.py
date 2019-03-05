@@ -488,7 +488,7 @@ class API:
                 seems_like_win = False
             elif ratio > 1:
                 f.write("The fixed player is NOT evolutionarily stable against the invader." + "\n" )
-                seems_like_win = true
+                seems_like_win = True
             else:
                 f.write("Unable to make a decision.\n")
                 tie = True
