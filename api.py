@@ -155,7 +155,7 @@ class API:
         for line in f:
             if ('firefox' in line) or ('Google Chrome' in line) or ('Safari' in line and 'SafariCloudHisto' not in line and 'com.apple.Safari' not in line and 'SafariBook' not in line) or ('mprime' in line) or ('Mathematica' in line):
                 process_active = True
-                break	       	 
+                break
         f.close()
 #        if not process_active:
 #            os.system("rm -f top-output.txt")
@@ -394,6 +394,7 @@ class API:
         name = "Results/Readable/Analysis_by_Fixed_"+ time.asctime() + " " + str(random.randrange(10**9) )+ ".txt"
         name = name.replace(" ","_")
         g_name = "Results/Readable/Summary_"+ time.asctime() + " " + str(random.randrange(10**9) )+ ".txt"
+        g_name = g_name.replace(" ","_")
         g = open(g_name, "a")
         f = open(name, "a")
         previously_fixed = None
