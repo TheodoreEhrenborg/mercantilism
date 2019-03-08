@@ -1,10 +1,13 @@
-# cython: profile=True 
-#cython: nonecheck=True
+# cython: profile=False
+# cython: nonecheck=True
+# cython: boundscheck=True
+# cython: wraparound=False
 import cdecimal, time, math
 Decimal = cdecimal.Decimal
 from libc.stdlib cimport rand, RAND_MAX
 import numpy as np
 cimport numpy as np
+from cpython cimport bool
 class SuperFloat:
     def __init__(self, f, exp = 0):
         import math
@@ -76,7 +79,7 @@ class SuperFloat:
     def __repr__(self):
         return "SuperFloat(" + str( self.get_value()) +str(" , ") + str( self.get_exp() ) + str(")")
 def main(game_results = range(32), trials = 1e5, test_case = None, final_diff_exp = -10):
-    '''Uses five dimensions with multiplicities and the Decimal class'''
+#    '''Uses five dimensions with multiplicities and the Decimal class'''
     #Note that game_results is of the form ( x , y , ... , w )
     #where each value is the number of times a game has had a certain outcome (like the first and third players tie)
     #However, the first element of game_results is zero because all players cannot all lose
@@ -88,16 +91,13 @@ def main(game_results = range(32), trials = 1e5, test_case = None, final_diff_ex
     #n is the number of players
     n = int( math.log( len(game_results) , 2) )
     compressed = []
-    multiplicities = []
-    weights = []
-    for x in range(n+1):
-        compressed.append(0)
-        multiplicities.append(0)
-        weights.append(0)
+    multiplicities = np.zeros( (n+1,), dtype = int)
+    weights = np.zeros( (n+1,), dtype = float )
+    compressed = np.zeros( (n+1,) , dtype = int )
     for i in range( 1, len(game_results) ):
         base_2 = to_base_2(i)
         c = sum(base_2)
-        if base_2[-1] == 0:
+        if base_2[ len(base_2) - 1] == 0:
             compressed[0] += game_results[i]
             multiplicities[0] += 1
             weights[0] = 0 #Note that losses come first, then wins, 2-ties, ..., n-ties
@@ -106,7 +106,7 @@ def main(game_results = range(32), trials = 1e5, test_case = None, final_diff_ex
             multiplicities[c] += 1
             weights[c] =  float(n)/c
     if test_case != None:
-        compressed = test_case
+        compressed = np.array(test_case)
 #    print compressed, weights, multiplicities
     #Now I need to run below_average_cases. I should figure out the 
     #weights of each outcome -- a win is n points -- and the average 
@@ -128,7 +128,7 @@ def main(game_results = range(32), trials = 1e5, test_case = None, final_diff_ex
             x = best_point_tuple[i]
             sample_lowers[i] = max( x - diff, 0)
             sample_uppers[i] = min(x + diff, 1) 
-        results += integrate( both , args = [compressed, weights, average, multiplicities],
+        results += integrate( args = (compressed, weights, average, multiplicities),
                             npoints = trials, lowers = sample_lowers, uppers = sample_uppers,
                             excluded_lowers = old_lowers, excluded_uppers = old_uppers)
         old_lowers = sample_lowers
@@ -142,50 +142,39 @@ def main(game_results = range(32), trials = 1e5, test_case = None, final_diff_ex
     #Divide to get the chance that 1 is not ES against 2
     #No, it's the chance that the fixed strategy is ES against the invader
     return  below / total
-def both(np.ndarray[np.float_t, ndim=1, negative_indices=False, mode='c'] point, list args ):
-    compressed_game_results = args[0]
-    cdef list weights = args[1]
-    cdef int average = args[2]
-    cdef list multiplicities = args[3]
-    point.sort()
-    density = Decimal(1)
+cdef both( double[:] point, long[:] compressed_game_results, double[:] weights, int average, long[:] multiplicities,
+                 int len_compressed_game_results, int len_weights    ):
+#    cdef long[:] compressed_game_results = args[0]
+#    cdef double[:] weights = args[1]
+#    cdef int average = args[2]
+#    cdef long[:] multiplicities = args[3]
+    cdef object density = Decimal(1)
     cdef int i = 0
-    for i in range( len(compressed_game_results) ):
-        how_many_games = compressed_game_results[i]
-        m = multiplicities[i]
-        interval = Decimal( point[i+1] - point[i] )
-#        print interval, how_many_games
-        density *= interval ** how_many_games
-        density *= interval ** (m-1)
-    result1 = density
+    for i in range( len_compressed_game_results ):
+        density *= Decimal( point[i+1] - point[i] ) ** ( compressed_game_results[i] + multiplicities[i]-1 )
     cdef float expected_utility = 0
-    for i in range( len(weights) ):
+    cdef object result2
+    for i in range( len_weights ):
         expected_utility += weights[i] *  ( point[i+1] - point[i] )
     if expected_utility < average:
-        result2 = result1
+        result2 = density
     elif expected_utility > average:
         result2 = 0
     else:
-        result2 = 0.5 * result1
-#    print result1, result2, density
-    return np.array( [result1,result2] ) 
-def list_total( l ):
-    t = 0
-    for x in l:
-        t += x
-    return t
-def normalize( l ):
-    t = list_total( l )
+        result2 =  density / Decimal(2)
+    return np.array( (density,result2) ) 
+cdef normalize( l ):
+    t = np.sum(l) 
     new = []
     this_value = 0
-    for x in l[:-1]:
+    for x in l[ 0 : len(l) - 1]:
         this_value = float(x) / t + this_value
         new.append( this_value )
 #    print new, l
     return new
-def to_base_2(x):
-    '''x is a positive integer. Returns a list that is x in base 2.
-    For instance, 22 becomes [1, 0, 1, 1, 0] and 0 becomes []''' 
+cdef to_base_2(x):
+#    '''x is a positive integer. Returns a list that is x in base 2.
+#    For instance, 22 becomes [1, 0, 1, 1, 0] and 0 becomes []''' 
     x = int( x )
     result = []
     while x > 0:
@@ -196,29 +185,42 @@ def to_base_2(x):
         x = x/2
     result.reverse()
     return result
-def integrate( function, args, npoints, lowers, uppers, excluded_lowers = None, excluded_uppers = None):
-    '''Finds the integral of the function in the box from lowers to uppers, not including
-    the box from excluded_lowers to excluded_uppers'''
-    dim = len(lowers)
-    if dim != len(uppers):
-        raise Exception("Dimension error")
+cdef integrate( tuple args, long npoints, double[:] lowers, double[:] uppers, excluded_lowers = None, excluded_uppers = None):
+#    Finds the integral of the function in the box from lowers to uppers, not including
+#    the box from excluded_lowers to excluded_uppers. Only considers points whose coordinates
+#    are in increasing order
+    cdef long[:] arg_0 = args[0]
+    cdef double[:] arg_1 = args[1]
+    cdef int arg_2 = args[2]
+    cdef long[:] arg_3 = args[3]
+    cdef int arg_4 = <int>len( arg_0 )
+    cdef int arg_5 = <int>len( arg_1 )
+    cdef int dim = <int>len(lowers)
+    cdef int i,j
+#    if dim != len(uppers):
+#        raise Exception("Dimension error")
     #If the following is True, don't worry about excluded areas
-    go_for_it = not isinstance(excluded_lowers, np.ndarray)
+#    go_for_it = not isinstance(excluded_lowers, np.ndarray)
     total = np.array( [Decimal(0),Decimal(0)] )
-    this_point = np.zeros(dim + 2)
+    cdef np.ndarray[np.float_t, ndim=1, negative_indices=False, mode='c'] this_point = np.zeros(dim + 2)
     this_point[dim + 2 - 1] = 1 
-    for i in range(npoints):
-        for j in range(dim):
-            r = rand()/(RAND_MAX*1.0)
-            rand_value = lowers[j] + r * ( uppers[j] - lowers[j] )
-            this_point[j+1] = rand_value
-#        if not go_for_it:
-#            print np.any(this_point - excluded_lowers) < 0
-        if go_for_it or np.min(this_point[1:-1] - excluded_lowers) < 0 or np.min(excluded_uppers - this_point[1:-1]) < 0: 
-            density = function( this_point, args )
-#            print density
-            total += density
+    if not isinstance(excluded_lowers, np.ndarray):
+        for i in range(npoints):
+            for j in range(dim):
+                this_point[j+1] = lowers[j] + rand()/(RAND_MAX*1.0) * ( uppers[j] - lowers[j] )
+            this_point.sort()  
+            total += both( this_point, arg_0, arg_1, arg_2, arg_3, arg_4, arg_5 )
+    else:
+        for i in range(npoints):
+            for j in range(dim):
+                this_point[j+1] = lowers[j] + rand()/(RAND_MAX*1.0) * ( uppers[j] - lowers[j] )
+            if np.min(this_point[1:dim+1] - excluded_lowers) < 0 or np.min(excluded_uppers - this_point[1:dim+1]) < 0:
+                this_point.sort()  
+                total += both( this_point, arg_0, arg_1, arg_2, arg_3, arg_4, arg_5 )
 #    print total, total/ float(npoints)
-    volume = np.abs( np.product( uppers - lowers ) )
-    return Decimal(volume) * total / Decimal(npoints)
+#    volume = np.abs( np.product( uppers - lowers ) )
+    cdef float volume = 1
+    for j in range(dim):
+        volume *= uppers[j] - lowers[j]
+    return Decimal(abs(volume)) * total / Decimal(npoints)
         

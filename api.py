@@ -454,7 +454,7 @@ class API:
             g.write("Was in a statistical tie with this many strategies: " + str(fixed_ties) + "\n")
             g.write("Was not ES against this many strategies: " + str(fixed_losses) + "\n\n")
         f.close()
-        results_list.sort(key = lambda x: x[4])
+        results_list.sort(key = lambda x: str(x[4]))
         name = "Results/Readable/Analysis_by_Invader_"+ time.asctime() + " " + str(random.randrange(10**9) )+ ".txt"
         name = name.replace(" ","_")
         f = open(name, "a")
