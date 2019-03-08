@@ -1,4 +1,7 @@
 #cython: nonecheck=True
+import decimal, random, time, math
+Decimal = decimal.Decimal
+import numpy as np
 class SuperFloat:
     def __init__(self, f, exp = 0):
         import math
@@ -69,14 +72,12 @@ class SuperFloat:
             return -1
     def __repr__(self):
         return "SuperFloat(" + str( self.get_value()) +str(" , ") + str( self.get_exp() ) + str(")")
-def main(game_results, trials = 1e5, default_cushion = None):
+def main(game_results = range(32), trials = 1e5, test_case = None, final_diff_exp = -10):
     '''Uses five dimensions with multiplicities and the Decimal class'''
     #Note that game_results is of the form ( x , y , ... , w )
     #where each value is the number of times a game has had a certain outcome (like the first and third players tie)
     #However, the first element of game_results is zero because all players cannot all lose
     #import Monte Carlo integration algorithm from scikit-monaco library
-    import time, math
-    from skmonaco import mcquad, mcmiser
     f = open("Results/bayesian.log","a")
     f.write(time.asctime() + ": Got game_results = " + str(game_results) + 
             " Got trials = " + str(trials) + "\n")
@@ -92,7 +93,7 @@ def main(game_results, trials = 1e5, default_cushion = None):
         weights.append(0)
     for i in range( 1, len(game_results) ):
         base_2 = to_base_2(i)
-        c = count(base_2)
+        c = sum(base_2)
         if base_2[-1] == 0:
             compressed[0] += game_results[i]
             multiplicities[0] += 1
@@ -101,6 +102,8 @@ def main(game_results, trials = 1e5, default_cushion = None):
             compressed[c] += game_results[i]
             multiplicities[c] += 1
             weights[c] =  float(n)/c
+    if test_case != None:
+        compressed = test_case
 #    print compressed, weights, multiplicities
     #Now I need to run below_average_cases. I should figure out the 
     #weights of each outcome -- a win is n points -- and the average 
@@ -110,26 +113,37 @@ def main(game_results, trials = 1e5, default_cushion = None):
     abridged = game_results[1:]
     #integrate all probabilities over the hypercube
     #For n players, a game could end in 2^n - 1 ways
-#    cushion = Decimal(1)
     best_point_tuple = tuple( normalize( compressed ) )
-    result, error = both( point_tuple = best_point_tuple, compressed, weights,
-                         average, multiplicities, cushion = Decimal(1) )
-    cushion = result[0]
-#    if default_cushion == None:
-#        cushion = sample5(compressed, multiplicities,n, trials/10)
-#    else:
-#        cushion = Decimal(default_cushion)
-    result, error = mcquad( both , args = [compressed, weights, average, multiplicities, cushion ],
-                            npoints = trials, xl = zeros(n), xu = ones(n) )
+    old_lowers = None
+    old_uppers = None
+    results = np.array([ Decimal(0), Decimal(0) ])
+    for e in range(final_diff_exp,1):
+        diff = 2**e
+        sample_lowers = np.zeros( (n,) )
+        sample_uppers = np.ones( (n,) )
+        for i in range(n):
+            x = best_point_tuple[i]
+            sample_lowers[i] = max( x - diff, 0)
+            sample_uppers[i] = min(x + diff, 1) 
+        results += integrate( both , args = [compressed, weights, average, multiplicities],
+                            npoints = trials, lowers = sample_lowers, uppers = sample_uppers,
+                            excluded_lowers = old_lowers, excluded_uppers = old_uppers)
+        old_lowers = sample_lowers
+        old_uppers = sample_uppers
+    total = results[0]
+    below = results[1]
     f = open("Results/bayesian.log","a")
-    f.write(time.asctime() + ": Calculated total probability = " + str(result[0]) + ", error = " +
-            str(error[0]) + "\n")
-    f.write(time.asctime() + ": Calculated below average probability = " + str(result[1]) + ", error = " +
-            str(error[1]) + "\n")
+    f.write(time.asctime() + ": Calculated total probability = " + str(total) + "\n")
+    f.write(time.asctime() + ": Calculated below average probability = " + str(below) + "\n")
     f.close()
     #Divide to get the chance that 1 is not ES against 2
-    return (result[1] / result[0], cushion)
-def both( point_tuple, compressed_game_results, weights, average, multiplicities, cushion):
+    #No, it's the chance that the fixed strategy is ES against the invader
+    return  below / total
+def both( point_tuple, args ):
+    compressed_game_results = args[0]
+    weights = args[1]
+    average = args[2]
+    multiplicities = args[3]
     point = list( point_tuple )
     point.sort()
     point = [0] + point + [1,]
@@ -139,12 +153,16 @@ def both( point_tuple, compressed_game_results, weights, average, multiplicities
         how_many_games = compressed_game_results[i]
         m = multiplicities[i]
         interval = Decimal( point[i+1] - point[i] )
+#        print interval, how_many_games
 #        average_multiplier += interval * m
         density *= interval ** how_many_games
-        density *= interval ** (m-1)
+        try:
+            density *= interval ** (m-1)
+        except decimal.InvalidOperation:
+            print point, interval
 #        density *= m ** interval
 #    density *= average_multiplier
-    result1 = float(density / cushion)
+    result1 = density
     expected_utility = 0
     for i in range( len(weights) ):
         expected_utility += weights[i] *  ( point[i+1] - point[i] )
@@ -154,32 +172,8 @@ def both( point_tuple, compressed_game_results, weights, average, multiplicities
         result2 = 0
     else:
         result2 = 0.5 * result1
+#    print result1, result2, density
     return np.array( [result1,result2] ) 
-def sample5( compressed_game_results, multiplicities, n, trials = 1e2):
-    '''Returns a Decimal indicating the highest density found'''
-    import random
-    counter = 0
-    current_max = Decimal(0)
-    while counter < trials:
-        counter+=1
-#        print counter
-        point = []
-        for x in range( n ):
-            point.append( random.random() )
-        point.sort()
-        point = [0] + point + [1,]
-        density = Decimal(1.0)
-        for i in range( len(compressed_game_results) ):
-            how_many_games = compressed_game_results[i]
-            m = multiplicities[i]
-            interval = Decimal( point[i+1] - point[i] )
-#        average_multiplier += interval * m
-            density *= interval ** how_many_games
-            density *= interval ** (m-1)
-#        density *= m ** interval
-#    density *= average_multiplier
-        current_max = max( current_max, density)
-    return current_max
 def list_total( l ):
     t = 0
     for x in l:
@@ -188,6 +182,47 @@ def list_total( l ):
 def normalize( l ):
     t = list_total( l )
     new = []
-    for x in l:
-        new.append( float(x) / t )
+    this_value = 0
+    for x in l[:-1]:
+        this_value = float(x) / t + this_value
+        new.append( this_value )
+#    print new, l
     return new
+def to_base_2(x):
+    '''x is a positive integer. Returns a list that is x in base 2.
+    For instance, 22 becomes [1, 0, 1, 1, 0] and 0 becomes []''' 
+    x = int( x )
+    result = []
+    while x > 0:
+        if x % 2:
+            result.append(1)
+        else:
+            result.append(0)
+        x = x/2
+    result.reverse()
+    return result
+def integrate( function, args, npoints, lowers, uppers, excluded_lowers = None, excluded_uppers = None):
+    '''Finds the integral of the function in the box from lowers to uppers, not including
+    the box from excluded_lowers to excluded_uppers'''
+    dim = len(lowers)
+    if dim != len(uppers):
+        raise Exception("Dimension error")
+    #If the following is True, don't worry about excluded areas
+    go_for_it = not isinstance(excluded_lowers, np.ndarray)
+    total = np.array( [Decimal(0),Decimal(0)] )
+    for i in range(npoints):
+        this_point = np.zeros(dim)
+        for j in range(dim):
+            r = random.random()
+            rand_value = lowers[j] + r * ( uppers[j] - lowers[j] )
+            this_point[j] = rand_value
+#        if not go_for_it:
+#            print np.any(this_point - excluded_lowers) < 0
+        if go_for_it or np.min(this_point - excluded_lowers) < 0 or np.min(excluded_uppers - this_point) < 0: 
+            density = function( this_point, args )
+#            print density
+            total += density
+#    print total, total/ float(npoints)
+    volume = np.abs( np.product( uppers - lowers ) )
+    return Decimal(volume) * total / Decimal(npoints)
+        
