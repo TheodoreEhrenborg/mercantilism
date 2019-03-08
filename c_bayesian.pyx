@@ -1,7 +1,10 @@
+# cython: profile=True 
 #cython: nonecheck=True
-import decimal, random, time, math
-Decimal = decimal.Decimal
+import cdecimal, time, math
+Decimal = cdecimal.Decimal
+from libc.stdlib cimport rand, RAND_MAX
 import numpy as np
+cimport numpy as np
 class SuperFloat:
     def __init__(self, f, exp = 0):
         import math
@@ -139,31 +142,23 @@ def main(game_results = range(32), trials = 1e5, test_case = None, final_diff_ex
     #Divide to get the chance that 1 is not ES against 2
     #No, it's the chance that the fixed strategy is ES against the invader
     return  below / total
-def both( point_tuple, args ):
+def both(np.ndarray[np.float_t, ndim=1, negative_indices=False, mode='c'] point, list args ):
     compressed_game_results = args[0]
-    weights = args[1]
-    average = args[2]
-    multiplicities = args[3]
-    point = list( point_tuple )
+    cdef list weights = args[1]
+    cdef int average = args[2]
+    cdef list multiplicities = args[3]
     point.sort()
-    point = [0] + point + [1,]
     density = Decimal(1)
-#    average_multiplier = 0
+    cdef int i = 0
     for i in range( len(compressed_game_results) ):
         how_many_games = compressed_game_results[i]
         m = multiplicities[i]
         interval = Decimal( point[i+1] - point[i] )
 #        print interval, how_many_games
-#        average_multiplier += interval * m
         density *= interval ** how_many_games
-        try:
-            density *= interval ** (m-1)
-        except decimal.InvalidOperation:
-            print point, interval
-#        density *= m ** interval
-#    density *= average_multiplier
+        density *= interval ** (m-1)
     result1 = density
-    expected_utility = 0
+    cdef float expected_utility = 0
     for i in range( len(weights) ):
         expected_utility += weights[i] *  ( point[i+1] - point[i] )
     if expected_utility < average:
@@ -210,15 +205,16 @@ def integrate( function, args, npoints, lowers, uppers, excluded_lowers = None, 
     #If the following is True, don't worry about excluded areas
     go_for_it = not isinstance(excluded_lowers, np.ndarray)
     total = np.array( [Decimal(0),Decimal(0)] )
+    this_point = np.zeros(dim + 2)
+    this_point[dim + 2 - 1] = 1 
     for i in range(npoints):
-        this_point = np.zeros(dim)
         for j in range(dim):
-            r = random.random()
+            r = rand()/(RAND_MAX*1.0)
             rand_value = lowers[j] + r * ( uppers[j] - lowers[j] )
-            this_point[j] = rand_value
+            this_point[j+1] = rand_value
 #        if not go_for_it:
 #            print np.any(this_point - excluded_lowers) < 0
-        if go_for_it or np.min(this_point - excluded_lowers) < 0 or np.min(excluded_uppers - this_point) < 0: 
+        if go_for_it or np.min(this_point[1:-1] - excluded_lowers) < 0 or np.min(excluded_uppers - this_point[1:-1]) < 0: 
             density = function( this_point, args )
 #            print density
             total += density
