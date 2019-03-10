@@ -7,18 +7,19 @@ Decimal = cdecimal.Decimal
 from libc.stdlib cimport rand, RAND_MAX
 import numpy as np
 cimport numpy as np
-def main(game_results = range(32), trials = 1e5, test_case = None, final_diff_exp = -10):
+def main(game_results = range(32), trials = 1e4, test_case = None, final_diff_exp = -10):
 #    '''Uses five dimensions with multiplicities and the Decimal class'''
     #Note that game_results is of the form ( x , y , ... , w )
     #where each value is the number of times a game has had a certain outcome (like the first and third players tie)
     #However, the first element of game_results is zero because all players cannot all lose
     #import Monte Carlo integration algorithm from scikit-monaco library
-    f = open("Results/bayesian.log","a")
-    f.write(time.asctime() + ": Got game_results = " + str(game_results) + 
-            " Got trials = " + str(trials) + "\n")
-    f.close()
+#    f = open("Results/bayesian.log","a")
+#    f.write(time.asctime() + ": Got game_results = " + str(game_results) + 
+#            " Got trials = " + str(trials) + "\n")
+#    f.close()
     #n is the number of players
     n = int( math.log( len(game_results) , 2) )
+    trials = long( trials )
     compressed = []
     multiplicities = np.zeros( (n+1,), dtype = int)
     weights = np.zeros( (n+1,), dtype = float )
@@ -64,10 +65,10 @@ def main(game_results = range(32), trials = 1e5, test_case = None, final_diff_ex
         old_uppers = sample_uppers
     total = results[0]
     below = results[1]
-    f = open("Results/bayesian.log","a")
-    f.write(time.asctime() + ": Calculated total probability = " + str(total) + "\n")
-    f.write(time.asctime() + ": Calculated below average probability = " + str(below) + "\n")
-    f.close()
+#    f = open("Results/bayesian.log","a")
+#    f.write(time.asctime() + ": Calculated total probability = " + str(total) + "\n")
+#    f.write(time.asctime() + ": Calculated below average probability = " + str(below) + "\n")
+#    f.close()
     #Divide to get the chance that 1 is not ES against 2
     #No, it's the chance that the fixed strategy is ES against the invader
     return  below / total
