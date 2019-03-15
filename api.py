@@ -228,6 +228,7 @@ class API:
     def do_comparisons(self):
         '''Choose a comparison and do it. Repeat. Check for commands every 5 min'''
         import time, copy
+#        checked_in_log = []
         #most_recent_check = time.time()
         #Note that current_confidence, all_game_trials, all_game_time  = self.comparisons[current_pair]
         if len(self.comparisons) == 0:
@@ -250,7 +251,9 @@ class API:
                     break#We choose the pair with the fewest number of trials
             #Now that we have a current_pair, we check the probability
             fixed, invader = current_pair
-            #self.check_probability(current_pair)
+#            if current_pair not in checked_in_log:
+#                self.check_probability(current_pair)
+#                checked_in_log.append( current_pair )
             algorithm_list = []
             for x in range(self.NUM_PLAYERS-1):
                 algorithm_list.append( fixed )
