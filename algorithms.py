@@ -128,6 +128,7 @@ class Quick_Evolver:
         return c
     @classmethod
     def evolve(cls, generations = 5 , trials_per_generation = 100, mutation_size = 0.1, mutation_number = 1):
+        '''Evolves without using a large population'''
 #        import copy
         for gen in range(generations):
             players = []
@@ -227,7 +228,8 @@ class Neural_Evolver:
         return c
     @classmethod
     def evolve(cls, generations = 5 , trials_per_generation = 100, mutation_size = 0.1, mutation_chance = 0.2, population = 15, chance_a_player_mutates = 0.5):
-#        import copy,time
+        '''Evolves with a population'''
+        #        import copy,time
         players = []
         for j in range(population):
             p = Neural_Evolver(i = j)
