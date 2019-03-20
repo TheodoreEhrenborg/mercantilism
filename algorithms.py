@@ -9,27 +9,27 @@ NUM_PLAYERS = 5
 def play_highest(tokens, data, game_name):
     '''Plays the highest token left.'''
 #    import time
-    f = open("Results/play_highest.log","a")
-    f.write(time.asctime() + ": Got message from Game " + game_name + ". Tokens received " + str(tokens) + ". Data received " + str(data) + ". \n")
+#    f = open("Results/play_highest.log","a")
+#    f.write(time.asctime() + ": Got message from Game " + game_name + ". Tokens received " + str(tokens) + ". Data received " + str(data) + ". \n")
     choice = max( tokens )
-    f.write(time.asctime() + ": Chose " + str(choice) + "\n")
-    f.close()
+#    f.write(time.asctime() + ": Chose " + str(choice) + "\n")
+#    f.close()
     return choice
 def uniform(tokens, data, game_name):
     '''Plays a token randomly, chosen based on a uniform distribution.'''
 #    import time, random
-    f = open("Results/uniform.log","a")
-    f.write(time.asctime() + ": Got message from Game " + game_name + ". Tokens received " + str(tokens) + ". Data received " + str(data) + ". \n")
+#    f = open("Results/uniform.log","a")
+#    f.write(time.asctime() + ": Got message from Game " + game_name + ". Tokens received " + str(tokens) + ". Data received " + str(data) + ". \n")
     choice = random.choice( tokens )
-    f.write(time.asctime() + ": Chose " + str(choice) + "\n")
-    f.close()
+#    f.write(time.asctime() + ": Chose " + str(choice) + "\n")
+#    f.close()
     return choice
 def aux_exp(tokens, data, game_name, n):
     '''Plays a token based on a distribution where each token is chosen with 
     weight proportional to n^(value) '''
 #    import time, random
-    f = open("Results/exp.log","a")
-    f.write(time.asctime() + ": Got message from Game " + game_name + ". Tokens received " + str(tokens) + ". Data received " + str(data) +  ". n = "  + str(n) + "\n")
+#    f = open("Results/exp.log","a")
+#    f.write(time.asctime() + ": Got message from Game " + game_name + ". Tokens received " + str(tokens) + ". Data received " + str(data) +  ". n = "  + str(n) + "\n")
     sum = 0
     for x in tokens:
         sum += n**x
@@ -41,8 +41,8 @@ def aux_exp(tokens, data, game_name, n):
     else:
         raise Exception("Uh-oh. The program should never reach this step.")
     choice = x
-    f.write(time.asctime() + ": Chose " + str(choice) + "\n")
-    f.close()
+#    f.write(time.asctime() + ": Chose " + str(choice) + "\n")
+#    f.close()
     return choice
 def exp_2(tokens, data, game_name):
     '''Plays a token based on a distribution where each token is chosen with 
@@ -52,8 +52,8 @@ def aux_power(tokens, data, game_name, n):
     '''Plays a token based on a distribution where each token is chosen with 
     weight proportional to (value)^n '''
 #    import time, random
-    f = open("Results/power.log","a")
-    f.write(time.asctime() + ": Got message from Game " + game_name + ". Tokens received " + str(tokens) + ". Data received " + str(data) +  ". n = "  + str(n) + "\n")
+#    f = open("Results/power.log","a")
+#    f.write(time.asctime() + ": Got message from Game " + game_name + ". Tokens received " + str(tokens) + ". Data received " + str(data) +  ". n = "  + str(n) + "\n")
     sum = 0
     for x in tokens:
         sum += x**n
@@ -65,8 +65,8 @@ def aux_power(tokens, data, game_name, n):
     else:
         raise Exception("Uh-oh. The program should never reach this step.")
     choice = x
-    f.write(time.asctime() + ": Chose " + str(choice) + "\n")
-    f.close()
+#    f.write(time.asctime() + ": Chose " + str(choice) + "\n")
+#    f.close()
     return choice
 def power_3(tokens, data, game_name):
     '''Plays a token based on a distribution where each token is chosen with 
@@ -85,8 +85,8 @@ def best_human_strategy(tokens, data, game_name):
     one-third 4th highest). But if I am in first place and my score - 2nd place score
     >= highest token left, I pick the highest value token.'''
 #    import random, time
-    f = open("Results/best_human_strategy.log","a")
-    f.write(time.asctime() + ": Got message from Game " + game_name + ". Tokens received " + str(tokens) + ". Data received " + str(data) + ". \n")
+#    f = open("Results/best_human_strategy.log","a")
+#    f.write(time.asctime() + ": Got message from Game " + game_name + ". Tokens received " + str(tokens) + ". Data received " + str(data) + ". \n")
     l = len(tokens)
     tokens.sort()
     tokens.reverse()
@@ -105,12 +105,12 @@ def best_human_strategy(tokens, data, game_name):
         if other[0] >  highest_other_score:
             highest_other_score = other[0]
     if my_score - highest_other_score >= tokens[0]: #In this case there's no harm in choosing the highest token.
-        f.write(time.asctime() + ": Chose the highest token: " + str(tokens[0]) + "\n")
-        f.close()
+#        f.write(time.asctime() + ": Chose the highest token: " + str(tokens[0]) + "\n")
+#        f.close()
         return tokens[0]
     else:
-        f.write(time.asctime() + ": Chose a default: " + str(default) + "\n")
-        f.close()
+#        f.write(time.asctime() + ": Chose a default: " + str(default) + "\n")
+#        f.close()
         return default
 def quick_evolve(tokens, data, game_name):
     q = Quick_Evolver()
