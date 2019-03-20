@@ -349,6 +349,7 @@ def get_results(comparisons):
     fixed_wins = 0
     fixed_ties = 0
     fixed_losses = 0
+    total_number_trials = 0
     first = True
     for x in results_list:
         title = x[0]
@@ -369,6 +370,7 @@ def get_results(comparisons):
         first = False
         f.write(title)
         f.write("Number of trials: " + str(num_trials) + "\n" )
+        total_number_trials += num_trials
         f.write("Invader's score: " + str(invader_score) + "\n" )
         ratio = float(invader_score) / num_trials
         f.write("Ratio: " + str(ratio) + "\n" )
@@ -465,6 +467,7 @@ def get_results(comparisons):
         g.write("Could invade this many strategies: " + str(invader_wins) + "\n")
         g.write("Was in a statistical tie with this many strategies: " + str(invader_ties) + "\n")
         g.write("Could not invade this many strategies: " + str(invader_losses) + "\n\n")
+    g.write("\n\n" + "The total number of trials for all comparisons is " + str(total_number_trials) )
     f.close()
     g.close()
 def is_significant(comparison):
