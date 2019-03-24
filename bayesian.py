@@ -362,7 +362,8 @@ def get_results(comparisons):
                 g.write("Results where " + str(previously_fixed) + " is fixed:\n")
                 g.write("Was ES against this many strategies: " + str(fixed_wins) + "\n")
                 g.write("Was in a statistical tie with this many strategies: " + str(fixed_ties) + "\n")
-                g.write("Was not ES against this many strategies: " + str(fixed_losses) + "\n\n")
+                g.write("Was not ES against this many strategies: " + str(fixed_losses) + "\n")
+                g.write("Net score: " + str(fixed_wins - fixed_losses) + "\n\n")
                 fixed_wins = 0
                 fixed_ties = 0
                 fixed_losses = 0
@@ -404,7 +405,8 @@ def get_results(comparisons):
         g.write("Results where " + str(previously_fixed) + " is fixed:\n")
         g.write("Was ES against this many strategies: " + str(fixed_wins) + "\n")
         g.write("Was in a statistical tie with this many strategies: " + str(fixed_ties) + "\n")
-        g.write("Was not ES against this many strategies: " + str(fixed_losses) + "\n\n")
+        g.write("Was not ES against this many strategies: " + str(fixed_losses) + "\n")
+        g.write("Net score: " + str(fixed_wins - fixed_losses) + "\n\n")
     f.close()
     results_list.sort(key = lambda x: str(x[4]))
     name = "Results/Readable/Bayesian_Analysis_by_Invader_"+ time.asctime() + " " + str(random.randrange(10**9) )+ ".txt"
@@ -426,7 +428,8 @@ def get_results(comparisons):
                 g.write("Results where " + str(previously_invading) + " is invader:\n")
                 g.write("Could invade this many strategies: " + str(invader_wins) + "\n")
                 g.write("Was in a statistical tie with this many strategies: " + str(invader_ties) + "\n")
-                g.write("Could not invade this many strategies: " + str(invader_losses) + "\n\n")
+                g.write("Could not invade this many strategies: " + str(invader_losses) + "\n")
+                g.write("Net score: " + str(invader_wins - invader_losses) + "\n\n")
                 invader_wins = 0
                 invader_ties = 0
                 invader_losses = 0
@@ -466,7 +469,8 @@ def get_results(comparisons):
         g.write("Results where " + str(previously_invading) + " is invader:\n")
         g.write("Could invade this many strategies: " + str(invader_wins) + "\n")
         g.write("Was in a statistical tie with this many strategies: " + str(invader_ties) + "\n")
-        g.write("Could not invade this many strategies: " + str(invader_losses) + "\n\n")
+        g.write("Could not invade this many strategies: " + str(invader_losses) + "\n")
+        g.write("Net score: " + str(invader_wins - invader_losses) + "\n\n")
     g.write("\n\n" + "The total number of trials for all comparisons is " + str(total_number_trials) )
     f.close()
     g.close()
