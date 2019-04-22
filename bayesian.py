@@ -7,8 +7,8 @@ import numpy as np
 import os
 DEFAULT = 0.0
 NUM_PLAYERS = 5
-TOKENS = range(1, 15+1)
-def main(game_results = range(32), trials = 1e4, test_case = None, final_diff_exp = -10):
+TOKENS = list(range(1, 15+1))
+def main(game_results = list(range(32)), trials = 1e4, test_case = None, final_diff_exp = -10):
     '''Uses five dimensions with multiplicities and the Decimal class'''
     #Note that game_results is of the form ( x , y , ... , w )
     #where each value is the number of times a game has had a certain outcome (like the first and third players tie)
