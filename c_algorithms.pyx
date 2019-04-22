@@ -8,7 +8,7 @@ import collections
 import pickle
 from libc.stdlib cimport rand, RAND_MAX
 cdef int NUM_PLAYERS = 5
-cdef list TOKENS = range(1,16)
+cdef list TOKENS = list(range(1,16))
 class Neural_Nash_Untrainable_Wrapper:
     '''Makes a decision using aux_stochastic and a neural network trained through backpropagation.
     This class is optimized for decision speed. It has no do_training method.'''
