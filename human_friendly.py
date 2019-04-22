@@ -72,7 +72,7 @@ def main(daytime_run = False):
         print( time.asctime() + ": " + normal )
         response_OK = False
         while not response_OK:
-            response = raw_input().lower().rstrip().lstrip()
+            response = input().lower().rstrip().lstrip()
             if formatted( response ):
                 response_OK = True
             else:
