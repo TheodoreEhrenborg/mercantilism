@@ -7,7 +7,7 @@ Decimal = cdecimal.Decimal
 from libc.stdlib cimport rand, RAND_MAX
 import numpy as np
 cimport numpy as np
-def main(game_results = range(32), trials = 1e4, test_case = None, final_diff_exp = -10):
+def main(game_results = list(range(32)), trials = 1e4, test_case = None, final_diff_exp = -10):
 #    '''Uses five dimensions with multiplicities and the Decimal class'''
     #Note that game_results is of the form ( x , y , ... , w )
     #where each value is the number of times a game has had a certain outcome (like the first and third players tie)
