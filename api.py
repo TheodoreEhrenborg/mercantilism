@@ -105,7 +105,7 @@ class API:
         self.daytime_run = daytime_run
         if self.daytime_run:
             self.sleep_time = 3
-#        print self.sleep_time
+#        print(self.sleep_time)
         try:
             f = open("Results/api.log","r")
         except IOError:
@@ -141,7 +141,7 @@ class API:
         f.write( time.asctime() + ": " + "Adjourning" + "\n" )
         f.close()
         while ( not self.should_quit ) and ( self.should_adjourn  or self.check_for_processes() ):
-#            print self.sleep_time
+#            print(self.sleep_time)
             time.sleep( self.sleep_time )
             self.execute_commands()
     def check_for_processes(self):
@@ -163,8 +163,8 @@ class API:
     def use_log(self):
         import time, inspect
         temp = inspect.getmembers( algorithms, inspect.isfunction)
-#        print temp
-#        print list_algorithms
+#        print(temp)
+#        print(list_algorithms)
 #        self.should_quit = True
         #***Make sure we can only get algorithms without aux_ in __name__
         list_algorithms = []
@@ -236,7 +236,7 @@ class API:
             f.write( time.asctime() + ": Uh-oh. There are no comparisons to make.\n" )
             f.close()
             return
-#        print self.comparisons
+#        print(self.comparisons)
         for x in self.comparisons.keys():
             self.check_probability(x)
         while (not self.should_quit) and (not self.should_adjourn) and ( not self.check_for_processes() ):
@@ -379,7 +379,7 @@ class API:
         name = "Results/Readable/Readable_"+ time.asctime() + " " + str(random.randrange(10**9) )+ ".txt"
         name = name.replace(" ","_")
         f = open(name, "a")
-        print len(self.comparisons)
+        print( len(self.comparisons) )
         results_list = []
         for c in self.comparisons.keys():
             fixed, invader = c
