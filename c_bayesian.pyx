@@ -112,7 +112,7 @@ cdef to_base_2(x):
             result.append(1)
         else:
             result.append(0)
-        x = x/2
+        x = int(x/2)
     result.reverse()
     return result
 cdef integrate( tuple args, long npoints, double[:] lowers, double[:] uppers, excluded_lowers = None, excluded_uppers = None):
