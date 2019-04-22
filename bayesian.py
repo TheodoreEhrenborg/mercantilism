@@ -133,7 +133,7 @@ def to_base_2(x):
             result.append(1)
         else:
             result.append(0)
-        x = x/2
+        x = x//2
     result.reverse()
     return result
 def integrate( function, args, npoints, lowers, uppers, excluded_lowers = None, excluded_uppers = None):
