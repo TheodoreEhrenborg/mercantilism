@@ -90,7 +90,7 @@ class API:
     def run(self,daytime_run = False):
         import os,time
         self.NUM_PLAYERS = 5
-        self.TOKENS = range(1, 15+1)
+        self.TOKENS = list(range(1, 15+1))
         self.previous_command_time = time.time()
         self.should_quit = False
         self.should_adjourn = False
@@ -595,7 +595,7 @@ class Game:
 #                elif player_list[0].get_name() == "aux_neural_nash_untrainable":
 #                    this_move = Game.Neural_Nash_Untrainable_Instance.actually_choose_token( copy.deepcopy(self.tokens), copy.deepcopy(data))
                 elif player_list[0].get_name() == "neural_evolve":
-                    r = random.choice(range(Game.NEURAL_EVOLVER_POPULATION))
+                    r = random.choice(list(range(Game.NEURAL_EVOLVER_POPULATION)))
                     Game.Neural_Evolver_Instance.i = r
                     Game.Neural_Evolver_Instance.load()
                     this_move = Game.Neural_Evolver_Instance.choose_token( copy.deepcopy(self.tokens), copy.deepcopy(data), self.name )
