@@ -2,7 +2,7 @@
 Methods starting with aux_ are not playing the game.'''
 import numpy as np
 import random, collections, time, copy, pickle, os
-TOKENS = range(1,16)
+TOKENS = list(range(1,16))
 NUM_PLAYERS = 5
 #def aux_neural_nash_untrainable():
 #    pass
@@ -234,7 +234,7 @@ class Neural_Evolver:
         for j in range(population):
             p = Neural_Evolver(i = j)
             players.append(p)
-        indices = range( population )
+        indices = list(range( population ))
         gen = 0
         while gen < generations:
             gen += 1
@@ -818,7 +818,7 @@ def aux_stochastic(tokens, data, game_name, utility_metric, start = 25, memory =
         count += 1
         for i in range(n):
             #Now we've chosen a player
-            temp = range(   min(   memory, len(actual_choices[i])  )   )
+            temp = list( range(   min(   memory, len(actual_choices[i])  )   ) )
             random.shuffle( temp )
             remembered_indices = temp[0:available]
             my_utilities = []
