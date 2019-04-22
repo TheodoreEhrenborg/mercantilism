@@ -37,7 +37,7 @@ def main(game_results = range(32), trials = 1e4, test_case = None, final_diff_ex
             weights[c] =  float(n)/c
     if test_case != None:
         compressed = np.array(test_case)
-#    print compressed, weights, multiplicities
+#    print(compressed, weights, multiplicities)
     #Now I need to run below_average_cases. I should figure out the 
     #weights of each outcome -- a win is n points -- and the average 
     #utility points to beat. I'll do that here instead of in the 
@@ -100,7 +100,7 @@ cdef normalize( l ):
     for x in l[ 0 : len(l) - 1]:
         this_value = float(x) / t + this_value
         new.append( this_value )
-#    print new, l
+#    print(new, l)
     return new
 cdef to_base_2(x):
 #    '''x is a positive integer. Returns a list that is x in base 2.
@@ -147,7 +147,7 @@ cdef integrate( tuple args, long npoints, double[:] lowers, double[:] uppers, ex
             if np.min(this_point[1:dim+1] - excluded_lowers) < 0 or np.min(excluded_uppers - this_point[1:dim+1]) < 0:
                 this_point.sort()  
                 total += both( this_point, arg_0, arg_1, arg_2, arg_3, arg_4, arg_5 )
-#    print total, total/ float(npoints)
+#    print(total, total/ float(npoints))
 #    volume = np.abs( np.product( uppers - lowers ) )
     cdef float volume = 1
     for j in range(dim):
