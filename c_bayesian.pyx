@@ -2,8 +2,8 @@
 # cython: nonecheck=True
 # cython: boundscheck=True
 # cython: wraparound=False
-import cdecimal, time, math
-Decimal = cdecimal.Decimal
+import decimal, time, math
+Decimal = decimal.Decimal
 from libc.stdlib cimport rand, RAND_MAX
 import numpy as np
 cimport numpy as np

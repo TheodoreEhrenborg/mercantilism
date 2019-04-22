@@ -1,8 +1,8 @@
-import cdecimal, random, time, math
+import decimal, random, time, math
 import pyximport
 pyximport.install()
 import c_bayesian
-Decimal = cdecimal.Decimal
+Decimal = decimal.Decimal
 import numpy as np
 import os
 DEFAULT = 0.0
