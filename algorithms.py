@@ -285,11 +285,11 @@ class Neural_Evolver:
 #            best = players[i]
 #            #Some of them mutate before being saved
 #            best.become_parent()
-#            print max_score / (trials_per_generation), time.time() - t
+#            print(max_score / (trials_per_generation), time.time() - t)
 #            clear_session()
 #            for p in players:
 #                p.delete()
-#            print best
+#            print(best)
 #        return best.model.get_weights()[0][0]
 #        return max_score / (trials_per_generation)
     def __init__(self, return_to_default = False, i = 0):
@@ -317,7 +317,7 @@ class Neural_Evolver:
         for item in data:
             scores.append( float(item[0]) / aux_list_total(TOKENS) )
         if tokens == []:
-            print "tokens == []"
+            print("tokens == []")
         c = collections.Counter(tokens)
         existing_tokens = []
         for i in TOKENS:
@@ -325,19 +325,19 @@ class Neural_Evolver:
         l = len( existing_tokens ) + len( scores )
         the_input = np.array( existing_tokens + scores)
         the_input.shape = (1,l)
-        #print the_input
+        #print(the_input)
         output = self.model.predict( the_input )
-        #print output
+        #print(output)
         weights = list(output[0])
-#        print weights
+#        print(weights)
         zeroed_weights = []
         for i in range(len(TOKENS)):
             t = TOKENS[i]
             zeroed_weights.append( weights[i]  * c[t] )
 #        zeroed_weights = Neural_Evolver.list_multiply(list(output[0]),c)
-#        print zeroed_weights
+#        print(zeroed_weights)
         if aux_list_total(zeroed_weights) == 0:
-#            print weights, zeroed_weights
+#            print(weights, zeroed_weights)
             choice = random.choice( tokens )
         else:
             choice = self.get_token_from_weights(zeroed_weights)
@@ -459,7 +459,7 @@ class Neural_Nash:
 #            the_output = shadow_output
             #Let the neural network train
 #            self.randomize()
-##            print the_input,the_output
+##            print(the_input,the_output)
             self.model.fit(the_input, the_output, epochs = training_epochs, batch_size=32)
             #Become the parent
             self.become_parent()
@@ -537,9 +537,9 @@ class Neural_Nash:
         l = len( existing_tokens ) + len( scores )
         the_input = np.array( existing_tokens + scores)
         the_input.shape = (1,l)
-        #print the_input
+        #print(the_input)
         results = self.model.predict( the_input )
-        #print results
+        #print(results)
         results_as_list = list(results[0])
         output = []
         for x in results_as_list:
@@ -611,7 +611,7 @@ class Game:
                 data.append( player_list[1:] )
                 for x in others:
                     data.append( x[1:] )#Does player_tuple[0] call the algorithm? ***
-#                print self.tokens,data
+#                print(self.tokens,data)
                 f = open( "Results/practice_games.log", "a")
                 f.write( time.asctime() + ": Game " + self.name + ". Calling Player " + str(i) + " which is " + str(player_list[0] )  + "\n" )
                 f.close()
@@ -879,5 +879,5 @@ def aux_stochastic(tokens, data, game_name, utility_metric, start = 25, memory =
         f = open("Results/neural_nash_data.p","wb")
         pickle.dump( to_pickle, f )
         f.close()
-#    print actual_choices
+#    print(actual_choices)
     return random.choice( actual_choices[0][-memory:] )
