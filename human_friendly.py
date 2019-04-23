@@ -44,7 +44,6 @@ work_during_day = '''WARNING: The API is set up to always work, which could affe
                          afterwards.'''
 def main(daytime_run = False):
     import time, api, os
-    reload(api)
     try:
         f = open("Results/human_friendly_to_api.txt","a")
         f.close()

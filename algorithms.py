@@ -309,7 +309,7 @@ class Neural_Evolver:
     def load(self):
 #        import pickle
         f = open("Results/neural_evolver_current_model" + str(self.i) + ".p","rb")
-        self.model.set_weights(pickle.load(f))
+        self.model.set_weights(pickle.load(file = f,encoding='latin1'))
     def choose_token( self, tokens, data, game_name):
 #        import collections,random
 #        import numpy as np
@@ -429,7 +429,7 @@ class Neural_Nash:
                 g = Game( players, copy.copy(TOKENS) )
             #Get the improved predictions from those games
             f = open("Results/neural_nash_data.p","rb")
-            data = pickle.load(f)
+            data = pickle.load(file = f,encoding='latin1')
             f.close()
             #data is a list of tuples, which are ( tokens ,scores, expected_utilities)
             the_input = []
@@ -507,7 +507,7 @@ class Neural_Nash:
     def load(self):
 #        import pickle
         f = open("Results/neural_nash_current_model.p","rb")
-        self.model.set_weights(pickle.load(f))
+        self.model.set_weights(pickle.load(file = f,encoding='latin1'))
     def evaluate_position( self, tokens, data, game_name):
         scores = []
         for item in data:
@@ -692,7 +692,7 @@ class Game:
                 to_pickle = []
                 to_pickle.append(data)            
             else:
-                to_pickle = pickle.load(f)
+                to_pickle = pickle.load(file = f,encoding='latin1')
                 to_pickle.append(data)
                 f.close()
             f = open("Results/neural_nash_data.p","wb")
@@ -873,7 +873,7 @@ def aux_stochastic(tokens, data, game_name, utility_metric, start = 25, memory =
             to_pickle = []
             to_pickle.append(data)            
         else:
-            to_pickle = pickle.load(f)
+            to_pickle = pickle.load(file=f,encoding='latin1')
             to_pickle.append(data)
             f.close()
         f = open("Results/neural_nash_data.p","wb")

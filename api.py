@@ -3,7 +3,6 @@
 It keeps the main log and decides which algorithms to test 
 against each other.'''
 import algorithms
-reload(algorithms)
 def main(daytime_run = False):
     should_run = True
     while should_run:
@@ -306,7 +305,6 @@ class API:
  #       return  low < current_confidence and high > current_confidence
     def check_probability(self, algorithm_tuple):
         import time##, bayesian
-        ##reload(bayesian)
         f = open("Results/api.log","r")
         lines = f.readlines()
         f.close()

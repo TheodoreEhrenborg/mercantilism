@@ -345,7 +345,7 @@ def get_results(comparisons):
     g_name = g_name.replace(" ","_")
     g = open(g_name, "a")
     f = open(name, "a")
-    previously_fixed = None
+    previously_fixed = Wrapper((100,200))
     fixed_wins = 0
     fixed_ties = 0
     fixed_losses = 0
@@ -412,7 +412,7 @@ def get_results(comparisons):
     name = "Results/Readable/Bayesian_Analysis_by_Invader_"+ time.asctime() + " " + str(random.randrange(10**9) )+ ".txt"
     name = name.replace(" ","_")
     f = open(name, "a")
-    previously_invading = None
+    previously_invading = Wrapper( (300,400) )
     invader_wins = 0
     invader_ties = 0
     invader_losses = 0
