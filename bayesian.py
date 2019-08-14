@@ -68,9 +68,16 @@ def main(game_results=range(32), trials=1e4,
             x = best_point_tuple[i]
             sample_lowers[i] = max(x - diff, 0)
             sample_uppers[i] = min(x + diff, 1)
-        results += integrate(both, args=[compressed, weights, average, multiplicities],
-                             npoints=long(trials), lowers=sample_lowers, uppers=sample_uppers,
-                             excluded_lowers=old_lowers, excluded_uppers=old_uppers)
+        results += integrate(both,
+                             args=[compressed,
+                                   weights,
+                                   average,
+                                   multiplicities],
+                             npoints=long(trials),
+                             lowers=sample_lowers,
+                             uppers=sample_uppers,
+                             excluded_lowers=old_lowers,
+                             excluded_uppers=old_uppers)
         old_lowers = sample_lowers
         old_uppers = sample_uppers
     total = results[0]

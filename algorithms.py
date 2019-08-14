@@ -279,8 +279,14 @@ class Neural_Evolver:
         return c
 
     @classmethod
-    def evolve(cls, generations=5, trials_per_generation=100, mutation_size=0.1,
-               mutation_chance=0.2, population=15, chance_a_player_mutates=0.5):
+    def evolve(
+            cls,
+            generations=5,
+            trials_per_generation=100,
+            mutation_size=0.1,
+            mutation_chance=0.2,
+            population=15,
+            chance_a_player_mutates=0.5):
         '''Evolves with a population'''
         #        import copy,time
         players = []
@@ -426,9 +432,8 @@ class Neural_Evolver:
         model.add(Dense(30, activation='relu', input_dim=20))
         model.add(Dense(30, activation='relu'))
         model.add(Dense(15, activation='softmax'))
-        model.compile(optimizer='sgd',
-                      loss='categorical_crossentropy',
-                      metrics=['accuracy'])  # These terms don't have any significance
+        model.compile(optimizer='sgd', loss='categorical_crossentropy', metrics=[
+                      'accuracy'])  # These terms don't have any significance
         return model
 
     def become_parent(self, which_label=None):
@@ -481,8 +486,13 @@ def neural_nash():
 class Neural_Nash:
     '''Makes a decision using aux_stochastic and a neural setwork trained through backpropagation'''
 
-    def do_training(self, generations=5, games=1000,
-                    max_complexity=None, training_epochs=10, max_gen_time=10**9):
+    def do_training(
+            self,
+            generations=5,
+            games=1000,
+            max_complexity=None,
+            training_epochs=10,
+            max_gen_time=10**9):
         '''max_gen_time is the maximum time allowed to any generation (plus the time it takes to finish a game)'''
         count = 0
         players = []

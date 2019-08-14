@@ -185,8 +185,12 @@ class API:
         f = open("Results/top-output.txt", "r")
         process_active = False
         for line in f:
-            if ('firefox' in line) or ('Google Chrome' in line) or (
-                    'Safari' in line and 'SafariCloudHisto' not in line and 'com.apple.Safari' not in line and 'SafariBook' not in line) or ('mprime' in line) or ('Mathematica' in line):
+            if (
+                'firefox' in line) or (
+                'Google Chrome' in line) or (
+                'Safari' in line and 'SafariCloudHisto' not in line and 'com.apple.Safari' not in line and 'SafariBook' not in line) or (
+                'mprime' in line) or (
+                    'Mathematica' in line):
                 process_active = True
                 break
         f.close()
@@ -531,7 +535,8 @@ class API:
             tie = False
             if ratio < 1:
                 f.write(
-                    "The fixed player IS evolutionarily stable against the invader." + "\n")
+                    "The fixed player IS evolutionarily stable against the invader." +
+                    "\n")
                 seems_like_win = True
             elif ratio > 1:
                 f.write(
@@ -622,7 +627,8 @@ class API:
             f.write("Ratio: " + str(ratio) + "\n")
             if ratio < 1:
                 f.write(
-                    "The fixed player IS evolutionarily stable against the invader." + "\n")
+                    "The fixed player IS evolutionarily stable against the invader." +
+                    "\n")
                 seems_like_win = False
             elif ratio > 1:
                 f.write(
