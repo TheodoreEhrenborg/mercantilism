@@ -1,19 +1,19 @@
 import os
 import numpy as np
 import c_bayesian
-import cdecimal
+import decimal
 import random
 import time
 import math
 import pyximport
 pyximport.install()
-Decimal = cdecimal.Decimal
+Decimal = decimal.Decimal
 DEFAULT = 0.0
 NUM_PLAYERS = 5
-TOKENS = range(1, 15 + 1)
+TOKENS = list(range(1, 15 + 1))
 
 
-def main(game_results=range(32), trials=1e4,
+def main(game_results=list(range(32)), trials=1e4,
          test_case=None, final_diff_exp=-10):
     '''Uses five dimensions with multiplicities and the Decimal class'''
     # Note that game_results is of the form ( x , y , ... , w )
@@ -47,7 +47,7 @@ def main(game_results=range(32), trials=1e4,
             weights[c] = float(n) / c
     if test_case is not None:
         compressed = test_case
-#    print compressed, weights, multiplicities
+#    print(compressed, weights, multiplicities)
     # Now I need to run below_average_cases. I should figure out the
     # weights of each outcome -- a win is n points -- and the average
     # utility points to beat. I'll do that here instead of in the
@@ -68,16 +68,9 @@ def main(game_results=range(32), trials=1e4,
             x = best_point_tuple[i]
             sample_lowers[i] = max(x - diff, 0)
             sample_uppers[i] = min(x + diff, 1)
-        results += integrate(both,
-                             args=[compressed,
-                                   weights,
-                                   average,
-                                   multiplicities],
-                             npoints=long(trials),
-                             lowers=sample_lowers,
-                             uppers=sample_uppers,
-                             excluded_lowers=old_lowers,
-                             excluded_uppers=old_uppers)
+        results += integrate(both, args=[compressed, weights, average, multiplicities],
+                             npoints=long(trials), lowers=sample_lowers, uppers=sample_uppers,
+                             excluded_lowers=old_lowers, excluded_uppers=old_uppers)
         old_lowers = sample_lowers
         old_uppers = sample_uppers
     total = results[0]
@@ -105,12 +98,12 @@ def both(point, args):
         how_many_games = compressed_game_results[i]
         m = multiplicities[i]
         interval = Decimal(point[i + 1] - point[i])
-#        print interval, how_many_games
+#        print(interval, how_many_games)
 #        average_multiplier += interval * m
         density *= interval ** how_many_games
         density *= interval ** (m - 1)
 #        except decimal.InvalidOperation:
-#            print point, interval
+#            print(point, interval)
 #        density *= m ** interval
 #    density *= average_multiplier
     result1 = density
@@ -123,7 +116,7 @@ def both(point, args):
         result2 = 0
     else:
         result2 = 0.5 * result1
-#    print result1, result2, density
+#    print(result1, result2, density)
     return np.array([result1, result2])
 
 
@@ -141,7 +134,7 @@ def normalize(l):
     for x in l[:-1]:
         this_value = float(x) / t + this_value
         new.append(this_value)
-#    print new, l
+#    print(new, l)
     return new
 
 
@@ -155,7 +148,7 @@ def to_base_2(x):
             result.append(1)
         else:
             result.append(0)
-        x = x / 2
+        x = x // 2
     result.reverse()
     return result
 
@@ -178,13 +171,13 @@ def integrate(function, args, npoints, lowers, uppers,
             rand_value = lowers[j] + r * (uppers[j] - lowers[j])
             this_point[j + 1] = rand_value
 #        if not go_for_it:
-#            print np.any(this_point - excluded_lowers) < 0
+#            print( np.any(this_point - excluded_lowers) < 0 )
         if go_for_it or np.min(
                 this_point[1:-1] - excluded_lowers) < 0 or np.min(excluded_uppers - this_point[1:-1]) < 0:
             density = function(this_point, args)
-#            print density
+#            print(density)
             total += density
-#    print total, total/ float(npoints)
+#    print( total, total/ float(npoints) )
     volume = np.abs(np.product(uppers - lowers))
     return Decimal(volume) * total / Decimal(npoints)
 
@@ -215,8 +208,8 @@ def use_log():
     import pickle
     comparisons = {}
     temp = inspect.getmembers(algorithms, inspect.isfunction)
-#    print temp
-#    print list_algorithms
+#    print(temp)
+#    print(list_algorithms)
 #    should_quit = True
     # ***Make sure we can only get algorithms without aux_ in __name__
     list_algorithms = []
@@ -392,7 +385,7 @@ def get_results(comparisons):
         time.asctime() + " " + str(random.randrange(10**9)) + ".txt"
     name = name.replace(" ", "_")
     f = open(name, "a")
-#    print len(comparisons)
+#    print(len(comparisons))
     results_list = []
     for c in comparisons.keys():
         fixed, invader = c
@@ -417,7 +410,7 @@ def get_results(comparisons):
     g_name = g_name.replace(" ", "_")
     g = open(g_name, "a")
     f = open(name, "a")
-    previously_fixed = None
+    previously_fixed = Wrapper((100, 200))
     fixed_wins = 0
     fixed_ties = 0
     fixed_losses = 0
@@ -510,7 +503,7 @@ def get_results(comparisons):
         time.asctime() + " " + str(random.randrange(10**9)) + ".txt"
     name = name.replace(" ", "_")
     f = open(name, "a")
-    previously_invading = None
+    previously_invading = Wrapper((300, 400))
     invader_wins = 0
     invader_ties = 0
     invader_losses = 0

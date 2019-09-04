@@ -8,7 +8,7 @@ import collections
 import pickle
 from libc.stdlib cimport rand, RAND_MAX
 cdef int NUM_PLAYERS = 5
-cdef list TOKENS = range(1,16)
+cdef list TOKENS = list(range(1,16))
 class Neural_Nash_Untrainable_Wrapper:
     '''Makes a decision using aux_stochastic and a neural network trained through backpropagation.
     This class is optimized for decision speed. It has no do_training method.'''
@@ -80,9 +80,9 @@ cdef aux_evaluate_position( object player, list tokens,
     l = len( existing_tokens ) + len( scores )
     the_input = np.array( existing_tokens + scores)
     the_input.shape = (1,l)
-#    print the_input
+#    print(the_input)
     results = player.model.predict( the_input )
-#    print results
+#    print(results)
     i = 0
     for i in range(NUM_PLAYERS):
         one_d_results[i] = <float>(NUM_PLAYERS * results[0,i])
@@ -201,8 +201,8 @@ cdef aux_stochastic(object player, np.ndarray[np.int_t, ndim=1, negative_indices
                     max_so_far = this_sum
                     max_index = <int>l
             view_actual_choices[count,i] =  view_tokens[ max_index ] 
-#            print actual_choices
+#            print(actual_choices)
     cdef int choice_index
     choice_index = 1 + <int>(rand()/(RAND_MAX*1.0) * memory)#Does this end at memory? Yes, it's inclusive.
-#    print len(utility_record.keys())
+#    print( len(utility_record.keys()) )
     return view_actual_choices[end-choice_index,0]

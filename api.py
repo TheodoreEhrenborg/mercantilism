@@ -3,7 +3,6 @@
 It keeps the main log and decides which algorithms to test
 against each other.'''
 import algorithms
-reload(algorithms)
 
 
 def main(daytime_run=False):
@@ -114,7 +113,7 @@ class API:
         import os
         import time
         self.NUM_PLAYERS = 5
-        self.TOKENS = range(1, 15 + 1)
+        self.TOKENS = list(range(1, 15 + 1))
         self.previous_command_time = time.time()
         self.should_quit = False
         self.should_adjourn = False
@@ -129,7 +128,7 @@ class API:
         self.daytime_run = daytime_run
         if self.daytime_run:
             self.sleep_time = 3
-#        print self.sleep_time
+#        print(self.sleep_time)
         try:
             f = open("Results/api.log", "r")
         except IOError:
@@ -171,7 +170,7 @@ class API:
         f.close()
         while (not self.should_quit) and (
                 self.should_adjourn or self.check_for_processes()):
-            #            print self.sleep_time
+            #            print(self.sleep_time)
             time.sleep(self.sleep_time)
             self.execute_commands()
 
@@ -185,12 +184,8 @@ class API:
         f = open("Results/top-output.txt", "r")
         process_active = False
         for line in f:
-            if (
-                'firefox' in line) or (
-                'Google Chrome' in line) or (
-                'Safari' in line and 'SafariCloudHisto' not in line and 'com.apple.Safari' not in line and 'SafariBook' not in line) or (
-                'mprime' in line) or (
-                    'Mathematica' in line):
+            if ('firefox' in line) or ('Google Chrome' in line) or (
+                    'Safari' in line and 'SafariCloudHisto' not in line and 'com.apple.Safari' not in line and 'SafariBook' not in line) or ('mprime' in line) or ('Mathematica' in line):
                 process_active = True
                 break
         f.close()
@@ -202,8 +197,10 @@ class API:
         import time
         import inspect
         temp = inspect.getmembers(algorithms, inspect.isfunction)
-#        print temp
-#        print list_algorithms
+
+
+#        print(temp)
+#        print(list_algorithms)
 #        self.should_quit = True
         # ***Make sure we can only get algorithms without aux_ in __name__
         list_algorithms = []
@@ -276,7 +273,7 @@ class API:
         import time
         import copy
 #        checked_in_log = []
-        #most_recent_check = time.time()
+        # most_recent_check = time.time()
         # Note that current_confidence, all_game_trials, all_game_time  =
         # self.comparisons[current_pair]
         if len(self.comparisons) == 0:
@@ -286,7 +283,7 @@ class API:
                 ": Uh-oh. There are no comparisons to make.\n")
             f.close()
             return
-#        print self.comparisons
+#        print(self.comparisons)
         for x in self.comparisons.keys():
             self.check_probability(x)
         while (not self.should_quit) and (not self.should_adjourn) and (
@@ -366,7 +363,6 @@ class API:
 
     def check_probability(self, algorithm_tuple):
         import time  # , bayesian
-        # reload(bayesian)
         f = open("Results/api.log", "r")
         lines = f.readlines()
         f.close()
@@ -379,7 +375,8 @@ class API:
             str(a) + " " + str(b) + " "
         to_write_time = "Official: Total Time: " + str(a) + " " + str(b) + " "
         to_write_sum = "Official: Total Score: " + str(a) + " " + str(b) + " "
-#        master_key = "Official: Game where " + str(a) + " is invaded by " + str(b) + "."
+# master_key = "Official: Game where " + str(a) + " is invaded by " +
+# str(b) + "."
         master_key = "Official: Game:"
         for i in range(self.NUM_PLAYERS - 1):
             master_key += " " + str(a)
@@ -426,10 +423,11 @@ class API:
 #                        all_game_results[ i ][last_index] = all_game_results[ i ][last_index] + 1
 #                    else:
 #                        inverse = int( float(self.NUM_PLAYERS)/this_player_score )
-#                        all_game_results[i][ inverse - 1 ] = all_game_results[i][ inverse - 1 ] + 1
+# all_game_results[i][ inverse - 1 ] = all_game_results[i][ inverse - 1 ]
+# + 1
         all_game_results = tuple(all_game_results)
         # if all_game_trials > 0:
-        ##    current_confidence = bayesian.main4( all_game_results )
+        # current_confidence = bayesian.main4( all_game_results )
         self.comparisons[(a, b)] = (current_confidence,
                                     all_game_trials, all_game_time, sum_game_results)
         f = open("Results/api.log", "a")
@@ -467,7 +465,7 @@ class API:
             time.asctime() + " " + str(random.randrange(10**9)) + ".txt"
         name = name.replace(" ", "_")
         f = open(name, "a")
-        print len(self.comparisons)
+        print(len(self.comparisons))
         results_list = []
         for c in self.comparisons.keys():
             fixed, invader = c
@@ -535,8 +533,8 @@ class API:
             tie = False
             if ratio < 1:
                 f.write(
-                    "The fixed player IS evolutionarily stable against the invader." +
-                    "\n")
+                    "The fixed player IS evolutionarily stable"
+                    + " against the invader." + "\n")
                 seems_like_win = True
             elif ratio > 1:
                 f.write(
@@ -627,8 +625,7 @@ class API:
             f.write("Ratio: " + str(ratio) + "\n")
             if ratio < 1:
                 f.write(
-                    "The fixed player IS evolutionarily stable against the invader." +
-                    "\n")
+                    "The fixed player IS evolutionarily stable against the invader." + "\n")
                 seems_like_win = False
             elif ratio > 1:
                 f.write(
@@ -782,7 +779,8 @@ class Game:
 #                elif player_list[0].get_name() == "aux_neural_nash_untrainable":
 #                    this_move = Game.Neural_Nash_Untrainable_Instance.actually_choose_token( copy.deepcopy(self.tokens), copy.deepcopy(data))
                 elif player_list[0].get_name() == "neural_evolve":
-                    r = random.choice(range(Game.NEURAL_EVOLVER_POPULATION))
+                    r = random.choice(
+                        list(range(Game.NEURAL_EVOLVER_POPULATION)))
                     Game.Neural_Evolver_Instance.i = r
                     Game.Neural_Evolver_Instance.load()
                     this_move = Game.Neural_Evolver_Instance.choose_token(

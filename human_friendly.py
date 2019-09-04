@@ -48,7 +48,6 @@ def main(daytime_run=False):
     import time
     import api
     import os
-    reload(api)
     try:
         f = open("Results/human_friendly_to_api.txt", "a")
         f.close()
@@ -59,9 +58,9 @@ def main(daytime_run=False):
         f.close()
     except IOError:
         os.system("mkdir Results/Readable")
-    print time.asctime() + ": " + starting
+    print(time.asctime() + ": " + starting)
     if daytime_run:
-        print time.asctime() + ": " + work_during_day
+        print(time.asctime() + ": " + work_during_day)
 #    t1 = multiprocessing.Process( target = api.main, args = [daytime_run] )
 #    t1 = threading.Thread( target = api.main, args = [daytime_run] )
 #    t1.start()
@@ -73,17 +72,17 @@ def main(daytime_run=False):
         os.system("python -c 'import api;api.main(True)' &")
     response = ""
     while True:
-        print time.asctime() + ": " + normal
+        print(time.asctime() + ": " + normal)
         response_OK = False
         while not response_OK:
-            response = raw_input().lower().rstrip().lstrip()
+            response = input().lower().rstrip().lstrip()
             if formatted(response):
                 response_OK = True
             else:
-                print time.asctime() + ": " + error
+                print(time.asctime() + ": " + error)
         # Do something based on the response
         if response == 'options':
-            print time.asctime() + ": " + options
+            print(time.asctime() + ": " + options)
         elif response == 'quit':
             break
         else:
@@ -95,10 +94,13 @@ def main(daytime_run=False):
     f = open("Results/human_friendly_to_api.txt", "a")
     f.write(str(time.time()) + ":" + response + '\n')
     f.close()
-    print time.asctime() + ": " + quitting
+    print(time.asctime() + ": " + quitting)
+
+
 #    #Wait until the API quits
 #    t1.join()
-#    print time.asctime() + ": " + done_quitting
+#    print( time.asctime() + ": " + done_quitting )
+>>>>>> > python3
 
 
 def formatted(command):
