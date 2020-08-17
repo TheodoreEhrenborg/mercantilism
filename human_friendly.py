@@ -1,10 +1,10 @@
-'''This module manages the interaction with the user and
+"""This module manages the interaction with the user and
 sends the user's commands to a file read by the artificial
-primary investigator.'''
-normal = '''The computer is currently running Theodore's AP Research project
+primary investigator."""
+normal = """The computer is currently running Theodore's AP Research project
               between midnight and 2:30 pm. Type 'quit' to safely quit the program.
-              Type 'options' to get more options.'''
-options = '''Type 'quit' to safely quit the program.
+              Type 'options' to get more options."""
+options = """Type 'quit' to safely quit the program.
               Type 'options' to get this options message.
               Type 'adjourn' to get the program to cease operations until midnight.
               Type 'reload' to tell the Artificial Primary Investigator (API) that conditions may have changed.
@@ -34,20 +34,23 @@ options = '''Type 'quit' to safely quit the program.
               Type 'redo_confidence' to tell API that it needs to redo all the confidences, but the trials
                   can be left alone. (This is a good option after you have fixed a bug in bayesian.py.)
               Type 'get_results' to tell API to make a short version of all its confidences, which will be
-                  saved in the Results folder.'''
-error = '''Sorry, I did not recognize that command. Are you sure you typed it correctly?'''
-starting = '''Starting the Artificial Primary Investigator (API)'''
-quitting = '''I told the Artificial Primary Investigator (API) to quit. It will quit in a few minutes.'''
-#done_quitting = '''I have quit.'''
-work_during_day = '''WARNING: The API is set up to always work, which could affect the results
+                  saved in the Results folder."""
+error = (
+    """Sorry, I did not recognize that command. Are you sure you typed it correctly?"""
+)
+starting = """Starting the Artificial Primary Investigator (API)"""
+quitting = """I told the Artificial Primary Investigator (API) to quit. It will quit in a few minutes."""
+# done_quitting = '''I have quit.'''
+work_during_day = """WARNING: The API is set up to always work, which could affect the results
                          Only proceed if you are testing the program, and please reset everything
-                         afterwards.'''
+                         afterwards."""
 
 
 def main(daytime_run=False):
     import time
     import api
     import os
+
     try:
         f = open("Results/human_friendly_to_api.txt", "a")
         f.close()
@@ -61,11 +64,11 @@ def main(daytime_run=False):
     print(time.asctime() + ": " + starting)
     if daytime_run:
         print(time.asctime() + ": " + work_during_day)
-#    t1 = multiprocessing.Process( target = api.main, args = [daytime_run] )
-#    t1 = threading.Thread( target = api.main, args = [daytime_run] )
-#    t1.start()
-#    #Starts the API here, using multi-processing
-#    #so human_friendly will be free to continue
+    #    t1 = multiprocessing.Process( target = api.main, args = [daytime_run] )
+    #    t1 = threading.Thread( target = api.main, args = [daytime_run] )
+    #    t1.start()
+    #    #Starts the API here, using multi-processing
+    #    #so human_friendly will be free to continue
     if not daytime_run:
         os.system("python -c 'import api;api.main()' &")
     else:
@@ -81,18 +84,18 @@ def main(daytime_run=False):
             else:
                 print(time.asctime() + ": " + error)
         # Do something based on the response
-        if response == 'options':
+        if response == "options":
             print(time.asctime() + ": " + options)
-        elif response == 'quit':
+        elif response == "quit":
             break
         else:
             # Contact API with the message
             f = open("Results/human_friendly_to_api.txt", "a")
-            f.write(str(time.time()) + ":" + response + '\n')
+            f.write(str(time.time()) + ":" + response + "\n")
             f.close()
     # Contact API and tell it to quit
     f = open("Results/human_friendly_to_api.txt", "a")
-    f.write(str(time.time()) + ":" + response + '\n')
+    f.write(str(time.time()) + ":" + response + "\n")
     f.close()
     print(time.asctime() + ": " + quitting)
 
@@ -100,21 +103,31 @@ def main(daytime_run=False):
 #    #Wait until the API quits
 #    t1.join()
 #    print( time.asctime() + ": " + done_quitting )
->>>>>> > python3
 
 
 def formatted(command):
-    '''Detects whether command is acceptable.'''
-    if 'official' in command:
+    """Detects whether command is acceptable."""
+    if "official" in command:
         return False
     new = command.split()
     if len(new) == 1:
-        return new[0] in ['quit', 'options', 'adjourn',
-                          'reload', 'redo_confidence', 'get_results']
+        return new[0] in [
+            "quit",
+            "options",
+            "adjourn",
+            "reload",
+            "redo_confidence",
+            "get_results",
+        ]
     elif len(new) == 3:
-        return new[0] in ['reset']
+        return new[0] in ["reset"]
     elif len(new) == 2:
-        return new[0] in ['confidence', 'min_trials',
-                          'max_trials', 'min_time', 'max_time']
+        return new[0] in [
+            "confidence",
+            "min_trials",
+            "max_trials",
+            "min_time",
+            "max_time",
+        ]
     else:
         return False

@@ -1,7 +1,7 @@
-'''This module contains the Artificial Primary Investigator
+"""This module contains the Artificial Primary Investigator
 (API). It only run programs at night to keep CPU speed constant.
 It keeps the main log and decides which algorithms to test
-against each other.'''
+against each other."""
 import algorithms
 
 
@@ -17,18 +17,18 @@ class API:
         pass
 
     def get_time(self, line):
-        '''Returns the number before the first ':' '''
-        i = line.index(':')
+        """Returns the number before the first ':' """
+        i = line.index(":")
         return float(line[0:i])
 
     def get_command(self, line):
-        '''Returns the string after the first ':' and before the newline'''
-        i = line.index(':')
-        return line[i + 1:-1]
+        """Returns the string after the first ':' and before the newline"""
+        i = line.index(":")
+        return line[i + 1 : -1]
 
     def get_new_commands(self):
-        ''' Looks in the appropriate file and returns a list
-        of the new commands from human_friendly '''
+        """ Looks in the appropriate file and returns a list
+        of the new commands from human_friendly """
         try:
             f = open("Results/human_friendly_to_api.txt", "r")
             lines = f.readlines()
@@ -44,67 +44,61 @@ class API:
         return result
 
     def execute_commands(self):
-        '''Looks for commands and executes them -- puts them on the log.
+        """Looks for commands and executes them -- puts them on the log.
         If a command is quit, adjourn, or reload,
         this method executes the other commands first, and
         then ends. The caller has to deal with quit, adjourn,
-        or reload.'''
+        or reload."""
         import time
+
         self.should_adjourn = False
         commands = self.get_new_commands()
         f = open("Results/api.log", "a")
         highest_priority = None
-        if time.localtime()[3] >= 14 and time.localtime()[
-                4] >= 30 and not self.daytime_run:
+        if (
+            time.localtime()[3] >= 14
+            and time.localtime()[4] >= 30
+            and not self.daytime_run
+        ):
             self.should_adjourn = True
         for i in commands:
-            f.write(time.asctime() + ": " + "Got command \'" + i + "\'" + "\n")
-            if i == 'quit':
+            f.write(time.asctime() + ": " + "Got command '" + i + "'" + "\n")
+            if i == "quit":
                 self.should_quit = True
-            elif i == 'adjourn':
+            elif i == "adjourn":
                 self.should_adjourn = True
-            elif i == 'reload':
+            elif i == "reload":
                 self.should_reload = True
-            elif 'reset' in i:
+            elif "reset" in i:
                 f.write(time.asctime() + ": Official: R" + i[1:] + "\n")
                 self.should_reload = True
-            elif 'get_results' in i:
+            elif "get_results" in i:
                 f.write(
-                    time.asctime() +
-                    ": Official: Saving human-readable results" +
-                    "\n")
+                    time.asctime() + ": Official: Saving human-readable results" + "\n"
+                )
                 self.get_results()
                 # self.should_reload = True #I don't see why the computer has
                 # to reload itself
-            elif 'redo_confidence' in i:
+            elif "redo_confidence" in i:
                 f.write(time.asctime() + ": Official: Redo_confidence" + "\n")
                 self.should_reload = True
-            elif 'confidence' in i and 'current' not in i:
-                f.write(time.asctime() +
-                        ": Official: Confidence: " + i[10:] + "\n")
+            elif "confidence" in i and "current" not in i:
+                f.write(time.asctime() + ": Official: Confidence: " + i[10:] + "\n")
                 self.should_reload = True
-            elif 'max_trials' in i:
-                f.write(time.asctime() +
-                        ": Official: Max_trials: " + i[10:] + "\n")
+            elif "max_trials" in i:
+                f.write(time.asctime() + ": Official: Max_trials: " + i[10:] + "\n")
                 self.should_reload = True
-            elif 'min_trials' in i:
-                f.write(time.asctime() +
-                        ": Official: Min_trials: " + i[10:] + "\n")
+            elif "min_trials" in i:
+                f.write(time.asctime() + ": Official: Min_trials: " + i[10:] + "\n")
                 self.should_reload = True
-            elif 'max_time' in i:
-                f.write(time.asctime() +
-                        ": Official: Max_time: " + i[8:] + "\n")
+            elif "max_time" in i:
+                f.write(time.asctime() + ": Official: Max_time: " + i[8:] + "\n")
                 self.should_reload = True
-            elif 'min_time' in i:
-                f.write(time.asctime() +
-                        ": Official: Min_time: " + i[8:] + "\n")
+            elif "min_time" in i:
+                f.write(time.asctime() + ": Official: Min_time: " + i[8:] + "\n")
                 self.should_reload = True
             else:
-                f.write(
-                    time.asctime() +
-                    ": " +
-                    "Could not understand command!" +
-                    "\n")
+                f.write(time.asctime() + ": " + "Could not understand command!" + "\n")
         if self.should_reload:
             self.should_quit = True
         f.close()
@@ -112,6 +106,7 @@ class API:
     def run(self, daytime_run=False):
         import os
         import time
+
         self.NUM_PLAYERS = 5
         self.TOKENS = list(range(1, 15 + 1))
         self.previous_command_time = time.time()
@@ -128,7 +123,7 @@ class API:
         self.daytime_run = daytime_run
         if self.daytime_run:
             self.sleep_time = 3
-#        print(self.sleep_time)
+        #        print(self.sleep_time)
         try:
             f = open("Results/api.log", "r")
         except IOError:
@@ -141,21 +136,26 @@ class API:
             if len(l) > 0:
                 if "Official: Quitting" not in l[len(l) - 1]:
                     raise Exception(
-                        "It seems that the previous session of API did not quit!")
+                        "It seems that the previous session of API did not quit!"
+                    )
         self.execute_commands()
-#        self.should_quit = True
+        #        self.should_quit = True
         if (not self.should_quit) and (not self.should_adjourn):
             # Read the log and update the algorithm list and priorities
             self.use_log()
         while not self.should_quit:
             self.execute_commands()
-            if (not self.should_quit) and (not self.should_adjourn) and (
-                    not self.check_for_processes()):
+            if (
+                (not self.should_quit)
+                and (not self.should_adjourn)
+                and (not self.check_for_processes())
+            ):
                 # Choose a comparison and do it. Repeat. Check for commands
                 # every 5 min
                 self.do_comparisons()
             if (not self.should_quit) and (
-                    self.should_adjourn or self.check_for_processes()):
+                self.should_adjourn or self.check_for_processes()
+            ):
                 self.adjourn()
         self.execute_commands()
         f = open("Results/api.log", "a")
@@ -165,18 +165,21 @@ class API:
 
     def adjourn(self):
         import time
+
         f = open("Results/api.log", "a")
         f.write(time.asctime() + ": " + "Adjourning" + "\n")
         f.close()
         while (not self.should_quit) and (
-                self.should_adjourn or self.check_for_processes()):
+            self.should_adjourn or self.check_for_processes()
+        ):
             #            print(self.sleep_time)
             time.sleep(self.sleep_time)
             self.execute_commands()
 
     def check_for_processes(self):
-        '''Checks whether a CPU-intensive process is running.'''
+        """Checks whether a CPU-intensive process is running."""
         import os
+
         if self.daytime_run:
             return False  # Ignore any processes
         # Write the activity monitor to a file
@@ -185,27 +188,33 @@ class API:
         process_active = False
         for line in f:
             if (
-                'firefox' in line) or (
-                'Google Chrome' in line) or (
-                'Safari' in line and 'SafariCloudHisto' not in line and 'com.apple.Safari' not in line and 'SafariBook' not in line) or (
-                'mprime' in line) or (
-                    'Mathematica' in line):
+                ("firefox" in line)
+                or ("Google Chrome" in line)
+                or (
+                    "Safari" in line
+                    and "SafariCloudHisto" not in line
+                    and "com.apple.Safari" not in line
+                    and "SafariBook" not in line
+                )
+                or ("mprime" in line)
+                or ("Mathematica" in line)
+            ):
                 process_active = True
                 break
         f.close()
-#        if not process_active:
-#            os.system("rm -f top-output.txt")
+        #        if not process_active:
+        #            os.system("rm -f top-output.txt")
         return process_active
 
     def use_log(self):
         import time
         import inspect
+
         temp = inspect.getmembers(algorithms, inspect.isfunction)
 
-
-#        print(temp)
-#        print(list_algorithms)
-#        self.should_quit = True
+        #        print(temp)
+        #        print(list_algorithms)
+        #        self.should_quit = True
         # ***Make sure we can only get algorithms without aux_ in __name__
         list_algorithms = []
         for x in temp:
@@ -218,8 +227,7 @@ class API:
         lines.reverse()
         for line in lines:
             if "Official: Confidence: " in line:
-                self.confidence = float(
-                    line.partition("Official: Confidence: ")[2])
+                self.confidence = float(line.partition("Official: Confidence: ")[2])
                 break
         for line in lines:
             if "Official: Min_time: " in line:
@@ -231,13 +239,11 @@ class API:
                 break
         for line in lines:
             if "Official: Min_trials: " in line:
-                self.min_trials = int(
-                    line.partition("Official: Min_trials: ")[2])
+                self.min_trials = int(line.partition("Official: Min_trials: ")[2])
                 break
         for line in lines:
             if "Official: Max_trials: " in line:
-                self.max_trials = int(
-                    line.partition("Official: Max_trials: ")[2])
+                self.max_trials = int(line.partition("Official: Max_trials: ")[2])
                 break
         self.comparisons = {}
         for i in range(len(list_algorithms)):
@@ -246,8 +252,7 @@ class API:
                 b = list_algorithms[j]
                 if a != b:
                     current_confidence = self.DEFAULT
-                    key = "Official: Current Confidence: " + \
-                        str(a) + " " + str(b) + " "
+                    key = "Official: Current Confidence: " + str(a) + " " + str(b) + " "
                     found = False
                     for line in lines:
                         if "Official: Reset " + str(a) + " " + str(b) in line:
@@ -268,45 +273,51 @@ class API:
                     self.comparisons[(a, b)] = (current_confidence, 0, 0, None)
                     if not found:
                         f = open("Results/api.log", "a")
-                        f.write(time.asctime() + ": " + key +
-                                str(current_confidence) + "\n")
+                        f.write(
+                            time.asctime() + ": " + key + str(current_confidence) + "\n"
+                        )
                         f.close()
 
     def do_comparisons(self):
-        '''Choose a comparison and do it. Repeat. Check for commands every 5 min'''
+        """Choose a comparison and do it. Repeat. Check for commands every 5 min"""
         import time
         import copy
-#        checked_in_log = []
+
+        #        checked_in_log = []
         # most_recent_check = time.time()
         # Note that current_confidence, all_game_trials, all_game_time  =
         # self.comparisons[current_pair]
         if len(self.comparisons) == 0:
             f = open("Results/api.log", "a")
-            f.write(
-                time.asctime() +
-                ": Uh-oh. There are no comparisons to make.\n")
+            f.write(time.asctime() + ": Uh-oh. There are no comparisons to make.\n")
             f.close()
             return
-#        print(self.comparisons)
+        #        print(self.comparisons)
         for x in self.comparisons.keys():
             self.check_probability(x)
-        while (not self.should_quit) and (not self.should_adjourn) and (
-                not self.check_for_processes()):
-            num_trials = 10**9
+        while (
+            (not self.should_quit)
+            and (not self.should_adjourn)
+            and (not self.check_for_processes())
+        ):
+            num_trials = 10 ** 9
             for x in self.comparisons.values():
                 if x[1] < num_trials and not self.is_significant(x):
                     num_trials = x[1]
-            if num_trials == 10**9:
+            if num_trials == 10 ** 9:
                 raise Exception("A comparison was not chosen.")
             for current_pair in self.comparisons.keys():
-                if self.comparisons[current_pair][1] == num_trials and not self.is_significant(
-                        self.comparisons[current_pair]):
+                if self.comparisons[current_pair][
+                    1
+                ] == num_trials and not self.is_significant(
+                    self.comparisons[current_pair]
+                ):
                     break  # We choose the pair with the fewest number of trials
             # Now that we have a current_pair, we check the probability
             fixed, invader = current_pair
-#            if current_pair not in checked_in_log:
-#                self.check_probability(current_pair)
-#                checked_in_log.append( current_pair )
+            #            if current_pair not in checked_in_log:
+            #                self.check_probability(current_pair)
+            #                checked_in_log.append( current_pair )
             algorithm_list = []
             for x in range(self.NUM_PLAYERS - 1):
                 algorithm_list.append(fixed)
@@ -337,21 +348,27 @@ class API:
                     if processes_running:
                         f = open("Results/api.log", "a")
                         f.write(
-                            time.asctime() +
-                            ": " +
-                            "Other CPU-intensive Process Detected\n")
+                            time.asctime()
+                            + ": "
+                            + "Other CPU-intensive Process Detected\n"
+                        )
                         f.close()
                     self.execute_commands()
                     should_stop = should_stop or self.should_quit or self.should_adjourn
                     if not should_stop:
                         self.check_probability(current_pair)
-                        should_stop = should_stop or not(
-                            self.experimental_conditions(current_pair))
+                        should_stop = should_stop or not (
+                            self.experimental_conditions(current_pair)
+                        )
 
     def experimental_conditions(self, current_pair):
-        '''Returns True if the current pair should continue to be tested'''
-        current_confidence, all_game_trials, all_game_time, sum_results = self.comparisons[
-            current_pair]
+        """Returns True if the current pair should continue to be tested"""
+        (
+            current_confidence,
+            all_game_trials,
+            all_game_time,
+            sum_results,
+        ) = self.comparisons[current_pair]
         if all_game_time < self.min_time:
             return True
         if all_game_time > self.max_time:
@@ -361,26 +378,28 @@ class API:
         if all_game_trials > self.max_trials:
             return False
         return True
- #       low = 1 - self.confidence
- #       high = self.confidence
- #       return  low < current_confidence and high > current_confidence
+
+    #       low = 1 - self.confidence
+    #       high = self.confidence
+    #       return  low < current_confidence and high > current_confidence
 
     def check_probability(self, algorithm_tuple):
         import time  # , bayesian
+
         f = open("Results/api.log", "r")
         lines = f.readlines()
         f.close()
         lines.reverse()
         a, b = algorithm_tuple
         current_confidence = self.DEFAULT
-        to_write_confidence = "Official: Current Confidence: " + \
-            str(a) + " " + str(b) + " "
-        to_write_trials = "Official: Total Trials: " + \
-            str(a) + " " + str(b) + " "
+        to_write_confidence = (
+            "Official: Current Confidence: " + str(a) + " " + str(b) + " "
+        )
+        to_write_trials = "Official: Total Trials: " + str(a) + " " + str(b) + " "
         to_write_time = "Official: Total Time: " + str(a) + " " + str(b) + " "
         to_write_sum = "Official: Total Score: " + str(a) + " " + str(b) + " "
-# master_key = "Official: Game where " + str(a) + " is invaded by " +
-# str(b) + "."
+        # master_key = "Official: Game where " + str(a) + " is invaded by " +
+        # str(b) + "."
         master_key = "Official: Game:"
         for i in range(self.NUM_PLAYERS - 1):
             master_key += " " + str(a)
@@ -391,11 +410,11 @@ class API:
         sum_game_results = []
         for i in range(self.NUM_PLAYERS):
             sum_game_results.append(0)
-        for i in range(2**self.NUM_PLAYERS):
+        for i in range(2 ** self.NUM_PLAYERS):
             all_game_results.append(0)
         all_game_trials = 0
         all_game_time = 0
-#        this_game_time = 0
+        #        this_game_time = 0
         for line in lines:
             if "Official: Reset " + str(a) + " " + str(b) in line:
                 break
@@ -413,60 +432,51 @@ class API:
                 current_game_tuple = eval(line.partition(results_key)[2])
             if master_key in line:
                 all_game_trials += 1
-#                this_game_results = eval( line.partition(key)[2] )
+                #                this_game_results = eval( line.partition(key)[2] )
                 all_game_time += this_game_time
-                sum_game_results = self.list_add(
-                    sum_game_results, current_game_tuple)
+                sum_game_results = self.list_add(sum_game_results, current_game_tuple)
                 all_game_results[self.get_index(current_game_tuple)] += 1
-#                current_game_tuple = this_game_results[0]
-#                for i in range(self.NUM_PLAYERS):
-#                    this_player_score = current_game_tuple[ i ]
-#                last_index = self.NUM_PLAYERS
-#                #I keep the type of score (win, tie, loss)
-#                    if this_score == 0:
-#                        all_game_results[ i ][last_index] = all_game_results[ i ][last_index] + 1
-#                    else:
-#                        inverse = int( float(self.NUM_PLAYERS)/this_player_score )
-# all_game_results[i][ inverse - 1 ] = all_game_results[i][ inverse - 1 ]
-# + 1
+        #                current_game_tuple = this_game_results[0]
+        #                for i in range(self.NUM_PLAYERS):
+        #                    this_player_score = current_game_tuple[ i ]
+        #                last_index = self.NUM_PLAYERS
+        #                #I keep the type of score (win, tie, loss)
+        #                    if this_score == 0:
+        #                        all_game_results[ i ][last_index] = all_game_results[ i ][last_index] + 1
+        #                    else:
+        #                        inverse = int( float(self.NUM_PLAYERS)/this_player_score )
+        # all_game_results[i][ inverse - 1 ] = all_game_results[i][ inverse - 1 ]
+        # + 1
         all_game_results = tuple(all_game_results)
         # if all_game_trials > 0:
         # current_confidence = bayesian.main4( all_game_results )
-        self.comparisons[(a, b)] = (current_confidence,
-                                    all_game_trials, all_game_time, sum_game_results)
+        self.comparisons[(a, b)] = (
+            current_confidence,
+            all_game_trials,
+            all_game_time,
+            sum_game_results,
+        )
         f = open("Results/api.log", "a")
         f.write(
-            time.asctime() +
-            ": " +
-            to_write_confidence +
-            str(current_confidence) +
-            "\n")
-        f.write(
-            time.asctime() +
-            ": " +
-            to_write_time +
-            str(all_game_time) +
-            "\n")
-        f.write(
-            time.asctime() +
-            ": " +
-            to_write_trials +
-            str(all_game_trials) +
-            "\n")
-        f.write(
-            time.asctime() +
-            ": " +
-            to_write_sum +
-            str(sum_game_results) +
-            "\n")
+            time.asctime() + ": " + to_write_confidence + str(current_confidence) + "\n"
+        )
+        f.write(time.asctime() + ": " + to_write_time + str(all_game_time) + "\n")
+        f.write(time.asctime() + ": " + to_write_trials + str(all_game_trials) + "\n")
+        f.write(time.asctime() + ": " + to_write_sum + str(sum_game_results) + "\n")
         f.close()
 
     def get_results(self):
         import time
         import random
         import math
-        name = "Results/Readable/Readable_" + \
-            time.asctime() + " " + str(random.randrange(10**9)) + ".txt"
+
+        name = (
+            "Results/Readable/Readable_"
+            + time.asctime()
+            + " "
+            + str(random.randrange(10 ** 9))
+            + ".txt"
+        )
         name = name.replace(" ", "_")
         f = open(name, "a")
         print(len(self.comparisons))
@@ -475,24 +485,30 @@ class API:
             fixed, invader = c
             title = "Fixed: " + str(fixed) + " Invader: " + str(invader) + "\n"
             f.write(title)
-            f.write("Current Confidence: " +
-                    str(self.comparisons[c][0]) + "\n")
+            f.write("Current Confidence: " + str(self.comparisons[c][0]) + "\n")
             num_trials = self.comparisons[c][1]
             f.write("Number of trials: " + str(self.comparisons[c][1]) + "\n")
-            f.write("Amount of time spent: " +
-                    str(self.comparisons[c][2]) + "\n")
+            f.write("Amount of time spent: " + str(self.comparisons[c][2]) + "\n")
             invader_score = self.comparisons[c][3][-1]
-            f.write("Summed results of games: " +
-                    str(self.comparisons[c][3]) + "\n\n")
-            results_list.append(
-                [title, num_trials, invader_score, fixed, invader])
+            f.write("Summed results of games: " + str(self.comparisons[c][3]) + "\n\n")
+            results_list.append([title, num_trials, invader_score, fixed, invader])
         f.close()
         results_list.sort()
-        name = "Results/Readable/Analysis_by_Fixed_" + \
-            time.asctime() + " " + str(random.randrange(10**9)) + ".txt"
+        name = (
+            "Results/Readable/Analysis_by_Fixed_"
+            + time.asctime()
+            + " "
+            + str(random.randrange(10 ** 9))
+            + ".txt"
+        )
         name = name.replace(" ", "_")
-        g_name = "Results/Readable/Summary_" + \
-            time.asctime() + " " + str(random.randrange(10**9)) + ".txt"
+        g_name = (
+            "Results/Readable/Summary_"
+            + time.asctime()
+            + " "
+            + str(random.randrange(10 ** 9))
+            + ".txt"
+        )
         g_name = g_name.replace(" ", "_")
         g = open(g_name, "a")
         f = open(name, "a")
@@ -508,22 +524,20 @@ class API:
             fixed = x[3]
             if fixed != previously_fixed:
                 if not first:
+                    g.write("Results where " + str(previously_fixed) + " is fixed:\n")
                     g.write(
-                        "Results where " +
-                        str(previously_fixed) +
-                        " is fixed:\n")
+                        "Was ES against this many strategies: " + str(fixed_wins) + "\n"
+                    )
                     g.write(
-                        "Was ES against this many strategies: " +
-                        str(fixed_wins) +
-                        "\n")
+                        "Was in a statistical tie with this many strategies: "
+                        + str(fixed_ties)
+                        + "\n"
+                    )
                     g.write(
-                        "Was in a statistical tie with this many strategies: " +
-                        str(fixed_ties) +
-                        "\n")
-                    g.write(
-                        "Was not ES against this many strategies: " +
-                        str(fixed_losses) +
-                        "\n\n")
+                        "Was not ES against this many strategies: "
+                        + str(fixed_losses)
+                        + "\n\n"
+                    )
                     fixed_wins = 0
                     fixed_ties = 0
                     fixed_losses = 0
@@ -538,13 +552,16 @@ class API:
             if ratio < 1:
                 f.write(
                     "The fixed player IS evolutionarily stable"
-                    + " against the invader." + "\n")
+                    + " against the invader."
+                    + "\n"
+                )
                 seems_like_win = True
             elif ratio > 1:
                 f.write(
                     "The fixed player is NOT"
-                    + " evolutionarily stable against the invader." +
-                    "\n")
+                    + " evolutionarily stable against the invader."
+                    + "\n"
+                )
                 seems_like_win = False
             else:
                 f.write("Unable to make a decision.\n")
@@ -552,14 +569,8 @@ class API:
             uncertainty = self.NUM_PLAYERS * math.sqrt(num_trials)
             lower_bound = invader_score - uncertainty
             upper_bound = invader_score + uncertainty
-            f.write(
-                "Lower bound on invader's score: " +
-                str(lower_bound) +
-                "\n")
-            f.write(
-                "Upper bound on invader's score: " +
-                str(upper_bound) +
-                "\n")
+            f.write("Lower bound on invader's score: " + str(lower_bound) + "\n")
+            f.write("Upper bound on invader's score: " + str(upper_bound) + "\n")
             if num_trials >= lower_bound and num_trials <= upper_bound:
                 f.write("It is POSSIBLE that this result is incorrect.\n")
                 fixed_ties += 1
@@ -572,22 +583,24 @@ class API:
             f.write("\n")
         if not first:
             g.write("Results where " + str(previously_fixed) + " is fixed:\n")
+            g.write("Was ES against this many strategies: " + str(fixed_wins) + "\n")
             g.write(
-                "Was ES against this many strategies: " +
-                str(fixed_wins) +
-                "\n")
+                "Was in a statistical tie with this many strategies: "
+                + str(fixed_ties)
+                + "\n"
+            )
             g.write(
-                "Was in a statistical tie with this many strategies: " +
-                str(fixed_ties) +
-                "\n")
-            g.write(
-                "Was not ES against this many strategies: " +
-                str(fixed_losses) +
-                "\n\n")
+                "Was not ES against this many strategies: " + str(fixed_losses) + "\n\n"
+            )
         f.close()
         results_list.sort(key=lambda x: str(x[4]))
-        name = "Results/Readable/Analysis_by_Invader_" + \
-            time.asctime() + " " + str(random.randrange(10**9)) + ".txt"
+        name = (
+            "Results/Readable/Analysis_by_Invader_"
+            + time.asctime()
+            + " "
+            + str(random.randrange(10 ** 9))
+            + ".txt"
+        )
         name = name.replace(" ", "_")
         f = open(name, "a")
         previously_invading = None
@@ -603,22 +616,22 @@ class API:
             if invader != previously_invading:
                 if not first:
                     g.write(
-                        "Results where " +
-                        str(previously_invading) +
-                        " is invader:\n")
+                        "Results where " + str(previously_invading) + " is invader:\n"
+                    )
                     g.write(
-                        "Could invade this many strategies: " +
-                        str(invader_wins) +
-                        "\n")
+                        "Could invade this many strategies: " + str(invader_wins) + "\n"
+                    )
                     g.write(
                         "Was in a statistical tie"
-                        + " with this many strategies: " +
-                        str(invader_ties) +
-                        "\n")
+                        + " with this many strategies: "
+                        + str(invader_ties)
+                        + "\n"
+                    )
                     g.write(
-                        "Could not invade this many strategies: " +
-                        str(invader_losses) +
-                        "\n\n")
+                        "Could not invade this many strategies: "
+                        + str(invader_losses)
+                        + "\n\n"
+                    )
                     invader_wins = 0
                     invader_ties = 0
                     invader_losses = 0
@@ -631,15 +644,17 @@ class API:
             f.write("Ratio: " + str(ratio) + "\n")
             if ratio < 1:
                 f.write(
-                    "The fixed player IS evolutionarily" +
-                    " stable against the invader." +
-                    "\n")
+                    "The fixed player IS evolutionarily"
+                    + " stable against the invader."
+                    + "\n"
+                )
                 seems_like_win = False
             elif ratio > 1:
                 f.write(
-                    "The fixed player is NOT evolutionarily" +
-                    " stable against the invader." +
-                    "\n")
+                    "The fixed player is NOT evolutionarily"
+                    + " stable against the invader."
+                    + "\n"
+                )
                 seems_like_win = True
             else:
                 f.write("Unable to make a decision.\n")
@@ -647,14 +662,8 @@ class API:
             uncertainty = self.NUM_PLAYERS * math.sqrt(num_trials)
             lower_bound = invader_score - uncertainty
             upper_bound = invader_score + uncertainty
-            f.write(
-                "Lower bound on invader's score: " +
-                str(lower_bound) +
-                "\n")
-            f.write(
-                "Upper bound on invader's score: " +
-                str(upper_bound) +
-                "\n")
+            f.write("Lower bound on invader's score: " + str(lower_bound) + "\n")
+            f.write("Upper bound on invader's score: " + str(upper_bound) + "\n")
             if num_trials >= lower_bound and num_trials <= upper_bound:
                 f.write("It is POSSIBLE that this result is incorrect.\n")
                 invader_ties += 1
@@ -666,27 +675,22 @@ class API:
                 invader_losses += 1
             f.write("\n")
         if not first:
+            g.write("Results where " + str(previously_invading) + " is invader:\n")
+            g.write("Could invade this many strategies: " + str(invader_wins) + "\n")
             g.write(
-                "Results where " +
-                str(previously_invading) +
-                " is invader:\n")
+                "Was in a statistical tie with this many strategies: "
+                + str(invader_ties)
+                + "\n"
+            )
             g.write(
-                "Could invade this many strategies: " +
-                str(invader_wins) +
-                "\n")
-            g.write(
-                "Was in a statistical tie with this many strategies: " +
-                str(invader_ties) +
-                "\n")
-            g.write(
-                "Could not invade this many strategies: " +
-                str(invader_losses) +
-                "\n\n")
+                "Could not invade this many strategies: " + str(invader_losses) + "\n\n"
+            )
         f.close()
         g.close()
 
     def is_significant(self, comparison):
         import math
+
         num_trials = comparison[1]
         invader_score = comparison[3][-1]
         uncertainty = self.NUM_PLAYERS * math.sqrt(num_trials)
@@ -703,9 +707,9 @@ class API:
         return c
 
     def get_index(self, result_tuple):
-        '''Takes a tuple like (2.5, 0, 2.5, 0, 0) and makes it into
+        """Takes a tuple like (2.5, 0, 2.5, 0, 0) and makes it into
         (1,0,1,0,0), then converts the base two number 10100 into
-        base ten -- 20.'''
+        base ten -- 20."""
         new = []
         for x in result_tuple:
             if x == 0:
@@ -724,8 +728,8 @@ class API:
 class Game:
     Neural_Evolver_Instance = algorithms.Neural_Evolver()
     Neural_Nash_Instance = algorithms.Neural_Nash(is_training=False)
-#    Don't use the next line
-#    Neural_Nash_Untrainable_Instance = c_algorithms.Neural_Nash_Untrainable_Wrapper()
+    #    Don't use the next line
+    #    Neural_Nash_Untrainable_Instance = c_algorithms.Neural_Nash_Untrainable_Wrapper()
     NEURAL_EVOLVER_POPULATION = 100
 
     def get_results(self):
@@ -736,8 +740,9 @@ class Game:
         import collections
         import copy
         import time
-        '''Calculates a list containing the utility points of
-        each player'''
+
+        """Calculates a list containing the utility points of
+        each player"""
         self.start_time = time.time()
         self.tokens = list(tokens)
         self.algorithm_list = []
@@ -747,19 +752,21 @@ class Game:
         for x in algorithm_tuple:
             self.algorithm_list.append([x, 0, []])
         self.algorithm_tuple = algorithm_tuple
-        self.name = str(int(time.time())) + ":" + str(random.randint(0, 10**9))
+        self.name = str(int(time.time())) + ":" + str(random.randint(0, 10 ** 9))
         # Each algorithm receives a list of the tokens left, of everyone's scores,
         # and everyone's prior moves. However, the opponents will be put in a
         # random order.
         f = open("Results/games.log", "a")
-        f.write(time.asctime() +
-                ": Game " +
-                self.name +
-                ". The tokens are " +
-                str(self.tokens) +
-                ". The players are " +
-                str(self.algorithm_tuple) +
-                "\n")
+        f.write(
+            time.asctime()
+            + ": Game "
+            + self.name
+            + ". The tokens are "
+            + str(self.tokens)
+            + ". The players are "
+            + str(self.algorithm_tuple)
+            + "\n"
+        )
         f.close()
         while len(self.tokens) > 1:
             current_moves = []
@@ -773,41 +780,46 @@ class Game:
                     # Does player_tuple[0] call the algorithm? ***
                     data.append(x[1:])
                 f = open("Results/games.log", "a")
-                f.write(time.asctime() +
-                        ": Game " +
-                        self.name +
-                        ". Calling Player " +
-                        str(i) +
-                        " which is " +
-                        str(player_list[0]) +
-                        "\n")
+                f.write(
+                    time.asctime()
+                    + ": Game "
+                    + self.name
+                    + ". Calling Player "
+                    + str(i)
+                    + " which is "
+                    + str(player_list[0])
+                    + "\n"
+                )
                 f.close()
                 if player_list[0].get_name() == "neural_nash":
                     this_move = Game.Neural_Nash_Instance.actually_choose_token(
-                        copy.deepcopy(self.tokens), copy.deepcopy(data), self.name)
-#                elif player_list[0].get_name() == "aux_neural_nash_untrainable":
-#                    this_move = Game.Neural_Nash_Untrainable_Instance.actually_choose_token( copy.deepcopy(self.tokens), copy.deepcopy(data))
+                        copy.deepcopy(self.tokens), copy.deepcopy(data), self.name
+                    )
+                #                elif player_list[0].get_name() == "aux_neural_nash_untrainable":
+                #                    this_move = Game.Neural_Nash_Untrainable_Instance.actually_choose_token( copy.deepcopy(self.tokens), copy.deepcopy(data))
                 elif player_list[0].get_name() == "neural_evolve":
-                    r = random.choice(
-                        list(range(Game.NEURAL_EVOLVER_POPULATION)))
+                    r = random.choice(list(range(Game.NEURAL_EVOLVER_POPULATION)))
                     Game.Neural_Evolver_Instance.i = r
                     Game.Neural_Evolver_Instance.load()
                     this_move = Game.Neural_Evolver_Instance.choose_token(
-                        copy.deepcopy(self.tokens), copy.deepcopy(data), self.name)
+                        copy.deepcopy(self.tokens), copy.deepcopy(data), self.name
+                    )
                 else:
                     this_move = player_list[0].get_function()(
-                        copy.deepcopy(self.tokens), copy.deepcopy(data), self.name)
+                        copy.deepcopy(self.tokens), copy.deepcopy(data), self.name
+                    )
                 current_moves.append(this_move)
                 f = open("Results/games.log", "a")
                 f.write(
-                    time.asctime() +
-                    ": Game " +
-                    self.name +
-                    ". Player " +
-                    str(i) +
-                    " responds " +
-                    str(this_move) +
-                    "\n")
+                    time.asctime()
+                    + ": Game "
+                    + self.name
+                    + ". Player "
+                    + str(i)
+                    + " responds "
+                    + str(this_move)
+                    + "\n"
+                )
                 f.close()
             c = collections.Counter(current_moves)
             for i in range(len(self.algorithm_list)):
@@ -824,14 +836,16 @@ class Game:
             for x in self.algorithm_list:
                 temp_scores.append(x[1])
             f = open("Results/games.log", "a")
-            f.write(time.asctime() +
-                    ": Game " +
-                    self.name +
-                    ". The tokens are " +
-                    str(self.tokens) +
-                    ". The intermediate scores are " +
-                    str(temp_scores) +
-                    "\n")
+            f.write(
+                time.asctime()
+                + ": Game "
+                + self.name
+                + ". The tokens are "
+                + str(self.tokens)
+                + ". The intermediate scores are "
+                + str(temp_scores)
+                + "\n"
+            )
             f.close()
         if len(self.tokens) == 1:
             item = self.tokens.pop(0)
@@ -841,30 +855,34 @@ class Game:
                 player_list[2].append(item)
                 f = open("Results/games.log", "a")
                 f.write(
-                    time.asctime() +
-                    ": Game " +
-                    self.name +
-                    ". Player " +
-                    str(i) +
-                    " (having one move left) gets " +
-                    str(item) +
-                    "\n")
+                    time.asctime()
+                    + ": Game "
+                    + self.name
+                    + ". Player "
+                    + str(i)
+                    + " (having one move left) gets "
+                    + str(item)
+                    + "\n"
+                )
                 f.close()
-                if len(
-                        self.algorithm_list) == 1:  # In the unusual 1-player case, the last token is won
+                if (
+                    len(self.algorithm_list) == 1
+                ):  # In the unusual 1-player case, the last token is won
                     player_list[1] += item
         temp_scores = []
         for x in self.algorithm_list:
             temp_scores.append(x[1])
         f = open("Results/games.log", "a")
-        f.write(time.asctime() +
-                ": Game " +
-                self.name +
-                ". The tokens are " +
-                str(self.tokens) +
-                ". The intermediate scores are " +
-                str(temp_scores) +
-                "\n")
+        f.write(
+            time.asctime()
+            + ": Game "
+            + self.name
+            + ". The tokens are "
+            + str(self.tokens)
+            + ". The intermediate scores are "
+            + str(temp_scores)
+            + "\n"
+        )
         f.close()
         max = 0
         for player_list in self.algorithm_list:
@@ -897,15 +915,16 @@ class Game:
         f.close()
 
     def write(self):
-        '''Writes the results of the game (both who won and the time) to Results/api.log. '''
+        """Writes the results of the game (both who won and the time) to Results/api.log. """
         import time
+
         f = open("Results/api.log", "a")
         f.write(time.asctime() + ": " + self.to_write)
         f.close()
 
 
 class Wrapper:
-    '''Takes an algorithm from inspect and has a nice interface'''
+    """Takes an algorithm from inspect and has a nice interface"""
 
     def __init__(self, input_tuple):
         self.__tuple = input_tuple

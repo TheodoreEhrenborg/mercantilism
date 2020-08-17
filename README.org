@@ -1,0 +1,9 @@
+* WARNING
+I last worked with this package in 
+Spring 2019. When I updated it to Python 3, 
+some bug appeared involving the neural network,
+but I don't remember what. It's probably best to 
+use the python2 branch.
+
+Also, the documentation is pretty bad, so I'm not sure
+what some of my code is doing.

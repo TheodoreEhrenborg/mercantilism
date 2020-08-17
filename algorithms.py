@@ -1,5 +1,5 @@
-'''This file contains the various algorithms that play the game.
-Methods starting with aux_ are not playing the game.'''
+"""This file contains the various algorithms that play the game.
+Methods starting with aux_ are not playing the game."""
 import numpy as np
 import random
 import collections
@@ -7,6 +7,7 @@ import time
 import copy
 import pickle
 import os
+
 TOKENS = list(range(1, 16))
 NUM_PLAYERS = 5
 # def aux_neural_nash_untrainable():
@@ -14,112 +15,112 @@ NUM_PLAYERS = 5
 
 
 def play_highest(tokens, data, game_name):
-    '''Plays the highest token left.'''
-#    import time
-#    f = open("Results/play_highest.log","a")
-# f.write(time.asctime() + ": Got message from Game " + game_name + ".
-# Tokens received " + str(tokens) + ". Data received " + str(data) + ".
-# \n")
+    """Plays the highest token left."""
+    #    import time
+    #    f = open("Results/play_highest.log","a")
+    # f.write(time.asctime() + ": Got message from Game " + game_name + ".
+    # Tokens received " + str(tokens) + ". Data received " + str(data) + ".
+    # \n")
     choice = max(tokens)
-#    f.write(time.asctime() + ": Chose " + str(choice) + "\n")
-#    f.close()
+    #    f.write(time.asctime() + ": Chose " + str(choice) + "\n")
+    #    f.close()
     return choice
 
 
 def uniform(tokens, data, game_name):
-    '''Plays a token randomly, chosen based on a uniform distribution.'''
-#    import time, random
-#    f = open("Results/uniform.log","a")
-# f.write(time.asctime() + ": Got message from Game " + game_name + ".
-# Tokens received " + str(tokens) + ". Data received " + str(data) + ".
-# \n")
+    """Plays a token randomly, chosen based on a uniform distribution."""
+    #    import time, random
+    #    f = open("Results/uniform.log","a")
+    # f.write(time.asctime() + ": Got message from Game " + game_name + ".
+    # Tokens received " + str(tokens) + ". Data received " + str(data) + ".
+    # \n")
     choice = random.choice(tokens)
-#    f.write(time.asctime() + ": Chose " + str(choice) + "\n")
-#    f.close()
+    #    f.write(time.asctime() + ": Chose " + str(choice) + "\n")
+    #    f.close()
     return choice
 
 
 def aux_exp(tokens, data, game_name, n):
-    '''Plays a token based on a distribution where each token is chosen with
-    weight proportional to n^(value) '''
-#    import time, random
-#    f = open("Results/exp.log","a")
-# f.write(time.asctime() + ": Got message from Game " + game_name + ".
-# Tokens received " + str(tokens) + ". Data received " + str(data) +  ". n
-# = "  + str(n) + "\n")
+    """Plays a token based on a distribution where each token is chosen with
+    weight proportional to n^(value) """
+    #    import time, random
+    #    f = open("Results/exp.log","a")
+    # f.write(time.asctime() + ": Got message from Game " + game_name + ".
+    # Tokens received " + str(tokens) + ". Data received " + str(data) +  ". n
+    # = "  + str(n) + "\n")
     sum = 0
     for x in tokens:
-        sum += n**x
+        sum += n ** x
     random_choice = random.random() * sum
     for x in tokens:
-        random_choice -= n**x
+        random_choice -= n ** x
         if random_choice < 0:
             break
     else:
         raise Exception("Uh-oh. The program should never reach this step.")
     choice = x
-#    f.write(time.asctime() + ": Chose " + str(choice) + "\n")
-#    f.close()
+    #    f.write(time.asctime() + ": Chose " + str(choice) + "\n")
+    #    f.close()
     return choice
 
 
 def exp_2(tokens, data, game_name):
-    '''Plays a token based on a distribution where each token is chosen with
-    weight proportional to 2^(value) '''
+    """Plays a token based on a distribution where each token is chosen with
+    weight proportional to 2^(value) """
     return aux_exp(tokens, data, game_name, 2)
 
 
 def aux_power(tokens, data, game_name, n):
-    '''Plays a token based on a distribution where each token is chosen with
-    weight proportional to (value)^n '''
-#    import time, random
-#    f = open("Results/power.log","a")
-# f.write(time.asctime() + ": Got message from Game " + game_name + ".
-# Tokens received " + str(tokens) + ". Data received " + str(data) +  ". n
-# = "  + str(n) + "\n")
+    """Plays a token based on a distribution where each token is chosen with
+    weight proportional to (value)^n """
+    #    import time, random
+    #    f = open("Results/power.log","a")
+    # f.write(time.asctime() + ": Got message from Game " + game_name + ".
+    # Tokens received " + str(tokens) + ". Data received " + str(data) +  ". n
+    # = "  + str(n) + "\n")
     sum = 0
     for x in tokens:
-        sum += x**n
+        sum += x ** n
     random_choice = random.random() * sum
     for x in tokens:
-        random_choice -= x**n
+        random_choice -= x ** n
         if random_choice < 0:
             break
     else:
         raise Exception("Uh-oh. The program should never reach this step.")
     choice = x
-#    f.write(time.asctime() + ": Chose " + str(choice) + "\n")
-#    f.close()
+    #    f.write(time.asctime() + ": Chose " + str(choice) + "\n")
+    #    f.close()
     return choice
 
 
 def power_3(tokens, data, game_name):
-    '''Plays a token based on a distribution where each token is chosen with
-    weight proportional to (value)^3 '''
+    """Plays a token based on a distribution where each token is chosen with
+    weight proportional to (value)^3 """
     return aux_power(tokens, data, game_name, 3)
 
 
 def power_2(tokens, data, game_name):
-    '''Plays a token based on a distribution where each token is chosen with
-    weight proportional to (value)^2 '''
+    """Plays a token based on a distribution where each token is chosen with
+    weight proportional to (value)^2 """
     return aux_power(tokens, data, game_name, 2)
 
 
 def power_1(tokens, data, game_name):
-    '''Plays a token based on a distribution where each token is chosen with
-    weight proportional to its value'''
+    """Plays a token based on a distribution where each token is chosen with
+    weight proportional to its value"""
     return aux_power(tokens, data, game_name, 1)
 
 
 def best_human_strategy(tokens, data, game_name):
-    '''Pick a number (one-third chance it's 2nd highest, one-third 3rd highest,
+    """Pick a number (one-third chance it's 2nd highest, one-third 3rd highest,
     one-third 4th highest). But if I am in first place and my score - 2nd place score
-    >= highest token left, I pick the highest value token.'''
-#    import random, time
-#    f = open("Results/best_human_strategy.log","a")
-# f.write(time.asctime() + ": Got message from Game " + game_name + ".
-# Tokens received " + str(tokens) + ". Data received " + str(data) + ".
-# \n")
+    >= highest token left, I pick the highest value token."""
+    #    import random, time
+    #    f = open("Results/best_human_strategy.log","a")
+    # f.write(time.asctime() + ": Got message from Game " + game_name + ".
+    # Tokens received " + str(tokens) + ". Data received " + str(data) + ".
+    # \n")
     l = len(tokens)
     tokens.sort()
     tokens.reverse()
@@ -155,7 +156,8 @@ def quick_evolve(tokens, data, game_name):
 
 
 class Quick_Evolver:
-    '''Makes a decision by choosing one of the fast algorithms'''
+    """Makes a decision by choosing one of the fast algorithms"""
+
     fast_algorithms = (
         play_highest,
         uniform,
@@ -163,7 +165,8 @@ class Quick_Evolver:
         power_1,
         power_2,
         power_3,
-        best_human_strategy)
+        best_human_strategy,
+    )
 
     @classmethod
     def list_add(cls, a, b):
@@ -175,10 +178,15 @@ class Quick_Evolver:
         return c
 
     @classmethod
-    def evolve(cls, generations=5, trials_per_generation=100,
-               mutation_size=0.1, mutation_number=1):
-        '''Evolves without using a large population'''
-#        import copy
+    def evolve(
+        cls,
+        generations=5,
+        trials_per_generation=100,
+        mutation_size=0.1,
+        mutation_number=1,
+    ):
+        """Evolves without using a large population"""
+        #        import copy
         for gen in range(generations):
             players = []
             scores = []
@@ -222,8 +230,8 @@ class Quick_Evolver:
         return self.choose_algorithm()(tokens, data, game_name)
 
     def choose_algorithm(self):
-        '''Given the current information, makes a decision about what algorithm to use'''
-#        import random
+        """Given the current information, makes a decision about what algorithm to use"""
+        #        import random
         sum = 0
         for x in self.weights:
             sum += x
@@ -264,12 +272,15 @@ class Quick_Evolver:
 
 def neural_evolve():
     pass
+
+
 # def neural_evolve(tokens, data, game_name):
 #    return NEURAL_EVOLVER_INSTANCE.choose_token( tokens, data, game_name )
 
 
 class Neural_Evolver:
-    '''Makes a decision using a neural network trained through artificial selection'''
+    """Makes a decision using a neural network trained through artificial selection"""
+
     @classmethod
     def list_add(cls, a, b):
         c = []
@@ -290,14 +301,15 @@ class Neural_Evolver:
 
     @classmethod
     def evolve(
-            cls,
-            generations=5,
-            trials_per_generation=100,
-            mutation_size=0.1,
-            mutation_chance=0.2,
-            population=15,
-            chance_a_player_mutates=0.5):
-        '''Evolves with a population'''
+        cls,
+        generations=5,
+        trials_per_generation=100,
+        mutation_size=0.1,
+        mutation_chance=0.2,
+        population=15,
+        chance_a_player_mutates=0.5,
+    ):
+        """Evolves with a population"""
         #        import copy,time
         players = []
         for j in range(population):
@@ -350,18 +362,19 @@ class Neural_Evolver:
                 next_gen_index = accountant.get_token_from_weights(scores) - 1
                 next_gen_player = players[next_gen_index]
                 next_gen_player.become_parent(which_label=i)
-#            max_score = max(scores)
-#            i = scores.index(max_score)
-#            best = players[i]
-#            #Some of them mutate before being saved
-#            best.become_parent()
-#            print(max_score / (trials_per_generation), time.time() - t)
-#            clear_session()
-#            for p in players:
-#                p.delete()
-#            print(best)
-#        return best.model.get_weights()[0][0]
-#        return max_score / (trials_per_generation)
+
+    #            max_score = max(scores)
+    #            i = scores.index(max_score)
+    #            best = players[i]
+    #            #Some of them mutate before being saved
+    #            best.become_parent()
+    #            print(max_score / (trials_per_generation), time.time() - t)
+    #            clear_session()
+    #            for p in players:
+    #                p.delete()
+    #            print(best)
+    #        return best.model.get_weights()[0][0]
+    #        return max_score / (trials_per_generation)
 
     def __init__(self, return_to_default=False, i=0):
         #        try:
@@ -380,9 +393,8 @@ class Neural_Evolver:
 
     def load(self):
         #        import pickle
-        f = open("Results/neural_evolver_current_model" +
-                 str(self.i) + ".p", "rb")
-        self.model.set_weights(pickle.load(file=f, encoding='latin1'))
+        f = open("Results/neural_evolver_current_model" + str(self.i) + ".p", "rb")
+        self.model.set_weights(pickle.load(file=f, encoding="latin1"))
 
     def choose_token(self, tokens, data, game_name):
         #        import collections,random
@@ -403,13 +415,13 @@ class Neural_Evolver:
         output = self.model.predict(the_input)
         # print(output)
         weights = list(output[0])
-#        print(weights)
+        #        print(weights)
         zeroed_weights = []
         for i in range(len(TOKENS)):
             t = TOKENS[i]
             zeroed_weights.append(weights[i] * c[t])
-#        zeroed_weights = Neural_Evolver.list_multiply(list(output[0]),c)
-#        print(zeroed_weights)
+        #        zeroed_weights = Neural_Evolver.list_multiply(list(output[0]),c)
+        #        print(zeroed_weights)
         if aux_list_total(zeroed_weights) == 0:
             #            print(weights, zeroed_weights)
             choice = random.choice(tokens)
@@ -428,22 +440,25 @@ class Neural_Evolver:
                 break
         else:
             raise Exception(
-                "Uh-oh. The program should never reach this step." +
-                str(random_choice) +
-                str(weights))
+                "Uh-oh. The program should never reach this step."
+                + str(random_choice)
+                + str(weights)
+            )
         return i + 1
 
     def get_standard_model(self):
-     #       import tensorflow.keras
+        #       import tensorflow.keras
         from tensorflow.keras.models import Sequential
         from tensorflow.keras.layers import Dense, Activation
         from tensorflow.keras.optimizers import SGD
+
         model = Sequential()
-        model.add(Dense(30, activation='relu', input_dim=20))
-        model.add(Dense(30, activation='relu'))
-        model.add(Dense(15, activation='softmax'))
-        model.compile(optimizer='sgd', loss='categorical_crossentropy', metrics=[
-                      'accuracy'])  # These terms don't have any significance
+        model.add(Dense(30, activation="relu", input_dim=20))
+        model.add(Dense(30, activation="relu"))
+        model.add(Dense(15, activation="softmax"))
+        model.compile(
+            optimizer="sgd", loss="categorical_crossentropy", metrics=["accuracy"]
+        )  # These terms don't have any significance
         return model
 
     def become_parent(self, which_label=None):
@@ -479,8 +494,9 @@ class Neural_Evolver:
                             else:
                                 weights[i][j][k] -= how_far * random.random()
         self.model.set_weights(weights)
-#    def __str__(self):
-#        return "Neural_Evolver: Weights are " + str(self.model.get_weights())
+
+    #    def __str__(self):
+    #        return "Neural_Evolver: Weights are " + str(self.model.get_weights())
 
     def __str__(self):
         return "Neural_Evolver"
@@ -494,16 +510,17 @@ def neural_nash():
 
 
 class Neural_Nash:
-    '''Makes a decision using aux_stochastic and a neural setwork trained through backpropagation'''
+    """Makes a decision using aux_stochastic and a neural setwork trained through backpropagation"""
 
     def do_training(
-            self,
-            generations=5,
-            games=1000,
-            max_complexity=None,
-            training_epochs=10,
-            max_gen_time=10**9):
-        '''max_gen_time is the maximum time allowed to any generation (plus the time it takes to finish a game)'''
+        self,
+        generations=5,
+        games=1000,
+        max_complexity=None,
+        training_epochs=10,
+        max_gen_time=10 ** 9,
+    ):
+        """max_gen_time is the maximum time allowed to any generation (plus the time it takes to finish a game)"""
         count = 0
         players = []
         if max_complexity is None:
@@ -523,7 +540,7 @@ class Neural_Nash:
             # Get the improved predictions from those games
             f = open("Results/neural_nash_data.p", "rb")
 
-            data = pickle.load(file=f, encoding='latin1')
+            data = pickle.load(file=f, encoding="latin1")
             f.close()
             # data is a list of tuples, which are ( tokens ,scores,
             # expected_utilities)
@@ -552,25 +569,20 @@ class Neural_Nash:
                 the_output.append(temp)
             the_output = np.array(the_output)
 
-
-#            the_output = shadow_output
+            #            the_output = shadow_output
             # Let the neural network train
-#            self.randomize()
-# print(the_input,the_output)
-            self.model.fit(
-                the_input,
-                the_output,
-                epochs=training_epochs,
-                batch_size=32)
+            #            self.randomize()
+            # print(the_input,the_output)
+            self.model.fit(the_input, the_output, epochs=training_epochs, batch_size=32)
             # Become the parent
             self.become_parent()
             os.system(
-                "cp Results/neural_nash_data.p Results/Old_Logs/neural_nash_data_" +
-                time.asctime().replace(
-                    " ",
-                    "_") +
-                ".p")
-#            time.sleep(1)
+                "cp Results/neural_nash_data.p Results/Old_Logs/neural_nash_data_"
+                + time.asctime().replace(" ", "_")
+                + ".p"
+            )
+
+    #            time.sleep(1)
     @classmethod
     def list_add(cls, a, b):
         c = []
@@ -617,7 +629,7 @@ class Neural_Nash:
     def load(self):
         #        import pickle
         f = open("Results/neural_nash_current_model.p", "rb")
-        self.model.set_weights(pickle.load(file=f, encoding='latin1'))
+        self.model.set_weights(pickle.load(file=f, encoding="latin1"))
 
     def evaluate_position(self, tokens, data, game_name):
         scores = []
@@ -641,7 +653,7 @@ class Neural_Nash:
         scores = []
         for item in current_scores:
             scores.append(item)
-#            scores.append( float(item) / aux_list_total(TOKENS) )
+        #            scores.append( float(item) / aux_list_total(TOKENS) )
         c = collections.Counter(tokens)
         existing_tokens = []
         for i in TOKENS:
@@ -667,19 +679,20 @@ class Neural_Nash:
         return aux_stochastic(tokens, data, game_name, self)
 
     def get_standard_model(self):
-     #       import tensorflow.keras
+        #       import tensorflow.keras
         from tensorflow.keras.models import Sequential
         from tensorflow.keras.layers import Dense, Activation, Dropout
         from tensorflow.keras.optimizers import SGD
+
         model = Sequential()
-        model.add(Dense(30, activation='relu', input_dim=20))
+        model.add(Dense(30, activation="relu", input_dim=20))
         model.add(Dropout(0.5))
-        model.add(Dense(30, activation='relu'))
+        model.add(Dense(30, activation="relu"))
         model.add(Dropout(0.5))
-        model.add(Dense(5, activation='softmax'))
-        model.compile(optimizer='sgd',
-                      loss='categorical_crossentropy',
-                      metrics=['accuracy'])
+        model.add(Dense(5, activation="softmax"))
+        model.compile(
+            optimizer="sgd", loss="categorical_crossentropy", metrics=["accuracy"]
+        )
         return model
 
     def become_parent(self):
@@ -688,8 +701,9 @@ class Neural_Nash:
         f = open("Results/neural_nash_current_model.p", "wb")
         pickle.dump(self.model.get_weights(), f)
         f.close()
-#    def __str__(self):
-#        return "Neural_Evolver: Weights are " + str(self.model.get_weights())
+
+    #    def __str__(self):
+    #        return "Neural_Evolver: Weights are " + str(self.model.get_weights())
 
     def __str__(self):
         return "Neural_Nash"
@@ -699,15 +713,15 @@ class Neural_Nash:
 
 
 class Game:
-    '''This version of game assumes that the algorithms are objects, not functions'''
+    """This version of game assumes that the algorithms are objects, not functions"""
 
     def get_results(self):
         return tuple(self.results)
 
     def __init__(self, algorithm_tuple, tokens):
         #        import random, collections, copy, time
-        '''Calculates a list containing the utility points of
-        each player'''
+        """Calculates a list containing the utility points of
+        each player"""
         self.start_time = time.time()
         self.tokens = list(tokens)
         self.algorithm_list = []
@@ -717,19 +731,21 @@ class Game:
         for x in algorithm_tuple:
             self.algorithm_list.append([x, 0, []])
         self.algorithm_tuple = algorithm_tuple
-        self.name = str(int(time.time())) + ":" + str(random.randint(0, 10**9))
+        self.name = str(int(time.time())) + ":" + str(random.randint(0, 10 ** 9))
         # Each algorithm receives a list of the tokens left, of everyone's scores,
         # and everyone's prior moves. However, the opponents will be put in a
         # random order.
         f = open("Results/practice_games.log", "a")
-        f.write(time.asctime() +
-                ": Game " +
-                self.name +
-                ". The tokens are " +
-                str(self.tokens) +
-                ". The players are " +
-                str(self.algorithm_tuple) +
-                "\n")
+        f.write(
+            time.asctime()
+            + ": Game "
+            + self.name
+            + ". The tokens are "
+            + str(self.tokens)
+            + ". The players are "
+            + str(self.algorithm_tuple)
+            + "\n"
+        )
         f.close()
         while len(self.tokens) > 0:
             current_moves = []
@@ -742,30 +758,34 @@ class Game:
                 for x in others:
                     # Does player_tuple[0] call the algorithm? ***
                     data.append(x[1:])
-#                print(self.tokens,data)
+                #                print(self.tokens,data)
                 f = open("Results/practice_games.log", "a")
-                f.write(time.asctime() +
-                        ": Game " +
-                        self.name +
-                        ". Calling Player " +
-                        str(i) +
-                        " which is " +
-                        str(player_list[0]) +
-                        "\n")
+                f.write(
+                    time.asctime()
+                    + ": Game "
+                    + self.name
+                    + ". Calling Player "
+                    + str(i)
+                    + " which is "
+                    + str(player_list[0])
+                    + "\n"
+                )
                 f.close()
                 this_move = player_list[0].choose_token(
-                    copy.deepcopy(self.tokens), copy.deepcopy(data), self.name)
+                    copy.deepcopy(self.tokens), copy.deepcopy(data), self.name
+                )
                 current_moves.append(this_move)
                 f = open("Results/practice_games.log", "a")
                 f.write(
-                    time.asctime() +
-                    ": Game " +
-                    self.name +
-                    ". Player " +
-                    str(i) +
-                    " responds " +
-                    str(this_move) +
-                    "\n")
+                    time.asctime()
+                    + ": Game "
+                    + self.name
+                    + ". Player "
+                    + str(i)
+                    + " responds "
+                    + str(this_move)
+                    + "\n"
+                )
                 f.close()
             c = collections.Counter(current_moves)
             for i in range(len(self.algorithm_list)):
@@ -782,38 +802,42 @@ class Game:
             for x in self.algorithm_list:
                 temp_scores.append(x[1])
             f = open("Results/practice_games.log", "a")
-            f.write(time.asctime() +
-                    ": Game " +
-                    self.name +
-                    ". The tokens are " +
-                    str(self.tokens) +
-                    ". The intermediate scores are " +
-                    str(temp_scores) +
-                    "\n")
+            f.write(
+                time.asctime()
+                + ": Game "
+                + self.name
+                + ". The tokens are "
+                + str(self.tokens)
+                + ". The intermediate scores are "
+                + str(temp_scores)
+                + "\n"
+            )
             f.close()
-#        if len(self.tokens) == 1:
-#            item = self.tokens.pop(0)
-#            i = 0
-#            for player_list in self.algorithm_list:
-#                i += 1
-#                player_list[2].append( item )
-#                f = open( "Results/games.log", "a")
-#                f.write( time.asctime() + ": Game " + self.name + ". Player " + str(i) + " (having one move left) gets " + str(item)  + "\n" )
-#                f.close()
-#                if len(self.algorithm_list) == 1:#In the unusual 1-player case, the last token is won
-#                    player_list[1] += item
+        #        if len(self.tokens) == 1:
+        #            item = self.tokens.pop(0)
+        #            i = 0
+        #            for player_list in self.algorithm_list:
+        #                i += 1
+        #                player_list[2].append( item )
+        #                f = open( "Results/games.log", "a")
+        #                f.write( time.asctime() + ": Game " + self.name + ". Player " + str(i) + " (having one move left) gets " + str(item)  + "\n" )
+        #                f.close()
+        #                if len(self.algorithm_list) == 1:#In the unusual 1-player case, the last token is won
+        #                    player_list[1] += item
         temp_scores = []
         for x in self.algorithm_list:
             temp_scores.append(x[1])
         f = open("Results/practice_games.log", "a")
-        f.write(time.asctime() +
-                ": Game " +
-                self.name +
-                ". The tokens are " +
-                str(self.tokens) +
-                ". The intermediate scores are " +
-                str(temp_scores) +
-                "\n")
+        f.write(
+            time.asctime()
+            + ": Game "
+            + self.name
+            + ". The tokens are "
+            + str(self.tokens)
+            + ". The intermediate scores are "
+            + str(temp_scores)
+            + "\n"
+        )
         f.close()
         max = 0
         for player_list in self.algorithm_list:
@@ -854,7 +878,7 @@ class Game:
                 to_pickle = []
                 to_pickle.append(data)
             else:
-                to_pickle = pickle.load(file=f, encoding='latin1')
+                to_pickle = pickle.load(file=f, encoding="latin1")
                 to_pickle.append(data)
                 f.close()
             f = open("Results/neural_nash_data.p", "wb")
@@ -864,7 +888,7 @@ class Game:
 
 def aux_abridged_game(tokens, players_choices, scores_so_far, utility_metric):
     #    import random, collections, copy
-    '''This version of game receives the position and the current moves.
+    """This version of game receives the position and the current moves.
     Then it plays one round and returns the utilities based on a
     user-chosen function.
     Calculates a list containing the utility points of
@@ -887,7 +911,7 @@ def aux_abridged_game(tokens, players_choices, scores_so_far, utility_metric):
                     Utility is always positive. The rest
                     is up to the neural network, which ought to assign utilities that
                     match expected utilities in the real game.
-    '''
+    """
     n = len(players_choices)
     c = collections.Counter(players_choices)
     round_scores = []
@@ -904,23 +928,23 @@ def aux_abridged_game(tokens, players_choices, scores_so_far, utility_metric):
             if x not in players_choices:
                 new.append(x)
         tokens = new
-    if utility_metric == 'round_points':
+    if utility_metric == "round_points":
         return round_scores
-    elif utility_metric == 'total_points':
+    elif utility_metric == "total_points":
         return scores_so_far
-    elif utility_metric == 'round_diff':
+    elif utility_metric == "round_diff":
         output = []
         for i in range(n):
-            other_scores = round_scores[:i] + round_scores[i + 1:]
+            other_scores = round_scores[:i] + round_scores[i + 1 :]
             output.append(round_scores[i] - max(other_scores))
         return output
-    elif utility_metric == 'total_diff':
+    elif utility_metric == "total_diff":
         output = []
         for i in range(n):
-            other_scores = scores_so_far[:i] + scores_so_far[i + 1:]
+            other_scores = scores_so_far[:i] + scores_so_far[i + 1 :]
             output.append(scores_so_far[i] - max(other_scores))
         return output
-    elif utility_metric == 'round_winner':
+    elif utility_metric == "round_winner":
         output = []
         highest_score = max(round_scores)
         num_winners = round_scores.count(highest_score)
@@ -930,7 +954,7 @@ def aux_abridged_game(tokens, players_choices, scores_so_far, utility_metric):
             else:
                 output.append(0)
         return output
-    elif utility_metric == 'total_winner':
+    elif utility_metric == "total_winner":
         output = []
         highest_score = max(scores_so_far)
         num_winners = scores_so_far.count(highest_score)
@@ -954,31 +978,32 @@ def aux_list_total(a):
 
 
 def round_points(tokens, data, game_name):
-    return aux_stochastic(tokens, data, game_name, 'round_points')
+    return aux_stochastic(tokens, data, game_name, "round_points")
 
 
 def total_points(tokens, data, game_name):
-    return aux_stochastic(tokens, data, game_name, 'total_points')
+    return aux_stochastic(tokens, data, game_name, "total_points")
 
 
 def round_diff(tokens, data, game_name):
-    return aux_stochastic(tokens, data, game_name, 'round_diff')
+    return aux_stochastic(tokens, data, game_name, "round_diff")
 
 
 def total_diff(tokens, data, game_name):
-    return aux_stochastic(tokens, data, game_name, 'total_diff')
+    return aux_stochastic(tokens, data, game_name, "total_diff")
 
 
 def round_winner(tokens, data, game_name):
-    return aux_stochastic(tokens, data, game_name, 'round_winner')
+    return aux_stochastic(tokens, data, game_name, "round_winner")
 
 
 def total_winner(tokens, data, game_name):
-    return aux_stochastic(tokens, data, game_name, 'total_winner')
+    return aux_stochastic(tokens, data, game_name, "total_winner")
 
 
-def aux_stochastic(tokens, data, game_name, utility_metric,
-                   start=25, memory=50, available=25, end=200):
+def aux_stochastic(
+    tokens, data, game_name, utility_metric, start=25, memory=50, available=25, end=200
+):
     #    import random
     utility_record = {}
     n = len(data)
@@ -1017,15 +1042,17 @@ def aux_stochastic(tokens, data, game_name, utility_metric,
                     # Saving a dictionary speeds it up by a factor of 17,
                     # starting with tokens from 1 to 15
                     try:
-                        temp_utilities = utility_record[(
-                            tokens, imagined_player_moves, scores_so_far)]
+                        temp_utilities = utility_record[
+                            (tokens, imagined_player_moves, scores_so_far)
+                        ]
                     except KeyError:
                         temp_utilities = aux_abridged_game(
-                            tokens, imagined_player_moves, scores_so_far, utility_metric)
-                        utility_record[(tokens,
-                                        imagined_player_moves,
-                                        scores_so_far)] = temp_utilities
-#                    temp_utilities = aux_abridged_game(tokens, imagined_player_moves, scores_so_far, utility_metric)
+                            tokens, imagined_player_moves, scores_so_far, utility_metric
+                        )
+                        utility_record[
+                            (tokens, imagined_player_moves, scores_so_far)
+                        ] = temp_utilities
+                    #                    temp_utilities = aux_abridged_game(tokens, imagined_player_moves, scores_so_far, utility_metric)
                     my_utilities[l].append(temp_utilities[i])
             summed = []
             for x in my_utilities:
@@ -1044,9 +1071,9 @@ def aux_stochastic(tokens, data, game_name, utility_metric,
                 expected = utility_record[(tokens, tuple(temp), scores_so_far)]
             except KeyError:
                 expected = aux_abridged_game(
-                    tokens, tuple(temp), scores_so_far, utility_metric)
-                utility_record[(tokens, tuple(temp),
-                                scores_so_far)] = temp_utilities
+                    tokens, tuple(temp), scores_so_far, utility_metric
+                )
+                utility_record[(tokens, tuple(temp), scores_so_far)] = temp_utilities
             results = Neural_Nash.list_add(expected, results)
         new_results = []
         for item in results:
@@ -1061,11 +1088,11 @@ def aux_stochastic(tokens, data, game_name, utility_metric,
             to_pickle = []
             to_pickle.append(data)
         else:
-            to_pickle = pickle.load(file=f, encoding='latin1')
+            to_pickle = pickle.load(file=f, encoding="latin1")
             to_pickle.append(data)
             f.close()
         f = open("Results/neural_nash_data.p", "wb")
         pickle.dump(to_pickle, f)
         f.close()
-#    print(actual_choices)
+    #    print(actual_choices)
     return random.choice(actual_choices[0][-memory:])
