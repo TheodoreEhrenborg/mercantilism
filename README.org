@@ -1,5 +1,7 @@
+#+TITLE: Mercantilism
+This is my 12th grade AP research project, where I wrote and tested several algorithms that played a multiplayer board game. See the PDF for more details.
 * WARNING
-I last worked with this package in 
+I last worked with this repository in
 Spring 2019. When I updated it to Python 3, 
 some bug appeared involving the neural network,
 but I don't remember what. It's probably best to 
